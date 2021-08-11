@@ -1,4 +1,4 @@
-**<font face="courier new"> utils：</font>**
+**utils：**
 
     .
     ├── include
@@ -24,14 +24,13 @@
         ├── thread.cpp
         └── utils.cpp
     
-> <font face="courier new"> utils包含线程、互斥锁、条件变量、字符串、缓存、函数堆栈。</font>
-> **<font face="courier new"> dependence：</font>**
-> <font face="courier new"> linunwind libaliaslog libpthread </font>
+    utils包含线程、互斥锁、条件变量、字符串、缓存、函数堆栈。
+    dependence：
+    linunwind libaliaslog libpthread
+    linunwind: github下载;
+    libaliaslog: 下面的log库; 
 
-> linunwind: github下载;
-> libaliaslog: 下面的log库; 
-
-**<font face="courier new"> log：</font>**
+**log：**
 
     .
     ├── log.cpp
