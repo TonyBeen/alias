@@ -47,17 +47,12 @@
     ├── makefile
     └── testlog.cc
 
-> <font face="courier new"> 日志类 </font>
-
-> <font face="courier new"> 只需包含log.h即可使用 </font>
-
-> <font face="courier new"> 用法：定义一个字符串宏LOG_TAG; LOGI(const char *fmt,...); 与printf用法一致 </font>
-
-> **<font face="courier new"> dependecce: </font>**
-
-> <font face="courier new"> libpthread </font>
-
-><font face="courier new"> 样式： </font>
-><font face="courier new"> 07-11 15:01:26.751  9040  9040 [I] Test: main-0 </font>
-><font face="courier new"> 07-11 15:01:26.751  9040  9041 [I] Test: thread-00000 </font>
-><font face="courier new"> log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下</font>
+    <font face="courier new"> 日志类 </font>  
+    <font face="courier new"> 只需包含log.h即可使用 </font>    
+    <font face="courier new"> 用法：定义一个字符串宏LOG_TAG; LOGI(const char *fmt,...); 与printf用法一致 </font>   
+    **<font face="courier new"> dependecce: </font>**  
+    <font face="courier new"> libpthread </font>   
+    <font face="courier new"> 样式： </font>
+    <font face="courier new"> 07-11 15:01:26.751  9040  9040 [I] Test: main-0 </font>
+    <font face="courier new"> 07-11 15:01:26.751  9040  9041 [I] Test: thread-00000 </font>
+    <font face="courier new"> log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下</font>
