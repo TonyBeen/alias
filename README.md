@@ -57,7 +57,7 @@
 
 > <font face="courier new"> libpthread </font>
 
-> <font face="courier new"> 样式： </font>
-> <font face="courier new"> 07-11 15:01:26.751  9040  9040 [I] Test: main-0 </font>
-> <font face="courier new"> 07-11 15:01:26.751  9040  9041 [I] Test: thread-00000 </font>
-> <font face="courier new"> log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下</font>
+><font face="courier new"> 样式： </font>
+><font face="courier new"> 07-11 15:01:26.751  9040  9040 [I] Test: main-0 </font>
+><font face="courier new"> 07-11 15:01:26.751  9040  9041 [I] Test: thread-00000 </font>
+><font face="courier new"> log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下</font>
