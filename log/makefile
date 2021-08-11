@@ -1,4 +1,4 @@
-cflags := -std=c++11 -lutils
+cflags := -std=c++11
 soflags := -fPIC
 shared_lib := -lpthread
 cc := g++
@@ -24,7 +24,7 @@ debug:
 	@echo $(obj)
 	@echo $(headerfile)
 
-.PHONY:clean cleanall install
+.PHONY:clean uninstall install
 
 install : libaliaslog.so
 	$(shell sudo mv ./libaliaslog.so /usr/lib)
@@ -33,10 +33,10 @@ install : libaliaslog.so
 	$(shell sudo cp $(headerfile) /usr/include/log/)
 	$(shell sudo make clean)
 
-cleanall:
+uninstall:
 	-rm -rf $(obj) $(mainobj) testlog
 	$(shell sudo rm -rf /usr/lib/libaliaslog.so)
 	$(shell sudo rm -rf /usr/include/log/)
 
 clean:
-	-rm -rf $(obj) $(mainobj)
+	-rm -rf $(obj) $(mainobj) testlog

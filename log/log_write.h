@@ -8,7 +8,6 @@
 #ifndef __LOG_WRITE_H__
 #define __LOG_WRITE_H__
 
-#include <utils/utils.h>
 #include <pthread.h>
 
 #include <string>

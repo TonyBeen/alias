@@ -3,13 +3,13 @@
 static Alias::LogManager *lm = nullptr;
 
 namespace Alias {
-LogManager::LogManager(int threadAttr, bool sync)
+LogManager::LogManager(bool isDetach, bool sync)
 {
-    mIsDetach = threadAttr;
+    mIsDetach = isDetach;
     mIsInterrupt = false;
     mIsSync = sync;
     if (sync == false) {
-        CreateThread(threadAttr);
+        CreateThread(isDetach);
     }
 
 #if defined(LOG_STDOUT)
@@ -42,12 +42,13 @@ void *LogManager::thread(void *arg)
     while (logManager->ExitThread() == false) {
         std::string msg;
         {
-            AutoLock<Mutex> _l(logManager->mMutex);
+            pthread_mutex_lock(&logManager->mMutex);
             while (logManager->mQueue.size() == 0) {
-                logManager->mCond.wait(logManager->mMutex);
+                pthread_cond_wait(&logManager->mCond, &logManager->mMutex);
             }
             msg = logManager->mQueue.front();
             logManager->mQueue.pop();
+            pthread_mutex_unlock(&logManager->mMutex);
         }
         logManager->mLogWrite->WriteToFile(msg);
     }
@@ -69,32 +70,36 @@ void LogManager::CreateThread(int detached)
 
 void LogManager::Interrupt()
 {
-    AutoLock<Mutex> lock(mExitMutex);
+    pthread_mutex_lock(&mExitMutex);
     mIsInterrupt = true;
+    pthread_mutex_unlock(&mExitMutex);
 }
 
 bool LogManager::ExitThread()
 {
-    AutoLock<Mutex> lock(mExitMutex);
+    pthread_mutex_lock(&mExitMutex);
     return mIsInterrupt;
+    pthread_mutex_unlock(&mExitMutex);
 }
 
 void LogManager::WriteLog(const std::string& msg)
 {
+    if (mIsSync) {
+        mLogWrite->WriteToFile(msg);
+    }
     if (mIsSync == false) {
         if (ExitThread()) {
             return;
         }
-        AutoLock<Mutex> lock(mMutex);
+        pthread_mutex_lock(&mMutex);
         if (mQueue.size() >= MAX_QUEUE_SIZE) {
             return;
         }
         mQueue.push(msg);
         if (mQueue.size() == 2) {
-            mCond.broadcast();
+            pthread_cond_broadcast(&mCond);
         }
-    } else {
-        mLogWrite->WriteToFile(msg);
+        pthread_mutex_unlock(&mMutex);
     }
 }
 
@@ -103,10 +108,10 @@ LogWrite *LogManager::GetLogWrite() const
     return mLogWrite;
 }
 
-LogManager *LogManager::getInstance(int threadAttr, bool sync)
+LogManager *LogManager::getInstance(bool isDetach, bool sync)
 {
     if (lm == nullptr) {
-        lm = new LogManager(threadAttr, sync);
+        lm = new LogManager(isDetach, sync);
     }
     return lm;
 }

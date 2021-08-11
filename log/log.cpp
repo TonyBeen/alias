@@ -1,4 +1,9 @@
 #include "log.h"
+#include <sys/syscall.h>
+
+#ifndef gettid
+#define gettid() syscall(__NR_gettid)
+#endif
 
 namespace Alias {
 

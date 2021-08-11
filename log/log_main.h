@@ -11,26 +11,29 @@
 #include "log_leavl.h"
 #include "log_write.h"
 #include "log_format.h"
-#include <utils/mutex.h>
-#include <utils/condition.h>
 #include <memory>
 #include <queue>
 #include <pthread.h>
 
 #define LOG_STDOUT
 #define MAX_QUEUE_SIZE (1024 * 10)
+
 namespace Alias {
-class LogManager : public NonCopyAble, public std::enable_shared_from_this<LogManager> {
+class LogManager : public std::enable_shared_from_this<LogManager> {
 public:
     ~LogManager();
+    LogManager(const LogManager&) = delete;
+    LogManager& operator=(const LogManager&) = delete;
+
     void WriteLog(const std::string& msg);
-    static LogManager *getInstance(int threadAttr = 1, bool sync = true);
+    static LogManager *getInstance(bool isDetach = true, bool sync = true);
     static void deleteInstance();
     void Interrupt();
     LogWrite *GetLogWrite() const;
 
 private:
-    LogManager(int threadAttr, bool sync = true);
+    LogManager() = default;
+    LogManager(bool, bool);
     void CreateThread(int detached);
     static void *thread(void *arg);
     bool ExitThread();
@@ -38,9 +41,9 @@ private:
 private:
     LogWrite *mLogWrite;
     std::queue<std::string> mQueue;
-    Mutex mMutex;
-    Condition mCond;
-    Mutex mExitMutex;
+    pthread_mutex_t         mMutex;
+    pthread_cond_t          mCond;
+    pthread_mutex_t         mExitMutex;
     pthread_t mLogTid;
     bool mIsDetach;
     bool mIsSync;
