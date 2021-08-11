@@ -1,0 +1,4 @@
+log:
+  leval: I
+  target: stdout|file
+  dateformat: "%.2d-%.2d %.2d:%.2d:%.2d.%.3ld"
