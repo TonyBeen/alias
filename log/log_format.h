@@ -8,7 +8,7 @@
 #ifndef __LOG_FORMAT_H__
 #define __LOG_FORMAT_H__
 
-#include "log_leavl.h"
+#include "log_level.h"
 #include "log_event.h"
 #include <string>
 #include <string.h>
@@ -28,6 +28,10 @@ public:
     LogFormat& operator=(const LogFormat&) = delete;
 
     static std::string Format(const LogEvent *ev);
+    static void SetLevel(const LogLevel::Level &lev) { mLevel = lev; }
+
+private:
+    static LogLevel::Level mLevel;     // 可以输出的最小level
 
 };
 

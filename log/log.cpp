@@ -6,15 +6,35 @@
 #endif
 
 namespace Alias {
+static bool gSync = true;
+static bool gIsStdout = true;
+static LogLevel::Level gLevel = LogLevel::DEBUG;
 
-void log_write(int leval, const char *tag, const char *fmt, ...)
+void InitLog(LogLevel::Level lev, bool sync, bool isStdout)
+{
+    gLevel = lev;
+    gSync = sync;
+    gIsStdout = isStdout;
+    if (gLogManager == nullptr) {
+        gLogManager = LogManager::getInstance(true, sync, isStdout);
+    }
+    LogFormat::SetLevel(gLevel);
+}
+
+void SetLeval(LogLevel::Level lev)
+{
+    gLevel = lev;
+    LogFormat::SetLevel(gLevel);
+}
+
+void log_write(int level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     LogEvent ev;
     struct timeval tv;
     gettimeofday(&tv, nullptr);
 
-    ev.leval = (LogLeval::Leval)leval;
+    ev.level = (LogLevel::Level)level;
     ev.tag = tag;
     ev.time = tv;
     ev.pid = getpid();
@@ -36,20 +56,22 @@ void log_write(int leval, const char *tag, const char *fmt, ...)
 static void log_writev(const LogEvent *ev)
 {
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance();
+        gLogManager = LogManager::getInstance(true, gSync, gIsStdout);
     }
     std::string msgString = LogFormat::Format(ev);
-    gLogManager->WriteLog(msgString);
+    if (msgString.size() > 0) {
+        gLogManager->WriteLog(msgString);
+    }
 }
 
-void log_write_assert(int leval, const char *tag, const char *fmt, ...)
+void log_write_assert(int level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     LogEvent ev;
     struct timeval tv;
     gettimeofday(&tv, nullptr);
 
-    ev.leval = (LogLeval::Leval)leval;
+    ev.level = (LogLevel::Level)level;
     ev.tag = tag;
     ev.time = tv;
     ev.pid = getpid();
@@ -71,10 +93,9 @@ void log_write_assert(int leval, const char *tag, const char *fmt, ...)
 void log_write_assertv(const LogEvent *ev)
 {
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance();
+        gLogManager = LogManager::getInstance(true, gSync, gIsStdout);
     }
     std::string msgString = LogFormat::Format(ev);
-    gLogManager->Interrupt();
     gLogManager->GetLogWrite()->WriteToFile(msgString);
 
     abort();

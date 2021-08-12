@@ -1,9 +1,14 @@
 #include "log_format.h"
 
 namespace Alias {
+LogLevel::Level LogFormat::mLevel = LogLevel::INFO;
 
 std::string LogFormat::Format(const LogEvent *ev)
 {
+    if (ev->level < mLevel) {
+        return std::string("");
+    }
+
     char buf[LOG_BUF_SIZE] = {0};
     int index = 0;
 
@@ -14,7 +19,7 @@ std::string LogFormat::Format(const LogEvent *ev)
 
     // pid tid leval tag: msg
     index += sprintf(buf + index, " %5d %5ld %s %s: %s",
-        ev->pid, ev->tid, LogLeval::ToFormatString(ev->leval).c_str(), ev->tag, ev->msg);
+        ev->pid, ev->tid, LogLevel::ToFormatString(ev->level).c_str(), ev->tag, ev->msg);
 
     return std::string(buf);
 }
