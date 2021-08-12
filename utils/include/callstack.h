@@ -28,7 +28,7 @@ public:
     void update(int32_t ignoreDepth = 2);
 
     void log(const char* logtag,
-             LogLeval::Leval leval = LogLeval::DEBUG) const;
+             LogLevel::Level level = LogLevel::DEBUG) const;
 
     // Return a string (possibly very long) containing the complete stack trace.
     String8 toString() const;

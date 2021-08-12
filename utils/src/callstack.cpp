@@ -53,7 +53,7 @@ void CallStack::update(int32_t ignoreDepth)
             if (status == 0) {
                 nameptr = demangled;
             }
-            mStackFrame.push_back(std::move(String8::format("-0x%012x: (%s + 0x%x)", funcPointer, nameptr, offset)));
+            mStackFrame.push_back(std::move(String8::format("-0x%016lx: (%s + 0x%lx)", funcPointer, nameptr, offset)));
             std::free(demangled);
         } else {
             mStackFrame.push_back(std::move(String8::format("(unable to obtain symbol name for this frame)")));
@@ -61,10 +61,10 @@ void CallStack::update(int32_t ignoreDepth)
     }
 }
 
-void CallStack::log(const char* logtag, LogLeval::Leval leval) const
+void CallStack::log(const char* logtag, LogLevel::Level level) const
 {
     for (size_t i = 0; i < mStackFrame.size() - mSkip; ++i) {
-        log_write(leval, logtag, "%s\n", mStackFrame[i].c_str());
+        log_write(level, logtag, "%s\n", mStackFrame[i].c_str());
     }
 }
 
