@@ -89,6 +89,7 @@ public:
     void                toUpper(size_t start, size_t numChars);
 
 private:
+    friend std::ostream&   operator<<(std::ostream &out, const String8& in);
     char*               getBuffer(size_t numChars = 0);
     void                release();
     static String8      formatV(const char* fmt, va_list args);
@@ -100,6 +101,9 @@ private:
 private:
     char *mString = nullptr;
 };
+
+// 为了方便输出
+std::ostream&   operator<<(std::ostream &out, const String8& in);
 
 } // namespace Alias
 

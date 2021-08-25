@@ -3,6 +3,7 @@ cppflags := -std=c++11
 soflags := -fPIC
 shared_lib := -lunwind -laliaslog -lpthread
 cc := g++
+destfile := /usr/local
 
 src := $(wildcard ./src/*.cpp)
 headerfile := $(wildcard ./include/*.h)
@@ -22,15 +23,16 @@ debug:
 .PHONY:clean install uninstall
 
 install : libutils.so
-	$(shell sudo mv ./libutils.so /usr/lib)
-	$(shell sudo ldconfig)
+	-sudo mv ./libutils.so $(destfile)/lib
+	-sudo ldconfig
+	-if [ ! -d "$(destfile)/include/utils/" ]; then sudo mkdir $(destfile)/include/utils/; fi
+	-sudo cp ./include/* $(destfile)/include/utils/
+	-make clean
 
-	$(shell if [ ! -d "/usr/include/utils/" ]; then sudo mkdir /usr/include/utils/; fi)
-	$(shell sudo cp ./include/* /usr/include/utils/)
-	$(shell make clean)
 uninstall:
 	-rm -rf $(obj)
-	$(shell sudo rm -rf /usr/lib/libutils.so)
-	$(shell sudo rm -rf /usr/include/utils)
+	-sudo rm -rf $(destfile)/lib/libutils.so
+	-sudo rm -rf $(destfile)/include/utils
+
 clean:
 	-rm -rf $(obj)

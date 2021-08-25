@@ -3,7 +3,7 @@
 static Alias::LogManager *lm = nullptr;
 
 namespace Alias {
-LogManager::LogManager(bool isDetach, bool sync, bool isStdout)
+LogManager::LogManager(bool isDetach, bool sync)
 {
     mIsDetach = isDetach;
     mIsInterrupt = false;
@@ -12,11 +12,12 @@ LogManager::LogManager(bool isDetach, bool sync, bool isStdout)
         CreateThread(isDetach);
     }
 
-    if (isStdout) {
+#ifdef LOG_STDOUT
         mLogWrite = new StdoutLogWrite();
-    } else {
+#else
         mLogWrite = new FileLogWrite();
-    }
+#endif
+
 }
 
 LogManager::~LogManager()
@@ -108,10 +109,10 @@ LogWrite *LogManager::GetLogWrite() const
     return mLogWrite;
 }
 
-LogManager *LogManager::getInstance(bool isDetach, bool sync, bool isStdout)
+LogManager *LogManager::getInstance(bool isDetach, bool sync)
 {
     if (lm == nullptr) {
-        lm = new LogManager(isDetach, sync, isStdout);
+        lm = new LogManager(isDetach, sync);
     }
     return lm;
 }

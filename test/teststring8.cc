@@ -74,5 +74,11 @@ int main()
          */
     }
 
+    {
+        // 测试左移运算符
+        Alias::String8 str8 = "Hello World!";
+        std::cout << "str8 = " << str8 << std::endl;
+    }
+
     return 0;
 }

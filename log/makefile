@@ -2,6 +2,7 @@ cflags := -std=c++11
 soflags := -fPIC
 shared_lib := -lpthread
 cc := g++
+destfile := /usr/local
 
 src := $(wildcard log*.cpp)
 headerfile := $(wildcard log*.h)
@@ -27,16 +28,16 @@ debug:
 .PHONY:clean uninstall install
 
 install : libaliaslog.so
-	$(shell sudo mv ./libaliaslog.so /usr/lib)
-	$(shell sudo ldconfig)
-	$(shell if [ ! -d "/usr/include/log/" ]; then sudo mkdir /usr/include/log/; fi)
-	$(shell sudo cp $(headerfile) /usr/include/log/)
-	$(shell sudo make clean)
+	-(sudo mv ./libaliaslog.so $(destfile)/lib)
+	-(sudo ldconfig)
+	-(if [ ! -d "$(destfile)/include/log/" ]; then sudo mkdir $(destfile)/include/log/; fi)
+	-(sudo cp $(headerfile) $(destfile)/include/log/)
+	-(sudo make clean)
 
 uninstall:
 	-rm -rf $(obj) $(mainobj) testlog
-	$(shell sudo rm -rf /usr/lib/libaliaslog.so)
-	$(shell sudo rm -rf /usr/include/log/)
+	-(sudo rm -rf /usr/lib/libaliaslog.so)
+	-(sudo rm -rf /usr/include/log/)
 
 clean:
 	-rm -rf $(obj) $(mainobj) testlog

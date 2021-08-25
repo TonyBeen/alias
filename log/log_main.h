@@ -1,3 +1,10 @@
+/*
+ * @Description: 
+ * @Autor: alias
+ * @Date: 2021-08-17 15:42:22
+ * @LastEditors: Seven
+ * @LastEditTime: 2021-08-23 16:32:27
+ */
 /*************************************************************************
     > File Name: log_main.h
     > Author: hsz
@@ -16,6 +23,7 @@
 #include <pthread.h>
 
 #define MAX_QUEUE_SIZE (1024 * 10)
+#define LOG_STDOUT
 
 namespace Alias {
 class LogManager : public std::enable_shared_from_this<LogManager> {
@@ -25,14 +33,14 @@ public:
     LogManager& operator=(const LogManager&) = delete;
 
     void WriteLog(const std::string& msg);
-    static LogManager *getInstance(bool isDetach = true, bool sync = true, bool isStdout = true);
+    static LogManager *getInstance(bool isDetach = true, bool sync = true);
     static void deleteInstance();
     void Interrupt();
     LogWrite *GetLogWrite() const;
 
 private:
     LogManager() = default;
-    LogManager(bool, bool, bool);
+    LogManager(bool, bool);
     void CreateThread(int detached);
     static void *thread(void *arg);
     bool ExitThread();

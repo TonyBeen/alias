@@ -457,4 +457,11 @@ int String8::appendFormatV(const char* fmt, va_list args)
     }
     return n;
 }
+
+std::ostream& operator<<(std::ostream &out, const String8& in)
+{
+    out << in.toStdString();
+    return out;
+}
+
 } // namespace Alias

@@ -7,16 +7,15 @@
 
 namespace Alias {
 static bool gSync = true;
-static bool gIsStdout = true;
 static LogLevel::Level gLevel = LogLevel::DEBUG;
 
-void InitLog(LogLevel::Level lev, bool sync, bool isStdout)
+void InitLog(LogLevel::Level lev, bool sync)
 {
     gLevel = lev;
     gSync = sync;
-    gIsStdout = isStdout;
+
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, sync, isStdout);
+        gLogManager = LogManager::getInstance(true, sync);
     }
     LogFormat::SetLevel(gLevel);
 }
@@ -56,7 +55,7 @@ void log_write(int level, const char *tag, const char *fmt, ...)
 static void log_writev(const LogEvent *ev)
 {
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, gSync, gIsStdout);
+        gLogManager = LogManager::getInstance(true, gSync);
     }
     std::string msgString = LogFormat::Format(ev);
     if (msgString.size() > 0) {
@@ -93,7 +92,7 @@ void log_write_assert(int level, const char *tag, const char *fmt, ...)
 void log_write_assertv(const LogEvent *ev)
 {
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, gSync, gIsStdout);
+        gLogManager = LogManager::getInstance(true, gSync);
     }
     std::string msgString = LogFormat::Format(ev);
     gLogManager->GetLogWrite()->WriteToFile(msgString);

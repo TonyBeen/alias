@@ -41,7 +41,7 @@ namespace Alias {
 static LogManager *gLogManager = nullptr;
 
 // interface
-void InitLog(LogLevel::Level lev, bool sync, bool isStdout);
+void InitLog(LogLevel::Level lev = LogLevel::DEBUG, bool sync = true);
 void SetLevel(LogLevel::Level lev);
 
 void log_write(int level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));

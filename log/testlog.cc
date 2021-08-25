@@ -15,7 +15,7 @@ void *thread(void *)
 
 int main()
 {
-    Alias::InitLog(Alias::LogLevel::INFO, true, true);
+    Alias::InitLog(Alias::LogLevel::INFO, true);
     pthread_t tid;
     pthread_create(&tid, nullptr, thread, nullptr);
     int num = 0;

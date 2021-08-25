@@ -8,7 +8,7 @@
 #define UNW_LOCAL_ONLY
 #include "callstack.h"
 #include <cxxabi.h>
-#include <libunwind.h>
+#include <libunwind/libunwind.h>
 #include <stdlib.h>
 
 namespace Alias {

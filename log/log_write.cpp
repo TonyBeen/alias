@@ -86,7 +86,7 @@ std::string FileLogWrite::getFileName()
     struct tm *p = localtime(&curr);
 
     char buf[1024] = {0};
-    sprintf(buf, "alias log %.4d%.2d%.2d-%.2d%.2d%.2d.log",
+    sprintf(buf, "aliaslog-%.4d%.2d%.2d-%.2d%.2d%.2d.log",
         1900 + p->tm_year,
         1 + p->tm_mon,
         p->tm_mday,
