@@ -8,6 +8,7 @@
 #include "string8.h"
 #include <errno.h>
 #include <error.h>
+#include <utils/Errors.h>
 
 namespace Alias {
 
@@ -16,12 +17,14 @@ char *String8::getBuffer(size_t numChars)
     char *ret = nullptr;
     if (numChars <= 0) {
         ret = (char *)malloc(1);
+        mCapacity = 1;
         if (ret) {
             *ret = '\0';
         }
         return ret;
     } else if (numChars > 0) {
-        ret = (char *)malloc(numChars + 1);
+        ret = (char *)malloc(numChars * 2);
+        mCapacity = numChars * 2;
         if (ret) {
             memset(ret, 0, numChars + 1);
         }
@@ -99,15 +102,113 @@ String8::~String8()
 {
     release();
 }
-size_t String8::find(const char* other, size_t start) const
+
+int32_t String8::find(const String8 &other, size_t start) const
+{
+    const char *tmp = strstr(mString + start, other.mString);
+    return tmp ? tmp - mString : -1;
+}
+
+int32_t String8::find(const char* other, size_t start) const
 {
     const char *tmp = strstr(mString + start, other);
     return tmp ? tmp - mString : -1;
 }
 
+int32_t String8::find(const char c, size_t start) const
+{
+    const char *index = strchr(mString, c);
+    return index ? index - mString : -1;
+}
+
 const char* String8::c_str() const
 {
     return mString;
+}
+
+char *String8::data()
+{
+    return mString;
+}
+
+String8 String8::left(uint32_t count) const
+{
+    char *buf = new char[count + 1]{ 0 };
+    if (buf == nullptr) {
+        return String8("");
+    }
+
+    strncpy(buf, mString, count);
+    String8 str = buf;
+    delete [] buf;
+    return std::move(str);
+}
+String8 String8::right(uint32_t n) const
+{
+    char *buf = new char[n + 1]{ 0 };
+    if (buf == nullptr) {
+        return String8("");
+    }
+
+    strncpy(buf, mString + (length() - n), n);
+    String8 str = buf;
+    delete [] buf;
+    return std::move(str);
+}
+
+void String8::trim(char c)
+{
+    int begin = 0;
+    int end = 0;
+    findNotChar(begin, end, c);
+    String8 tmp(mString + begin, end - begin);
+
+    char *swap = nullptr;
+    swap = tmp.mString;
+    tmp.mString = this->mString;
+    this->mString = swap;
+}
+
+void String8::trimLeft(char c)
+{
+    int begin = 0;
+    int end = 0;
+    findNotChar(begin, end, c);
+    String8 tmp(mString + begin);
+
+    char *swap = nullptr;
+    swap = tmp.mString;
+    tmp.mString = this->mString;
+    this->mString = swap;
+}
+
+void String8::trimRight(char c)
+{
+    int begin = 0;
+    int end = 0;
+    findNotChar(begin, end, c);
+    String8 tmp(mString, end + 1);
+
+    char *swap = nullptr;
+    swap = tmp.mString;
+    tmp.mString = this->mString;
+    this->mString = swap;
+}
+
+void String8::reverse()
+{
+    if (length() == 0) {
+        return;
+    }
+    char *buf = getBuffer(length());
+    if (buf == nullptr) {
+        return;
+    }
+    for (size_t i = 0; i < length(); ++i) {
+        buf[i] = mString[length() - 1 - i];
+    }
+    free(mString);
+    mString = buf;
 }
 
 std::string String8::toStdString() const
@@ -224,6 +325,19 @@ int String8::compare(const char* other) const
     return stringcompare(other);
 }
 
+int String8::ncompare(const String8& other, size_t n) const
+{
+    return strncmp(mString, other.mString, n);
+}
+
+int String8::ncompare(const char* other, size_t n) const
+{
+    if (other == nullptr) {
+        return 1;
+    }
+    return strncmp(mString, other, n);
+}
+
 int String8::StrCaseCmp(const String8& other) const
 {
     if (mString) {
@@ -290,10 +404,11 @@ bool String8::operator>(const char* other) const
     return stringcompare(other) > 0;
 }
 
+// 如果index超过范围则返回最后一个位置'\0'
 char& String8::operator[](size_t index)
 {
     if (index >= length()) {    // 如果mString为null则返回0，故无需再判断mString
-        return mString[0];
+        return mString[length()];
     }
     return mString[index];
 }
@@ -304,6 +419,26 @@ int String8::stringcompare(const char *other) const
         return -0xFFFF;         // means param error
     }
     return strcmp(mString, other);
+}
+
+int String8::getNext(String8 key, int n)
+{
+    if (n < 2) {
+        return 0;
+    }
+    if (n == 2) {
+        if (key[0] == key[1]) {
+            return 1;
+        }
+        return 0;
+    }
+    int max = 0;
+    for (int k = 1; k < n; ++k) {
+        if (strncmp(key.c_str() + n - k, key.c_str(), k) == 0) {
+            max = k > max ? k : max;
+        }
+    }
+    return max;
 }
 
 void String8::setTo(const String8& other)
@@ -319,7 +454,7 @@ int String8::setTo(const char* other)
 
 int String8::setTo(const char* other, size_t numChars)
 {
-    if (other == nullptr) {
+    if (other == nullptr || numChars == 0) {
         return -1;
     }
     size_t otherLen = strlen(other);
@@ -331,12 +466,51 @@ int String8::setTo(const char* other, size_t numChars)
 
     if (stringLen > numChars) {
         memset(mString, 0, stringLen);
-        memcpy(mString, other, numChars);
+        memmove(mString, other, numChars);
     } else {
         release();
         mString = getBuffer(numChars);
-        memcpy(mString, other, numChars);
+        memmove(mString, other, numChars);
     }
+}
+
+void String8::findNotChar(int &begin, int &end, char c) const
+{
+    const int len = length();
+    for (size_t i = 0; i < len; ++i) {
+        if (mString[i] == c) {
+            continue;
+        }
+        begin = i;
+        break;
+    }
+    for (size_t i = len - 1; i > 0; --i) {
+        if (mString[i] == c) {
+            continue;
+        }
+        end = i;
+        break;
+    }
+    // (begin == end) 表示全是字符c
+}
+
+int32_t String8::find_last_of(const char *key) const
+{
+    // 思想，将两个字符串均翻转后在匹配，在使用字符串长度减去匹配字符串长度减查找到的字符串位置
+    String8 keyStr = key;
+    String8 value = mString;
+    value.reverse();
+    keyStr.reverse();
+    int index = value.find(keyStr.c_str());
+    if (index < 0) {
+        return index;
+    }
+    return length() - index - keyStr.length();
+}
+
+int32_t String8::find_last_of(const String8 &str) const
+{
+    return find_last_of(str.c_str());
 }
 
 bool String8::contains(const char* other) const
@@ -396,6 +570,35 @@ void String8::toUpper(size_t start, size_t numChars)
             mString[i] = static_cast<char>(toupper(mString[i]));
         }
     }
+}
+
+int32_t String8::kmp_strstr(const char *val, const char *key)
+{
+    if (val == nullptr || key == nullptr) {
+        return INVALID_PARAM;
+    }
+    int valLen = strlen(val);
+    int keyLen = strlen(key);
+    int i = 0;
+    int j = 0;
+    for (i = 0; i < valLen;) {
+        for (j = 0; j < keyLen; ++j) {
+            if (val[i + j] == key[j]) {
+                continue;
+            }
+            // j > 0: 表示当前存在匹配上的一段字符串，但是不完全匹配，所以需要偏移
+            if (j > 0) {
+                i += (j - getNext(String8(key, j), j));
+            } else { // 没有匹配到一个字符则只移动一个位置
+                ++i;
+            }
+            break;
+        }
+        if (j == keyLen) { // 由continue跳出循环时需判断是否j == 子串长度
+            return i;
+        }
+    }
+    return -1;
 }
 
 String8 String8::format(const char* fmt, ...)

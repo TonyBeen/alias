@@ -35,6 +35,9 @@ public:
     virtual uint32_t        getErrno() = 0; 
     virtual const char *    getErrorStr() = 0;
     virtual void CloseConn() = 0;
+
+protected:
+    virtual bool KeepField(const char *value) { return true; }
 };
 
 class SqlResBase {

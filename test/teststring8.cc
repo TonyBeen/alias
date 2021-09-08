@@ -1,7 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <log/log.h>
-#include "../utils/string8.h"
+#include <utils/string8.h>
 
 #define LOG_TAG "String8 test"
 
@@ -78,6 +78,45 @@ int main()
         // 测试左移运算符
         Alias::String8 str8 = "Hello World!";
         std::cout << "str8 = " << str8 << std::endl;
+    }
+
+    {
+        // 测试left right operator[] trim trimLeft trimRight reverse
+        Alias::String8 str1 = "127.0.0.1:8000";
+        int32_t index = str1.find(':');
+        std::cout << str1[index] << std::endl;
+        std::cout << "A big number: " << str1[100] << std::endl;
+        std::cout << (str1[str1.length()] == '\0' ? "true" : "false") << std::endl;
+        if (index > 0) {
+            std::cout << str1.left(index) << std::endl;
+            std::cout << str1.right(str1.length() - (index + 1)) << std::endl;
+        }
+        Alias::String8 str2 = "\t\t12345\t\t";
+        str2.trim('\t');
+        std::cout << str2 << std::endl;
+
+        Alias::String8 str3 = "\t12345";
+        str3.trimLeft('\t');
+        std::cout << str3 << std::endl;
+
+        Alias::String8 str4 = "12345\n";
+        str4.trimRight('\n');
+        std::cout << "trimRight: " << str4 << std::endl;
+        str4.reverse();
+        std::cout << str4 << std::endl;
+    }
+
+    {
+        // 测试 find_last_of kmp_strstr
+        Alias::String8 str1 = "sssabcssdeabcss";
+        int index = str1.find_last_of("abc");
+        std::cout << "find_last_of: " << index << std::endl;
+        LOG_ASSERT(index == 10, "index should equal to five\n");
+
+        const char *val = "BBC ABCDAB ABCDABCDABDE";
+        const char *key = "ABCDABD";
+        bool flag = (Alias::String8::kmp_strstr(val, key) == strstr(val, key) - val);
+        LOG_ASSERT(false, "error");
     }
 
     return 0;

@@ -8,6 +8,8 @@
 #include "utils.h"
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 nsec_t seconds(uint16_t sec)
 {
@@ -69,6 +71,53 @@ int msleep(uint32_t ms)
     time.tv_usec = us;
 
     return select(0, NULL, NULL, NULL, &time);
+}
+
+
+#define BUF_SIZE 280
+std::vector<int> getPidByName(const char *procName)
+{
+    std::vector<int> pidVec;
+    if (procName == nullptr) {
+        return std::move(pidVec);
+    }
+    DIR *dir = nullptr;
+    struct dirent *ptr = nullptr;
+    FILE *fp = nullptr;
+    char fildPath[BUF_SIZE];
+    char cur_task_name[32];
+    char buf[BUF_SIZE];
+
+    dir = opendir("/proc");
+    if (nullptr != dir) {
+        // 循环读取/proc下的每一个文件
+        while ((ptr = readdir(dir)) != nullptr) {
+            // 如果读取到的是"."或者".."则跳过，读取到的不是文件夹类型也跳过
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0))
+                continue;
+            if (DT_DIR != ptr->d_type)
+                continue;
+
+            // cmdlines存放的是启动进程时第一个入参，argv[0]
+            snprintf(fildPath, BUF_SIZE - 1,"/proc/%s/cmdline", ptr->d_name);
+            fp = fopen(fildPath, "r");
+            if (nullptr != fp) {
+                if (fgets(buf, BUF_SIZE - 1, fp) == nullptr) {
+                    fclose(fp);
+                    continue;
+                }
+
+                // %*s %s表示添加了*的字符串会忽略，后面的%s赋值给cur_task_name
+                // sscanf(buf, "%*s %s", cur_task_name); // 读取status时需要格式化字符串
+                if (strcmp(procName, buf) == 0) {
+                    pidVec.push_back(atoi(ptr->d_name));
+                }
+                fclose(fp);
+            }
+        }
+        closedir(dir);
+    }
+    return pidVec;
 }
 
 pid_t GetThreadId()

@@ -14,16 +14,18 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
+#include <vector>
 
 #ifndef gettid
 #define gettid() syscall(__NR_gettid)
 #endif
 
-#ifndef DISALLOW_COPY_AND_ASSIGN
+#ifdef DISALLOW_COPY_AND_ASSIGN
+#undef DISALLOW_COPY_AND_ASSIGN
+#endif
 #define DISALLOW_COPY_AND_ASSIGN(ClassName) \
     ClassName(const ClassName&) = delete; \
     ClassName& operator=(const ClassName&) = delete;
-#endif
 
 
 typedef unsigned long long nsec_t;
@@ -34,7 +36,7 @@ static  bool    __lstat(const char *path);
 static  bool    __mkdir(const char *path);
         bool    Mkdir(const std::string &path);
         int     msleep(uint32_t ms);
-
+std::vector<int> getPidByName(const char *procName);
 
 std::string Time2Str(time_t ts, const std::string& format = "%Y-%m-%d %H:%M:%S");
 time_t Str2Time(const char* str, const char* format = "%Y-%m-%d %H:%M:%S");

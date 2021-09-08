@@ -15,7 +15,7 @@ testlog : $(obj) $(mainobj)
 	$(cc) $^ -o $@ $(cflags) $(shared_lib)
 
 libaliaslog.so : $(obj)
-	$(cc) $(obj) -o $@ $(cflags) -shared
+	$(cc) $(obj) -o $@ $(cflags) -shared $(shared_lib)
 
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cflags) $(soflags)

@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/socket.h>
 
 namespace Alias {
 LogWrite::LogWrite()
@@ -13,7 +14,7 @@ LogWrite::LogWrite()
     assert(ret == 0);
 }
 
-size_t StdoutLogWrite::WriteToFile(std::string msg)
+ssize_t StdoutLogWrite::WriteToFile(std::string msg)
 {
     if (msg.length() == 0) {
         return 0;
@@ -96,10 +97,10 @@ std::string FileLogWrite::getFileName()
     return std::string(buf);
 }
 
-size_t FileLogWrite::WriteToFile(std::string msg)
+ssize_t FileLogWrite::WriteToFile(std::string msg)
 {
     pthread_mutex_lock(&mMutex);
-    int ret = 0;
+    ssize_t ret = 0;
     if (mFileDesc <= 0 || mFileSize > MAX_FILE_SIZE) {
         CloseFile(mFileDesc);
         CreateNewFile(getFileName());
@@ -202,6 +203,136 @@ bool FileLogWrite::CloseFile(const int fd)
         return true;
     }
     return !close(fd);
+}
+
+#define LOCAL_SOCKET_SERVER_PATH        "/tmp/log_sock_server"
+#define LOCAL_SOCKET_CLIENT_PATH_FMT    "/tmp/log_sock_client_%d"   // %d 是父进程的ID，使用子进程ID时多进程时容易出问题
+#define MAX_SIZE_OF_SUNPATH             108
+static std::string gClientSockPath;
+
+ConsoleLogWrite::ConsoleLogWrite() :
+    mClientFd(-1)
+{
+    mClientSockAddr.sun_family = AF_LOCAL;
+    snprintf(mClientSockAddr.sun_path, MAX_SIZE_OF_SUNPATH, LOCAL_SOCKET_CLIENT_PATH_FMT, getppid());
+    mLocalClientSockPath = mClientSockAddr.sun_path;
+    gClientSockPath = mLocalClientSockPath;
+
+    mServerSockAddr.sun_family = AF_LOCAL;
+    snprintf(mServerSockAddr.sun_path, MAX_SIZE_OF_SUNPATH, LOCAL_SOCKET_SERVER_PATH);
+    mLocalServerSockPath = mServerSockAddr.sun_path;
+    
+    // 捕获信号
+    signal(SIGINT, signalHandler);
+    signal(SIGQUIT, signalHandler);
+    signal(SIGPIPE, signalHandler);
+
+    pthread_mutex_init(&mMutex, nullptr);
+    InitParams();
+}
+
+ConsoleLogWrite::~ConsoleLogWrite()
+{
+    pthread_mutex_destroy(&mMutex);
+    Destroy();
+}
+
+void ConsoleLogWrite::InitParams()
+{
+    Destroy();
+    mClientFd = ::socket(AF_LOCAL, SOCK_STREAM, 0);
+    if (mClientFd < 0) {
+        perror("socket error:");
+        return;
+    }
+    do {
+        int nRetCode = ::bind(mClientFd, (const sockaddr *)&mClientSockAddr, sizeof(mClientSockAddr));
+        if (nRetCode < 0) {
+            break;
+        }
+        nRetCode = ::connect(mClientFd, (sockaddr *)&mServerSockAddr, sizeof(mServerSockAddr));
+        if (nRetCode < 0) {
+            break;
+        }
+        return;
+    } while(0);
+    close(mClientFd);
+    mClientFd = -1;
+}
+
+void ConsoleLogWrite::Destroy()
+{
+    if (mClientFd > 0) {
+        close(mClientFd);
+        mClientFd = -1;
+    }
+    unlink(mLocalClientSockPath.c_str());
+}
+
+void ConsoleLogWrite::signalHandler(int sig)
+{
+    if (sig == SIGPIPE) {
+        return;
+    }
+    unlink(gClientSockPath.c_str());
+    exit(0);
+}
+
+ssize_t ConsoleLogWrite::WriteToFile(std::string msg)
+{
+    if (mClientFd <= 0) {
+        InitParams();
+        if (mClientFd <=0 ) {
+            return 0;
+        }
+    }
+    pthread_mutex_lock(&mMutex);
+    ssize_t sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
+    if (sendSize < 0) { // 服务端不在线
+        Destroy();
+    }
+    pthread_mutex_unlock(&mMutex);
+    return sendSize;
+}
+
+std::string ConsoleLogWrite::getFileName()
+{
+    return mLocalClientSockPath;
+}
+
+size_t ConsoleLogWrite::getFileSize()
+{
+    return 0;
+}
+
+uint32_t ConsoleLogWrite::getFileMode()
+{
+    return 0;
+}
+
+bool ConsoleLogWrite::setFileMode(uint32_t mode)
+{
+    return true;
+}
+
+uint32_t ConsoleLogWrite::getFileFlag()
+{
+    return 0;
+}
+
+bool ConsoleLogWrite::setFileFlag(uint32_t flag)
+{
+    return true;
+}
+
+bool ConsoleLogWrite::CreateNewFile(std::string fileName)
+{
+    return true;
+}
+
+bool ConsoleLogWrite::CloseFile(const int fd)
+{
+    return true;
 }
 
 }

@@ -1,4 +1,4 @@
-INCLUDE_DIR := -I/home/hsz/VScode/alias/utils/include
+INCLUDE_DIR := -I./include
 cppflags := -std=c++11
 soflags := -fPIC
 shared_lib := -lunwind -laliaslog -lpthread

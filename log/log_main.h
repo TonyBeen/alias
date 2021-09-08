@@ -21,13 +21,14 @@
 #include <memory>
 #include <queue>
 #include <pthread.h>
+#include <list>
 
 #define MAX_QUEUE_SIZE (1024 * 10)
-#define LOG_STDOUT
 
 namespace Alias {
 class LogManager : public std::enable_shared_from_this<LogManager> {
 public:
+    typedef std::list<LogWrite *>::iterator LogWriteIt;
     ~LogManager();
     LogManager(const LogManager&) = delete;
     LogManager& operator=(const LogManager&) = delete;
@@ -36,7 +37,7 @@ public:
     static LogManager *getInstance(bool isDetach = true, bool sync = true);
     static void deleteInstance();
     void Interrupt();
-    LogWrite *GetLogWrite() const;
+    const std::list<LogWrite *> &GetLogWrite() const;
 
 private:
     LogManager() = default;
@@ -46,7 +47,7 @@ private:
     bool ExitThread();
 
 private:
-    LogWrite *mLogWrite;
+    std::list<LogWrite *>   mLogWriteList;
     std::queue<std::string> mQueue;
     pthread_mutex_t         mMutex;
     pthread_cond_t          mCond;

@@ -20,18 +20,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <signal.h>
+#include <arpa/inet.h>
+#include <sys/un.h>
 
 #define MAX_FILE_SIZE (1024 * 1024 * 5)  // one file' max size is 5mb
 
+class NonCopyAndAssign
+{
+public:
+    NonCopyAndAssign() {}
+    NonCopyAndAssign(const NonCopyAndAssign&) = delete;
+    NonCopyAndAssign &operator=(const NonCopyAndAssign&) = delete;
+    virtual ~NonCopyAndAssign() {}
+};
+
 namespace Alias {
-class LogWrite {
+class LogWrite : public NonCopyAndAssign{
 public:
     LogWrite();
-    LogWrite(const LogWrite&) = delete;
-    LogWrite& operator= (const LogWrite&) = delete;
     virtual ~LogWrite(){}
 
-    virtual size_t       WriteToFile(std::string msg) = 0;
+    virtual ssize_t      WriteToFile(std::string msg) = 0;
     virtual std::string  getFileName() = 0;
     virtual size_t       getFileSize() = 0;
     virtual uint32_t     getFileMode() = 0;
@@ -50,7 +60,7 @@ public:
     StdoutLogWrite() {}
     ~StdoutLogWrite() {}
 
-    virtual size_t       WriteToFile(std::string msg);
+    virtual ssize_t      WriteToFile(std::string msg);
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -69,7 +79,7 @@ public:
     FileLogWrite(uint32_t fileFlag = O_WRONLY | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
     virtual ~FileLogWrite();
 
-    virtual size_t       WriteToFile(std::string msg);
+    virtual ssize_t      WriteToFile(std::string msg);
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -89,6 +99,36 @@ private:
     size_t mFileSize;
 };
 
+class ConsoleLogWrite : public LogWrite
+{
+public:
+    ConsoleLogWrite();
+    ~ConsoleLogWrite();
+
+    ssize_t      WriteToFile(std::string msg);
+    std::string  getFileName();
+    size_t       getFileSize();
+    uint32_t     getFileMode();
+    bool         setFileMode(uint32_t mode);
+    uint32_t     getFileFlag();
+    bool         setFileFlag(uint32_t flag);
+
+    bool         CreateNewFile(std::string fileName);
+    bool         CloseFile(const int fd);
+
+protected:
+    void         InitParams();
+    void         Destroy();
+    static void  signalHandler(int sig);        // 信号捕获处理函数
+
+private:
+    std::string         mLocalClientSockPath;
+    std::string         mLocalServerSockPath;
+
+    struct sockaddr_un  mServerSockAddr;
+    struct sockaddr_un  mClientSockAddr;
+    int                 mClientFd;
+};
 
 } // namespace Alias
 #endif // __LOG_WRITE_H__

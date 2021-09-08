@@ -12,12 +12,9 @@ LogManager::LogManager(bool isDetach, bool sync)
         CreateThread(isDetach);
     }
 
-#ifdef LOG_STDOUT
-        mLogWrite = new StdoutLogWrite();
-#else
-        mLogWrite = new FileLogWrite();
-#endif
-
+    mLogWriteList.push_back(new StdoutLogWrite());
+    mLogWriteList.push_back(new FileLogWrite());
+    mLogWriteList.push_back(new ConsoleLogWrite());
 }
 
 LogManager::~LogManager()
@@ -30,9 +27,12 @@ LogManager::~LogManager()
         printf("%s()\n", __func__);
         usleep(10000);  // 等待线程退出
     }
-    if (mLogWrite != nullptr) {
-        delete mLogWrite;
-        mLogWrite = nullptr;
+
+    if (mLogWriteList.size() > 0) {
+        for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
+            delete *it;
+            mLogWriteList.erase(it);
+        }
     }
 }
 
@@ -51,7 +51,11 @@ void *LogManager::thread(void *arg)
             logManager->mQueue.pop();
             pthread_mutex_unlock(&logManager->mMutex);
         }
-        logManager->mLogWrite->WriteToFile(msg);
+        for (LogWriteIt it = logManager->mLogWriteList.begin(); it != logManager->mLogWriteList.end(); ++it) {
+            if (*it != nullptr) {
+                (*it)->WriteToFile(msg);
+            }
+        }
     }
     printf("log write thread exit\n");
 }
@@ -86,7 +90,11 @@ bool LogManager::ExitThread()
 void LogManager::WriteLog(const std::string& msg)
 {
     if (mIsSync) {
-        mLogWrite->WriteToFile(msg);
+        for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
+            if (*it != nullptr) {
+                (*it)->WriteToFile(msg);
+            }
+        }
     }
     if (mIsSync == false) {
         if (ExitThread()) {
@@ -104,9 +112,9 @@ void LogManager::WriteLog(const std::string& msg)
     }
 }
 
-LogWrite *LogManager::GetLogWrite() const
+const std::list<LogWrite *> &LogManager::GetLogWrite() const
 {
-    return mLogWrite;
+    return mLogWriteList;
 }
 
 LogManager *LogManager::getInstance(bool isDetach, bool sync)

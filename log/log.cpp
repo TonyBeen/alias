@@ -63,7 +63,7 @@ static void log_writev(const LogEvent *ev)
     }
 }
 
-void log_write_assert(int level, const char *tag, const char *fmt, ...)
+void log_write_assert(int level, const char *expr, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     LogEvent ev;
@@ -76,9 +76,10 @@ void log_write_assert(int level, const char *tag, const char *fmt, ...)
     ev.pid = getpid();
     ev.tid = gettid();
 
+    size_t index = snprintf(buf, MSG_BUF_SIZE - 1, "assertion \"%s\" failed. msg: ", expr);
     va_list ap;
     va_start(ap, fmt);
-    vsnprintf(buf, MSG_BUF_SIZE - 1, fmt, ap);
+    vsnprintf(buf + index, MSG_BUF_SIZE - index - 1, fmt, ap);
     va_end(ap);
 
     size_t len = strlen(buf);
@@ -95,7 +96,12 @@ void log_write_assertv(const LogEvent *ev)
         gLogManager = LogManager::getInstance(true, gSync);
     }
     std::string msgString = LogFormat::Format(ev);
-    gLogManager->GetLogWrite()->WriteToFile(msgString);
+    std::list<LogWrite*> logWriteList = gLogManager->GetLogWrite();
+    for (LogManager::LogWriteIt it = logWriteList.begin(); it != logWriteList.end(); ++it) {
+        if (*it != nullptr) {
+            (*it)->WriteToFile(msgString);
+        }
+    }
 
     abort();
 }

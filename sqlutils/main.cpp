@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include <iostream>
-#include "sql_conn.h"
+#include "mysql_conn.h"
 #include <log/log.h>
 #include <utils/Errors.h>
 
