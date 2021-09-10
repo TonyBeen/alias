@@ -36,6 +36,16 @@ void SetLeval(LogLevel::Level lev)
     LogFormat::SetLevel(gLevel);
 }
 
+void addOutputNode(int type)
+{
+
+}
+
+void delOutputNode(int type)
+{
+    
+}
+
 void log_write(int level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};

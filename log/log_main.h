@@ -38,9 +38,10 @@ public:
     static void deleteInstance();
     void Interrupt();
     const std::list<LogWrite *> &GetLogWrite() const;
+    void addLogWriteToList(int type);
+    void delLogWriteFromList(int type);
 
 private:
-    LogManager() = default;
     LogManager(bool, bool);
     void CreateThread(int detached);
     static void *thread(void *arg);
@@ -48,6 +49,8 @@ private:
 
 private:
     std::list<LogWrite *>   mLogWriteList;
+    pthread_mutex_t         mListMutex;
+
     std::queue<std::string> mQueue;
     pthread_mutex_t         mMutex;
     pthread_cond_t          mCond;

@@ -32,9 +32,25 @@
 #endif
 
 namespace Alias {
-// interface
+
+/**
+ * @param lev   最小输出级别
+ * @param sync  日志输出方式采用同步还是异步，异步采用线程处理
+ */
 void InitLog(LogLevel::Level lev = LogLevel::DEBUG, bool sync = true);
+/**
+ * @param lev   设置最小输出级别
+ */
 void SetLevel(LogLevel::Level lev);
+
+/**
+ * @param type  输出节点类型；STDOUT，FILEOUT，CONSLOEOUT.
+ */
+void addOutputNode(int type);
+/**
+ * @param type  输出节点类型；STDOUT，FILEOUT，CONSLOEOUT.
+ */
+void delOutputNode(int type);
 
 void log_write(int level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 void log_write_assert(int level, const char *expr, const char *tag, const char *fmt, ...) __attribute__((format(printf, 4, 5)));

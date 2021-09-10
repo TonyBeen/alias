@@ -51,6 +51,16 @@ public:
 
     virtual bool         CreateNewFile(std::string fileName) = 0;
     virtual bool         CloseFile(const int fd) = 0;
+    virtual uint16_t     type() const = 0;
+
+public:
+    enum Type {
+        UNKNOW = -1,
+        STDOUT = 0,
+        FILEOUT = 1,
+        CONSLOEOUT = 2
+    };
+
 protected:
     pthread_mutex_t mMutex;        // 同步状态下保护文件描述符
 };
@@ -70,6 +80,7 @@ public:
 
     virtual bool         CreateNewFile(std::string fileName);
     virtual bool         CloseFile(const int fd);
+    virtual uint16_t     type() const { return STDOUT; }
 private:
     bool isInterrupt;
 };
@@ -89,6 +100,7 @@ public:
 
     virtual bool         CreateNewFile(std::string fileName);
     virtual bool         CloseFile(const int fd);
+    virtual uint16_t     type() const { return FILEOUT; }
 
 private:
     bool isInterrupt;
@@ -115,6 +127,7 @@ public:
 
     bool         CreateNewFile(std::string fileName);
     bool         CloseFile(const int fd);
+    uint16_t     type() const { return CONSLOEOUT; }
 
 protected:
     void         InitParams();
