@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <atomic>
 
 #define LOG_BUF_SIZE (512 + 128)
 
@@ -28,11 +29,10 @@ public:
     LogFormat& operator=(const LogFormat&) = delete;
 
     static std::string Format(const LogEvent *ev);
-    static void SetLevel(const LogLevel::Level &lev) { mLevel = lev; }
+    static void SetLevel(const LogLevel::Level &lev);
 
 private:
-    static LogLevel::Level mLevel;     // 可以输出的最小level
-
+    static std::atomic<int> mLevel;     // 可以输出的最小level
 };
 
 } // namespace Alias

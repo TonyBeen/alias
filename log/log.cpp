@@ -38,12 +38,16 @@ void SetLeval(LogLevel::Level lev)
 
 void addOutputNode(int type)
 {
-
+    if (gLogManager != nullptr) {
+        gLogManager->addLogWriteToList(type);
+    }
 }
 
 void delOutputNode(int type)
 {
-    
+    if (gLogManager != nullptr) {
+        gLogManager->delLogWriteFromList(type);
+    }
 }
 
 void log_write(int level, const char *tag, const char *fmt, ...)

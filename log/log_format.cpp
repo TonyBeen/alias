@@ -1,7 +1,13 @@
 #include "log_format.h"
 
 namespace Alias {
-LogLevel::Level LogFormat::mLevel = LogLevel::INFO;
+// 静态成员变量初始化
+std::atomic<int> LogFormat::mLevel(LogLevel::DEBUG);
+
+void LogFormat::SetLevel(const LogLevel::Level &lev)
+{
+    mLevel.exchange((int)lev, std::memory_order_seq_cst);
+}
 
 std::string LogFormat::Format(const LogEvent *ev)
 {
