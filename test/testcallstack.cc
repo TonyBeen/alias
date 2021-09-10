@@ -1,6 +1,8 @@
 #include <utils/callstack.h>
 #include <utils/thread.h>
 
+#define LOG_TAG "callstack"
+
 namespace ns
 {
     template <typename T, typename U>
@@ -10,7 +12,7 @@ namespace ns
         cs.update();
         Alias::String8 str = cs.toString();
         printf("%s\n\n", str.c_str());
-        cs.log("DEBUG");
+        cs.log("callstack", Alias::LogLevel::INFO);
     }
 }
 
@@ -38,7 +40,7 @@ int main()
 {
     Len<int> l;
     l.len();
-    printf("\n");
+
     Alias::Thread th("Thread", thread);
     th.run();
     sleep(2);

@@ -5,9 +5,19 @@
 #define gettid() syscall(__NR_gettid)
 #endif
 
+#define MSG_BUF_SIZE 512
+
 namespace Alias {
+static LogManager *gLogManager = nullptr;
 static bool gSync = true;
 static LogLevel::Level gLevel = LogLevel::DEBUG;
+
+void getLogManager()
+{
+    if (gLogManager == nullptr) {
+        gLogManager = LogManager::getInstance(true, gSync);
+    }
+}
 
 void InitLog(LogLevel::Level lev, bool sync)
 {
@@ -54,12 +64,12 @@ void log_write(int level, const char *tag, const char *fmt, ...)
 
 static void log_writev(const LogEvent *ev)
 {
-    if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, gSync);
-    }
-    std::string msgString = LogFormat::Format(ev);
-    if (msgString.size() > 0) {
-        gLogManager->WriteLog(msgString);
+    getLogManager();
+    if (gLogManager) {
+        std::string msgString = LogFormat::Format(ev);
+        if (msgString.size() > 0) {
+            gLogManager->WriteLog(msgString);
+        }
     }
 }
 
@@ -92,14 +102,14 @@ void log_write_assert(int level, const char *expr, const char *tag, const char *
 
 void log_write_assertv(const LogEvent *ev)
 {
-    if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, gSync);
-    }
-    std::string msgString = LogFormat::Format(ev);
-    std::list<LogWrite*> logWriteList = gLogManager->GetLogWrite();
-    for (LogManager::LogWriteIt it = logWriteList.begin(); it != logWriteList.end(); ++it) {
-        if (*it != nullptr) {
-            (*it)->WriteToFile(msgString);
+    getLogManager();
+    if (gLogManager != nullptr) {
+        std::string msgString = LogFormat::Format(ev);
+        std::list<LogWrite*> logWriteList = gLogManager->GetLogWrite();
+        for (LogManager::LogWriteIt it = logWriteList.begin(); it != logWriteList.end(); ++it) {
+            if (*it != nullptr) {
+                (*it)->WriteToFile(msgString);
+            }
         }
     }
 

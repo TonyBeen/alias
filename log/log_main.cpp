@@ -12,9 +12,10 @@ LogManager::LogManager(bool isDetach, bool sync)
         CreateThread(isDetach);
     }
 
-    mLogWriteList.push_back(new StdoutLogWrite());
-    mLogWriteList.push_back(new FileLogWrite());
-    mLogWriteList.push_back(new ConsoleLogWrite());
+    LogWrite *lw = new StdoutLogWrite();
+    mLogWriteList.push_back(lw);
+    // mLogWriteList.push_back(new FileLogWrite());
+    // mLogWriteList.push_back(new ConsoleLogWrite());
 }
 
 LogManager::~LogManager()
@@ -24,7 +25,6 @@ LogManager::~LogManager()
         if (!mIsDetach) {
             pthread_join(mLogTid, nullptr);
         }
-        printf("%s()\n", __func__);
         usleep(10000);  // 等待线程退出
     }
 

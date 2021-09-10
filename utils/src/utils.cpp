@@ -73,7 +73,7 @@ int msleep(uint32_t ms)
     return select(0, NULL, NULL, NULL, &time);
 }
 
-
+// ps也是走的这种方法
 #define BUF_SIZE 280
 std::vector<int> getPidByName(const char *procName)
 {
@@ -117,7 +117,32 @@ std::vector<int> getPidByName(const char *procName)
         }
         closedir(dir);
     }
-    return pidVec;
+    return std::move(pidVec);
+}
+
+std::string getNameByPid(pid_t pid)
+{
+    if (pid <= 0) {
+        return "";
+    }
+
+    FILE *fp = nullptr;
+    char buf[BUF_SIZE] = {0};
+
+    snprintf(buf, BUF_SIZE, "/proc/%d/status", pid);
+    fp = fopen(buf, "r");
+    if (fp == nullptr) {
+        perror("fopen failed:");
+        return "";
+    }
+    memset(buf, 0, BUF_SIZE);
+    fgets(buf, BUF_SIZE, fp);
+    if (buf[0] != '\0') {
+        char name[BUF_SIZE] = {0};
+        sscanf(buf, "%*s %s", name);
+        return name;
+    }
+    return "";
 }
 
 pid_t GetThreadId()

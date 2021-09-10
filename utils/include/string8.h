@@ -11,10 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 #include <stdarg.h>
 #include <stdint.h>
 #include <ctype.h>
+#include <string>
 
 namespace Alias {
 

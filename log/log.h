@@ -2,14 +2,9 @@
 #define _LOG_H_
 
 #include "log_main.h"
-#include "log_write.h"
-#include "log_level.h"
-#include "log_format.h"
 #include <stdarg.h>
 #include <time.h>
 #include <sys/time.h>
-
-#define MSG_BUF_SIZE 512
 
 #ifndef LOGD
 #define LOGD(...) ((void)Alias::log_write(Alias::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
@@ -37,8 +32,6 @@
 #endif
 
 namespace Alias {
-static LogManager *gLogManager = nullptr;
-
 // interface
 void InitLog(LogLevel::Level lev = LogLevel::DEBUG, bool sync = true);
 void SetLevel(LogLevel::Level lev);

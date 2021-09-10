@@ -48,6 +48,7 @@ public:
     int  lock() const;
     void unlock() const;
     int  trylock() const;
+    operator pthread_mutex_t *() { return &mMutex; }
     pthread_mutex_t *mutex() { return &mMutex; }
 private:
     friend class Condition;

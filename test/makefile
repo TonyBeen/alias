@@ -21,6 +21,7 @@ testbuffer : testbuffer.cc
 
 testcallstack : testcallstack.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
 testyaml : testyaml.cc
 	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
 

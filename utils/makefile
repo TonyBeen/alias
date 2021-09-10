@@ -1,6 +1,7 @@
 INCLUDE_DIR := -I./include
 cppflags := -std=c++11
 soflags := -fPIC
+static_lib := /usr/local/lib/libunwind.a
 shared_lib := -lunwind -laliaslog -lpthread
 cc := g++
 destfile := /usr/local
@@ -10,7 +11,7 @@ headerfile := $(wildcard ./include/*.h)
 obj := $(patsubst %.cpp, %.o, $(src))
 
 libutils.so : $(obj)
-	$(cc) $(obj) -o $@ $(cppflags) -shared $(shared_lib)
+	$(cc) $^ -o $@ -shared $(shared_lib)
 
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cppflags) $(soflags) $(INCLUDE_DIR)
