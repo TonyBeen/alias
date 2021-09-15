@@ -12,7 +12,7 @@
 
 #define LOG_TAG "ThreadPool"
 
-namespace Alias {
+namespace Jarvis {
 void TaskQueue::addTask(const Task& task)
 {
     AutoLock<Mutex> lock(mQueueMutex);
@@ -216,4 +216,4 @@ void ThreadPool::threadExit()
     pthread_exit(NULL);
 }
 
-} // namespace Alias
+} // namespace Jarvis

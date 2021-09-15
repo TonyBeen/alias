@@ -7,7 +7,7 @@
 #include <memory>
 
 using namespace std;
-using namespace Alias;
+using namespace Jarvis;
 
 Mutex gMutex;
 

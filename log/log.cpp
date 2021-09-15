@@ -1,4 +1,5 @@
 #include "log.h"
+#include "callstack.h"
 #include <sys/syscall.h>
 
 #ifndef gettid
@@ -7,7 +8,7 @@
 
 #define MSG_BUF_SIZE 512
 
-namespace Alias {
+namespace Jarvis {
 static LogManager *gLogManager = nullptr;
 static bool gSync = true;
 static LogLevel::Level gLevel = LogLevel::DEBUG;
@@ -126,8 +127,10 @@ void log_write_assertv(const LogEvent *ev)
             }
         }
     }
-
+    CallStack cs;
+    cs.update(2, 2);
+    cs.log("Stack", LogLevel::ERROR);
     abort();
 }
 
-} // namespace Alias
+} // namespace Jarvis

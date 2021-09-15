@@ -1,8 +1,7 @@
 INCLUDE_DIR := -I./include
 cppflags := -std=c++11
 soflags := -fPIC
-static_lib := /usr/local/lib/libunwind.a
-shared_lib := -lunwind -laliaslog -lpthread
+shared_lib := -lpthread
 cc := g++
 destfile := /usr/local
 

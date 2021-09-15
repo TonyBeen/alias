@@ -4,7 +4,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 
-namespace Alias {
+namespace Jarvis {
 LogWrite::LogWrite()
 {
     int ret = 0;

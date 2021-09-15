@@ -15,7 +15,7 @@
 #define DEFAULT_BUFFER_SIZE (4096)
 
 
-namespace Alias {
+namespace Jarvis {
 class ByteBuffer final
 {
 public:
@@ -54,6 +54,6 @@ private:
     size_t  mCapacity;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __ALIAS_BUFFER_H__

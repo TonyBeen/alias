@@ -7,20 +7,21 @@
 void *thread(void *)
 {
     int num = 0;
-    while (1) {
+    while (num < 2) {
         LOGI("thread-%.5d", num++);
         usleep(500000);
     }
+    LOG_ASSERT(num == 0, "LOG_ASSERT test");
 }
 
 int main()
 {
-    Alias::InitLog(Alias::LogLevel::INFO, true);
+    Jarvis::InitLog(Jarvis::LogLevel::INFO, true);
     pthread_t tid;
     pthread_create(&tid, nullptr, thread, nullptr);
     int num = 0;
     LOG_ASSERT(num == 0, "Should not output");
-    while (1) {
+    while (num < 2) {
         LOGI("main-%d", num++);
         usleep(500000);
     }

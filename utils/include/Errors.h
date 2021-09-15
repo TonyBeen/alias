@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-namespace Alias {
+namespace Jarvis {
 typedef enum {
     OK                = 0,
     NO_ERROR          = OK,
@@ -24,6 +24,6 @@ typedef enum {
     TIMED_OUT           = -ETIMEDOUT,   /* Something timed out */
 } status_t;
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __ERRORS_H__

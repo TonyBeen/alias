@@ -1,5 +1,5 @@
 cppflags := -std=c++11
-shared_lib := -lunwind -laliaslog -lutils -lpthread
+shared_lib := -lunwind -llog -lutils -lpthread
 cc := g++
 
 all : testbuffer testmutex teststring8 testthread teststring8_2

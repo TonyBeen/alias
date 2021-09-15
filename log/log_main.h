@@ -1,10 +1,3 @@
-/*
- * @Description: 
- * @Autor: alias
- * @Date: 2021-08-17 15:42:22
- * @LastEditors: Seven
- * @LastEditTime: 2021-08-23 16:32:27
- */
 /*************************************************************************
     > File Name: log_main.h
     > Author: hsz
@@ -25,7 +18,7 @@
 
 #define MAX_QUEUE_SIZE (1024 * 10)
 
-namespace Alias {
+namespace Jarvis {
 class LogManager : public std::enable_shared_from_this<LogManager> {
 public:
     typedef std::list<LogWrite *>::iterator LogWriteIt;
@@ -60,5 +53,5 @@ private:
     bool mIsSync;
     volatile bool mIsInterrupt;
 };
-} // namespace Alias
+} // namespace Jarvis
 #endif // __LOG_MAIN_H__

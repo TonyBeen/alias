@@ -1,4 +1,4 @@
-#include <utils/callstack.h>
+#include <log/callstack.h>
 #include <utils/thread.h>
 
 #define LOG_TAG "callstack"
@@ -8,11 +8,11 @@ namespace ns
     template <typename T, typename U>
     void func(T t, U u)
     {
-        Alias::CallStack cs;
+        Jarvis::CallStack cs;
         cs.update();
-        Alias::String8 str = cs.toString();
+        Jarvis::String8 str = cs.toString();
         printf("%s\n\n", str.c_str());
-        cs.log("callstack", Alias::LogLevel::INFO);
+        cs.log("callstack", Jarvis::LogLevel::INFO);
     }
 }
 
@@ -22,7 +22,7 @@ struct Len
 public:
     void len()
     {
-        Alias::String8 s;
+        Jarvis::String8 s;
         ns::func(t, s);
     }
 private:
@@ -41,7 +41,7 @@ int main()
     Len<int> l;
     l.len();
 
-    Alias::Thread th("Thread", thread);
+    Jarvis::Thread th("Thread", thread);
     th.run();
     sleep(2);
     return 0;

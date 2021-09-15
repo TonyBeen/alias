@@ -13,7 +13,7 @@
 #define LOG_TAG __FILE__
 
 using namespace std;
-using namespace Alias;
+using namespace Jarvis;
 
 int main(int argc, char **argv)
 {

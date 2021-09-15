@@ -7,31 +7,31 @@
 #include <sys/time.h>
 
 #ifndef LOGD
-#define LOGD(...) ((void)Alias::log_write(Alias::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGD(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGI
-#define LOGI(...) ((void)Alias::log_write(Alias::LogLevel::Level::INFO, LOG_TAG, __VA_ARGS__))
+#define LOGI(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::INFO, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGW
-#define LOGW(...) ((void)Alias::log_write(Alias::LogLevel::Level::WARN, LOG_TAG, __VA_ARGS__))
+#define LOGW(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::WARN, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGE
-#define LOGE(...) ((void)Alias::log_write(Alias::LogLevel::Level::ERROR, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::ERROR, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGF
-#define LOGF(...) ((void)Alias::log_write(Alias::LogLevel::Level::FATAL, LOG_TAG, __VA_ARGS__))
+#define LOGF(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::FATAL, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOG_ASSERT
 #define LOG_ASSERT(cond, ...) \
-    (!(cond) ? ((void)Alias::log_write_assert(Alias::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
+    (!(cond) ? ((void)Jarvis::log_write_assert(Jarvis::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
 #endif
 
-namespace Alias {
+namespace Jarvis {
 
 /**
  * @param lev   最小输出级别

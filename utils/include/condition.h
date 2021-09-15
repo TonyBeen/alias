@@ -11,7 +11,7 @@
 #include "utils.h"
 #include "mutex.h"
 
-namespace Alias {
+namespace Jarvis {
 class Condition {
 public:
     enum {
@@ -32,6 +32,6 @@ private:
     pthread_cond_t mCond;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __CONDITION_H__

@@ -18,8 +18,7 @@ static const char *DELETE_SQL_FMT = "delete from %s where(%s)";
 
 #define SQL_BUF_LEN (1024U)
 
-namespace Alias
-{
+namespace Jarvis {
 MySqlConn::MySqlConn() :
     mSqlHandle(nullptr),
     mSqlInit(false)
@@ -380,4 +379,4 @@ time_t MySqlRes::getTime(int idx)
     return Str2Time(mRow[idx]);
 }
 
-} // namespace Alias
+} // namespace Jarvis

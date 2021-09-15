@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-namespace Alias {
+namespace Jarvis {
 
 /* 1、提供拷贝构造；2、重载 ==，<，> */
 template <typename T>
@@ -344,5 +344,5 @@ private:
     nodeptr_t mListBack;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 #endif

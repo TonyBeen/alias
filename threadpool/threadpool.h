@@ -27,7 +27,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-namespace Alias {
+namespace Jarvis {
 struct Task {
     Task() : func(nullptr), data(nullptr) {}
     Task(user_thread_function f, void *d) : func(f), data(d) {}
@@ -90,5 +90,5 @@ private:
     static const size_t THREAD_NUM_ONCE = 2;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 #endif // __ALIAS_THREAD_POOL_H__

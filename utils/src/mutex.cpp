@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <assert.h>
 
-namespace Alias {
+namespace Jarvis {
 Mutex::Mutex(int type)
 {
     int ret = 0;

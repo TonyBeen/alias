@@ -13,7 +13,7 @@
 #include <sys/time.h> 
 #include <sys/types.h>
 
-namespace Alias {
+namespace Jarvis {
 struct LogEvent {
     struct timeval  time;       // 时间
     int             pid;        // 进程ID
@@ -23,5 +23,5 @@ struct LogEvent {
     const char *    msg;        // 日志消息
 };
 
-} // namespace Alias
+} // namespace Jarvis
 #endif // __LOG_EVENT_H__

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <bits/move.h>
 
-using namespace Alias;
+using namespace Jarvis;
 
 int main()
 {

@@ -16,7 +16,7 @@
 #include <ctype.h>
 #include <string>
 
-namespace Alias {
+namespace Jarvis {
 
 #define MAXSIZE (1024 * 8)
 
@@ -129,6 +129,6 @@ private:
 // 为了方便输出
 std::ostream&   operator<<(std::ostream &out, const String8& in);
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __STRING8_H__

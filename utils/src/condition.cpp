@@ -11,7 +11,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-namespace Alias {
+namespace Jarvis {
 Condition::Condition() : Condition(PRIVATE)
 {
 
@@ -73,4 +73,4 @@ void Condition::broadcast()
     pthread_cond_broadcast(&mCond);
 }
 
-} // namespace Alias
+} // namespace Jarvis

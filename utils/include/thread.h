@@ -15,7 +15,7 @@
 #include "string8.h"
 #include <stdint.h>
 
-namespace Alias {
+namespace Jarvis {
 class ThreadBase {
 public:
     typedef enum {
@@ -73,6 +73,6 @@ private:
     volatile int  mFuncReturn;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __THREAD_H__

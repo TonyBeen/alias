@@ -11,7 +11,7 @@
 
 struct Data {
     int num;
-    Alias::String8 str;
+    Jarvis::String8 str;
 };
 
 int function(void *arg)
@@ -29,7 +29,7 @@ int function(void *arg)
 
 int main(int argc, char **argv)
 {
-    Alias::Thread thread("test", function);
+    Jarvis::Thread thread("test", function);
     Data *data = new Data;
     if (data == nullptr) {
         perror("malloc");
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
     printf("func return %d\n", thread.getFunctionReturn());
     printf("func name -> %s\n", thread.GetThreadName().c_str());
 
-    if (thread.ThreadStatus() == Alias::ThreadBase::THREAD_WAITING) {
+    if (thread.ThreadStatus() == Jarvis::ThreadBase::THREAD_WAITING) {
         thread.StartWork();
     }
 

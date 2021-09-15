@@ -11,8 +11,7 @@
 #include "sql_base.h"
 #include <map>
 
-namespace Alias
-{
+namespace Jarvis {
 class MySqlConn : public SqlBase
 {
 public:
@@ -85,6 +84,6 @@ private:
     std::shared_ptr<MYSQL_RES> mResData;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __ALIAS_SQL_CONN_H__

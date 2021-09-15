@@ -1,5 +1,5 @@
 /*************************************************************************
-    > File Name: utilsfunc.cpp
+    > File Name: utils.h
     > Author: hsz
     > Mail:
     > Created Time: Wed May  5 14:55:59 2021
@@ -27,13 +27,15 @@
     ClassName(const ClassName&) = delete; \
     ClassName& operator=(const ClassName&) = delete;
 
-#define atomic_or(P, V) __sync_or_and_fetch((P), (V))       // p: 地址 V: 值，P指向的内容与V相或
-#define atomic_and(P, V) __sync_and_and_fetch((P), (V))
-#define atomic_add(P, V) __sync_add_and_fetch((P), (V))
-#define atomic_xadd(P, V) __sync_fetch_and_add((P), (V))
+#define atomic_or(P, V)     __sync_or_and_fetch((P), (V))       // p: 地址 V: 值，P指向的内容与V相或
+#define atomic_and(P, V)    __sync_and_and_fetch((P), (V))
+#define atomic_add(P, V)    __sync_add_and_fetch((P), (V))      // 前置++
+#define atomic_load(P)      __sync_add_and_fetch((P), (0))
+#define atomic_xadd(P, V)   __sync_fetch_and_add((P), (V))      // 后置++
 
-// P: 地址 O: 旧值 N: 新值; if (O == *P) *p = N;   返回旧值
-#define cmpxchg(P, O, N) __sync_val_compare_and_swap((P), (O), (N)) 
+// P: 地址 O: 旧值 N: 新值; if (O == *P) { *p = N; return O} else { return *P }
+#define cmpxchg(P, O, N)    __sync_val_compare_and_swap((P), (O), (N))
+#define cpu_relax()         asm volatile("rep; nop\n": : :"memory")
 
 typedef unsigned long long nsec_t;
         nsec_t  seconds(uint16_t sec);
@@ -50,8 +52,7 @@ std::string         getNameByPid(pid_t pid);
 std::string Time2Str(time_t ts, const std::string& format = "%Y-%m-%d %H:%M:%S");
 time_t Str2Time(const char* str, const char* format = "%Y-%m-%d %H:%M:%S");
 
-class TypeUtil
-{
+class TypeUtil {
 public:
     static int8_t   ToChar(const std::string& str);
     static int64_t  Atoi(const std::string& str);

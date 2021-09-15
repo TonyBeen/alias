@@ -16,7 +16,7 @@
     #define SLOGD(...)
 #endif
 
-namespace Alias {
+namespace Jarvis {
 ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
     mThreadStatus(THREAD_EXIT),
     mExitStatus(false),
@@ -167,4 +167,4 @@ void Thread::setWorkFunc(user_thread_function func)
     this->function = func;
 }
 
-} // namespace Alias
+} // namespace Jarvis

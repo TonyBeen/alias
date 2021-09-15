@@ -10,7 +10,7 @@
 #include <error.h>
 #include "Errors.h"
 
-namespace Alias {
+namespace Jarvis {
 
 char *String8::getBuffer(size_t numChars)
 {
@@ -606,7 +606,7 @@ String8 String8::format(const char* fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    String8 result(formatV(fmt, args));
+    String8 result = formatV(fmt, args);
 
     va_end(args);
     return std::move(result);
@@ -615,7 +615,23 @@ String8 String8::format(const char* fmt, ...)
 String8 String8::formatV(const char* fmt, va_list args)
 {
     String8 result;
-    result.appendFormatV(fmt, args);
+    int len = 0;
+    char *buf = nullptr;
+
+    va_list tmp_args;
+    va_copy(tmp_args, args);
+    len = vsnprintf(nullptr, 0, fmt, tmp_args);
+    va_end(tmp_args);
+
+    if (len > 0) {
+        buf = (char *)malloc(len + 1);
+        if (buf != nullptr) {
+            vsnprintf(buf, len + 1, fmt, args);
+            result = buf;
+            free(buf);
+        }
+    }
+
     return std::move(result);
 }
 
@@ -632,12 +648,11 @@ int String8::appendFormat(const char* fmt, ...)
 
 int String8::appendFormatV(const char* fmt, va_list args)
 {
-    int n;
+    int n = 0;
     va_list tmp_args;
     va_copy(tmp_args, args);
     n = vsnprintf(nullptr, 0, fmt, tmp_args);
     va_end(tmp_args);
-
     if (n < 0) {
         return n;
     }
@@ -648,12 +663,14 @@ int String8::appendFormatV(const char* fmt, va_list args)
             oldLength > MAXSIZE - (size_t)n - 1) {
             return -1;
         }
-
         char *buf = (char *)malloc(oldLength + n);
         if (buf == nullptr) {
             return -1;
         }
-        memcpy(buf, mString, oldLength);
+        if (oldLength > 0) {
+            memcpy(buf, mString, oldLength);
+        }
+
         release();
         vsnprintf(buf + oldLength, n + 1, fmt, args);
         mString = buf;
@@ -667,4 +684,4 @@ std::ostream& operator<<(std::ostream &out, const String8& in)
     return out;
 }
 
-} // namespace Alias
+} // namespace Jarvis

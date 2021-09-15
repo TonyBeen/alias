@@ -10,7 +10,7 @@
 
 #include <string>
 
-namespace Alias {
+namespace Jarvis {
 class LogLevel {
 public:
     enum Level {
@@ -75,5 +75,5 @@ public:
     }
 };
 
-} // namespace Alias
+} // namespace Jarvis
 #endif // #ifndef __LOG_LEVEL_H__

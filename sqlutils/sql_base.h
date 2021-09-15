@@ -14,8 +14,7 @@
 #include <string>
 #include <memory>
 
-namespace Alias
-{
+namespace Jarvis {
 class SqlResBase;
 class SqlBase {
 public:
@@ -71,6 +70,6 @@ public:
     virtual bool next() = 0;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 
 #endif // __ALIAS_SQL_BASE_H__

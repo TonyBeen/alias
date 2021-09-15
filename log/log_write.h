@@ -35,7 +35,7 @@ public:
     virtual ~NonCopyAndAssign() {}
 };
 
-namespace Alias {
+namespace Jarvis {
 class LogWrite : public NonCopyAndAssign{
 public:
     LogWrite();
@@ -143,5 +143,5 @@ private:
     int                 mClientFd;
 };
 
-} // namespace Alias
+} // namespace Jarvis
 #endif // __LOG_WRITE_H__

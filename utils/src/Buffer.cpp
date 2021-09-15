@@ -8,7 +8,7 @@
 #include "Buffer.h"
 #include "debug.h"
 
-namespace Alias {
+namespace Jarvis {
 ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 {
 }
@@ -217,4 +217,4 @@ void  ByteBuffer::freeBuffer()
     mBuffer = nullptr;
 }
 
-} // namespace Alias
+} // namespace Jarvis

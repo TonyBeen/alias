@@ -10,7 +10,8 @@
 
 #include <pthread.h>
 
-namespace Alias {
+namespace Jarvis {
+
 class NonCopyAble {
 public:
     NonCopyAble() = default;
@@ -55,6 +56,6 @@ private:
     mutable pthread_mutex_t mMutex;
 };
 
-} // namespace Alia 
+} // namespace Jarvis 
 
 #endif // __MUTEX_H__
