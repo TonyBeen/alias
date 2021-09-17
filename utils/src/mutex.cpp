@@ -50,4 +50,29 @@ int Mutex::trylock() const
     return pthread_mutex_trylock(&mMutex);
 }
 
+RWMutex::RWMutex()
+{
+    pthread_rwlock_init(&mRWMutex, nullptr);
+}
+
+RWMutex::~RWMutex()
+{
+    pthread_rwlock_destroy(&mRWMutex);
+}
+
+void RWMutex::rlock()
+{
+    pthread_rwlock_rdlock(&mRWMutex);
+}
+
+void RWMutex::wlock()
+{
+    pthread_rwlock_wrlock(&mRWMutex);
+}
+
+void RWMutex::unlock()
+{
+    pthread_rwlock_unlock(&mRWMutex);
+}
+
 }

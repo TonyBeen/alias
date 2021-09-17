@@ -9,7 +9,7 @@
 #define __ALIAS_CALLSTACK_H__
 
 #include <utils/string8.h>
-#include <log/log.h>
+#include "log.h"
 #include <stdio.h>
 #include <vector>
 

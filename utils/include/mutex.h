@@ -11,7 +11,6 @@
 #include <pthread.h>
 
 namespace Jarvis {
-
 class NonCopyAble {
 public:
     NonCopyAble() = default;
@@ -36,7 +35,6 @@ private:
 };
 
 class Condition;
-
 class Mutex : public NonCopyAble {
 public:
     enum {
@@ -54,6 +52,58 @@ public:
 private:
     friend class Condition;
     mutable pthread_mutex_t mMutex;
+};
+
+// 局部写锁
+template<typename WRMutexType>
+class WRAutoLock {
+public:
+    WRAutoLock(const WRMutexType& mtx)
+    {
+        mutex = mtx;
+        mtx.wlock();
+    }
+    ~WRAutoLock()
+    {
+        mutex.unlock();
+    }
+
+private:
+    const WRMutexType &mutex;
+};
+
+// 局部读锁
+template<typename RDMutexType>
+class RDAutoLock {
+public:
+    RDAutoLock(const RDMutexType& mtx)
+    {
+        mutex = mtx;
+        mtx.rlock();
+    }
+    ~RDAutoLock()
+    {
+        mutex.unlock();
+    }
+
+private:
+    const RDMutexType &mutex;
+};
+
+// 读写锁，读共享，写独享，读上锁无法写，写上锁无法读写
+class RWMutex : public NonCopyAble {
+public:
+    typedef RDAutoLock<RWMutex> ReadAutoLock;
+    typedef WRAutoLock<RWMutex> WriteAutoLock;
+
+    RWMutex();
+    ~RWMutex();
+    void rlock();
+    void wlock();
+    void unlock();
+
+private:
+    pthread_rwlock_t    mRWMutex;
 };
 
 } // namespace Jarvis 
