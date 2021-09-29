@@ -8,23 +8,24 @@
 #ifndef __LOG_WRITE_H__
 #define __LOG_WRITE_H__
 
-#include <pthread.h>
-
 #include <string>
 #include <error.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include <signal.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <semaphore.h>
 
-#define MAX_FILE_SIZE (1024 * 1024 * 5)  // one file' max size is 5mb
+#define MAX_FILE_SIZE       (1024 * 1024 * 5)  // one file' max size is 5mb
+#define DEFAULT_NAME_SIZE   (64)
 
 class NonCopyAndAssign
 {
@@ -39,7 +40,7 @@ namespace Jarvis {
 class LogWrite : public NonCopyAndAssign{
 public:
     LogWrite();
-    virtual ~LogWrite(){}
+    virtual ~LogWrite();
 
     virtual ssize_t      WriteToFile(std::string msg) = 0;
     virtual std::string  getFileName() = 0;
@@ -50,7 +51,7 @@ public:
     virtual bool         setFileFlag(uint32_t flag) = 0;
 
     virtual bool         CreateNewFile(std::string fileName) = 0;
-    virtual bool         CloseFile(const int fd) = 0;
+    virtual bool         CloseFile() = 0;
     virtual uint16_t     type() const = 0;
 
 public:
@@ -62,7 +63,7 @@ public:
     };
 
 protected:
-    pthread_mutex_t mMutex;        // 同步状态下保护文件描述符
+    pthread_mutex_t *mMutex;        // 同步状态下保护文件描述符
 };
 
 class StdoutLogWrite : public LogWrite {
@@ -79,7 +80,7 @@ public:
     virtual bool         setFileFlag(uint32_t flag);
 
     virtual bool         CreateNewFile(std::string fileName);
-    virtual bool         CloseFile(const int fd);
+    virtual bool         CloseFile();
     virtual uint16_t     type() const { return STDOUT; }
 private:
     bool isInterrupt;
@@ -99,16 +100,15 @@ public:
     virtual bool         setFileFlag(uint32_t flag);
 
     virtual bool         CreateNewFile(std::string fileName);
-    virtual bool         CloseFile(const int fd);
+    virtual bool         CloseFile();
     virtual uint16_t     type() const { return FILEOUT; }
 
 private:
-    bool isInterrupt;
-    int mFileDesc;
-    uint32_t mFileMode;
-    uint32_t mFileFlag;
-    std::string mFileName;
-    size_t mFileSize;
+    bool        isInterrupt;
+    int*        mFileDesc;
+    uint32_t    mFileMode;
+    uint32_t    mFileFlag;
+    uint64_t*   mFileSize;
 };
 
 class ConsoleLogWrite : public LogWrite
@@ -126,7 +126,7 @@ public:
     bool         setFileFlag(uint32_t flag);
 
     bool         CreateNewFile(std::string fileName);
-    bool         CloseFile(const int fd);
+    bool         CloseFile();
     uint16_t     type() const { return CONSLOEOUT; }
 
 protected:

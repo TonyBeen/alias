@@ -11,7 +11,6 @@ void *thread(void *)
         LOGI("thread-%.5d", num++);
         usleep(500000);
     }
-    LOG_ASSERT(num == 0, "LOG_ASSERT test");
 }
 
 int main()

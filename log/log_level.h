@@ -9,11 +9,13 @@
 #define __LOG_LEVEL_H__
 
 #include <string>
+#include <string.h>
 
 namespace Jarvis {
 class LogLevel {
 public:
     enum Level {
+        UNKNOW = -1,
         DEBUG = 0,
         INFO  = 1,
         WARN  = 2,
@@ -72,6 +74,25 @@ public:
             break;
         }
         return str;
+    }
+    static LogLevel::Level String2Level(const std::string& lev)
+    {
+        if (strcasecmp(lev.c_str(), "debug") == 0) {
+            return DEBUG;
+        }
+        if (strcasecmp(lev.c_str(), "info") == 0) {
+            return INFO;
+        }
+        if (strcasecmp(lev.c_str(), "warn") == 0) {
+            return WARN;
+        }
+        if (strcasecmp(lev.c_str(), "error") == 0) {
+            return ERROR;
+        }
+        if (strcasecmp(lev.c_str(), "fatal") == 0) {
+            return FATAL;
+        }
+        return UNKNOW;
     }
 };
 

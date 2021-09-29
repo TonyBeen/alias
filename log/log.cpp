@@ -101,7 +101,7 @@ void log_write_assert(int level, const char *expr, const char *tag, const char *
     ev.pid = getpid();
     ev.tid = gettid();
 
-    size_t index = snprintf(buf, MSG_BUF_SIZE - 1, "assertion \"%s\" failed. msg: ", expr);
+    size_t index = snprintf(buf, MSG_BUF_SIZE - 1, "assertion \"%s\" failed. ", expr);
     va_list ap;
     va_start(ap, fmt);
     vsnprintf(buf + index, MSG_BUF_SIZE - index - 1, fmt, ap);
