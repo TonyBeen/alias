@@ -15,12 +15,10 @@ LogWrite::LogWrite()
     pthread_mutexattr_setpshared(&mutexAttr, PTHREAD_PROCESS_SHARED);
     mMutex = (pthread_mutex_t *)mmap(nullptr, sizeof(pthread_mutex_t),
         PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-    assert(mMutex);
 #else
     mMutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
-    assert(mMutex);
 #endif
-
+    assert(mMutex);
     do {
         ret = pthread_mutex_init(mMutex, &mutexAttr);
     } while (ret == EAGAIN);
