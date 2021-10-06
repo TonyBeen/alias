@@ -30,9 +30,13 @@ LogManager::~LogManager()
 
     pthread_mutex_destroy(&mListMutex);
     if (mLogWriteList.size() > 0) {
-        for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
-            delete *it;
-            mLogWriteList.erase(it);
+        for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end();) {
+            if (*it != nullptr) {
+                delete *it;
+                it = mLogWriteList.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 }
@@ -123,14 +127,15 @@ void LogManager::addLogWriteToList(int type)
     LogWrite *logWrite = nullptr;
 
     pthread_mutex_lock(&mListMutex);
-    for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
+    for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end();) {
         if (*it == nullptr) {           // new 出来的对象为空
-            mLogWriteList.erase(it);
+            it = mLogWriteList.erase(it);
             continue;
         }
         if ((*it)->type() == type) {    // 如果已存在则直接返回
             goto unlock;
         }
+        ++it;
     }
 
     switch (type)
@@ -156,9 +161,9 @@ unlock:
 void LogManager::delLogWriteFromList(int type)
 {
     pthread_mutex_lock(&mListMutex);
-    for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
+    for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end();) {
         if (*it == nullptr) {
-            mLogWriteList.erase(it);
+            it = mLogWriteList.erase(it);
             continue;
         }
         if ((*it)->type() == type) {
@@ -167,6 +172,7 @@ void LogManager::delLogWriteFromList(int type)
             mLogWriteList.erase(it);
             break;
         }
+        ++it;
     }
     pthread_mutex_unlock(&mListMutex);
 }
