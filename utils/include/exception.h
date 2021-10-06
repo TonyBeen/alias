@@ -13,6 +13,21 @@
 
 namespace Jarvis {
 
+class Exception : public std::exception
+{
+public:
+    Exception(const char *msg) : mExceptMsg(msg) {}
+    Exception(const String8 &msg) : mExceptMsg(msg) {}
+    virtual ~Exception() {}
+
+    virtual const char *what() const noexcept
+    {
+        return mExceptMsg.c_str();
+    }
+private:
+    String8     mExceptMsg;
+};
+
 class bad_type_cast_exception : public std::exception
 {
 public:

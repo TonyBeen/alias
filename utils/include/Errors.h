@@ -8,7 +8,7 @@ typedef enum {
     OK                = 0,
     NO_ERROR          = OK,
 
-    UNKNOWN_ERROR       = (-2147483647-1), // INT32_MIN value
+    UNKNOWN_ERROR       = (-0x7FFFFFFF), // INT32_MIN value
 
     NO_MEMORY           = -ENOMEM,      /* Out of memory */
     INVALID_OPERATION   = -ENOSYS,      /* Illegal operation */

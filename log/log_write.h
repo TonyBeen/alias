@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
-#define MAX_FILE_SIZE       (1024 * 1024 * 5)  // one file' max size is 5mb
+#define MAX_FILE_SIZE       (1024 * 1024)  // one file' max size is 5mb
 #define DEFAULT_NAME_SIZE   (64)
 
 class NonCopyAndAssign
