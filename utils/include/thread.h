@@ -14,32 +14,37 @@
 #include "condition.h"
 #include "string8.h"
 #include <stdint.h>
+#include <atomic>
+
+#define THREAD_FUNC_RETURN 0xFFF
 
 namespace Jarvis {
-class ThreadBase {
+class ThreadBase
+{
 public:
     typedef enum {
         THREAD_EXIT = 0,
         THREAD_RUNNING = 1,
         THREAD_WAITING = 2
     } thread_status_t;
+
     typedef void *(*ThreadFunc)(void *);
-    ThreadBase() : ThreadBase("null") {}
     ThreadBase(const char *threadName, uint8_t isThreadDetach = true);
     virtual ~ThreadBase();
     DISALLOW_COPY_AND_ASSIGN(ThreadBase);
 
-            thread_status_t ThreadStatus() const;
-            void            Interrupt();
-            int             run(size_t stackSize = 0);
-            void            StartWork();
-            const String8&  GetThreadName() const { return mThreadName; }
-            const uint32_t& getKernalTid() const { return mKernalTid; }
-            const pthread_t& getTid() const { return mTid; }
+    uint32_t        ThreadStatus() const;
+    void            Interrupt();
+    bool            ForceExit();
+    int             run(size_t stackSize = 0);
+    void            StartWork();
+    const String8&  GetThreadName() const { return mThreadName; }
+    const uint32_t& getKernalTid() const { return mKernalTid; }
+    const pthread_t getTid() const { return mTid; }
 protected:
             void    *userData;       // 用户传参数据块
     virtual int     threadWorkFunction(void *arg) = 0;
-            String8             mThreadName;
+            String8 mThreadName;
 
 private:
     static  int     threadloop(void *user);
@@ -49,13 +54,15 @@ private:
                 uint32_t            mPid;
                 uint32_t            mKernalTid;
                 pthread_t           mTid;
-    volatile    thread_status_t     mThreadStatus;
+
+    std::atomic<uint32_t>           mThreadStatusAtomic;
     volatile    bool                mExitStatus;
                 bool                mIsThreadDetached;
                 Condition           mCond;
 };
 
-class Thread final : public ThreadBase {
+class Thread final : public ThreadBase
+{
 public:
     Thread();
     Thread(const char *threadName, user_thread_function func = nullptr, uint8_t isDetach = true);

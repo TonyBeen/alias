@@ -13,24 +13,30 @@
 #define LOG_TAG "ThreadPool"
 
 namespace Jarvis {
-void TaskQueue::addTask(const Task& task)
+static const uint32_t THREAD_NUM_ONCE = 2;
+
+void TaskQueue::addTask(const Task& task, bool insertFront)
 {
     AutoLock<Mutex> lock(mQueueMutex);
-    mQueue.push_back(task);
+    if (insertFront) {
+        mTaskQueue.insert(mTaskQueue.begin(), task);
+    } else {
+        mTaskQueue.push_back(task);
+    }
 }
 
-Task TaskQueue::task()
+const Task &TaskQueue::front()
 {
     AutoLock<Mutex> lock(mQueueMutex);
-    Task t = mQueue.front();
-    mQueue.pop_front();
+    Task t = mTaskQueue.front();
+    mTaskQueue.pop_front();
     return t;
 }
 
 size_t TaskQueue::taskNumber()
 {
     AutoLock<Mutex> lock(mQueueMutex);
-    return mQueue.size();
+    return mTaskQueue.size();
 }
 
 ThreadPool::ThreadPool() :
@@ -41,15 +47,17 @@ ThreadPool::ThreadPool() :
 ThreadPool::ThreadPool(size_t minThreadNum, size_t maxThreadNum) :
     mThreadNumMax(MAX(maxThreadNum, minThreadNum)),
     mThreadNumMin(MIN(minThreadNum, maxThreadNum)),
-    mExitNum(0),
-    mBusyNum(0),
-    mAliveThreadNum(0),
-    mWorkThread(nullptr),
-    mShouldExit(false)
+    mWorkThread(nullptr)
 {
+    mExitNum.store(0);
+    mBusyNum.store(0);
+    mAliveThreadNum.store(0);
+    mShouldExit.store(false, std::memory_order_release);
+    mValid = false;
+
     mTask = new TaskQueue();
     if (mTask == nullptr) {
-        LOGE("Create TaskQueue error: no memory");
+        LOGE("%s() Create TaskQueue error: no memory", __func__);
         return;
     }
     mManagerThread = new Thread("ThreadPool Manager thread", manager);
@@ -58,23 +66,23 @@ ThreadPool::ThreadPool(size_t minThreadNum, size_t maxThreadNum) :
         return;
     }
     mManagerThread->setArg(this);
+    mManagerThread->run();
 
     mWorkThread = new Thread[mThreadNumMax];
     if (mWorkThread == nullptr) {
         LOGE("Create worker thread error: no memory");
-        delete mManagerThread;
         return;
     }
     for (size_t i = 0; i < mThreadNumMin; ++i) {
         mWorkThread[i].setWorkFunc(worker);
         mWorkThread[i].setArg(this);
-        mWorkThread[i].run();
     }
-    mManagerThread->run();
+    mValid = true;
 }
 
 ThreadPool::~ThreadPool()
 {
+    mShouldExit.store(true, std::memory_order_release);
     if (mManagerThread) {
         delete mManagerThread;
     }
@@ -86,8 +94,53 @@ ThreadPool::~ThreadPool()
     }
 }
 
+bool ThreadPool::Reinit()
+{
+    if (mTask == nullptr) {
+        mTask = new TaskQueue();
+        if (mTask == nullptr) {
+            LOGE("%s() Create TaskQueue error: no memory", __func__);
+            return false;
+        }
+    }
+    if (mManagerThread == nullptr) {
+        mManagerThread = new Thread("ThreadPool Manager thread", manager);
+        if (mManagerThread == nullptr) {
+            LOGE("%s() Create manager thread error: no memory", __func__);
+            return false;
+        }
+        mManagerThread->setArg(this);
+        mManagerThread->run();
+    }
+    if (mWorkThread == nullptr) {
+        mWorkThread = new Thread[mThreadNumMax];
+        if (mWorkThread == nullptr) {
+            LOGE("Create worker thread error: no memory");
+            return false;
+        }
+        for (size_t i = 0; i < mThreadNumMin; ++i) {
+            mWorkThread[i].setWorkFunc(worker);
+            mWorkThread[i].setArg(this);
+        }
+    }
+    mValid = true;
+    return true;
+}
+
+void ThreadPool::startWork()
+{
+    if (mWorkThread == nullptr) {
+        return;
+    }
+    for (int i = 0; i < mThreadNumMin; ++i) {
+        mWorkThread[i].run();
+    }
+    mAliveThreadNum.store(mThreadNumMin);
+}
+
 void ThreadPool::addWork(const Task& td)
 {
+    AutoLock<Mutex> lock(mPoolMutex);
     if (mTask != nullptr) {
         mTask->addTask(td);
     }
@@ -106,31 +159,28 @@ int ThreadPool::manager(void *arg)
         pool->mPoolMutex.lock();
         int queueSize = pool->mTask->taskNumber();
         int busyNum = pool->mBusyNum;
-        int aliveNum = pool->mAliveThreadNum;
         pool->mPoolMutex.unlock();
+        int aliveNum = pool->mAliveThreadNum.load();
 
         // 任务过多，添加线程
         if (queueSize / 4 > aliveNum && aliveNum < pool->mThreadNumMax) {
-            for (size_t i = 0, count = 0; i < pool->mThreadNumMax && THREAD_NUM_ONCE > count; ++i) {
-                if (pool->mWorkThread[i].ThreadStatus() == ThreadBase::THREAD_EXIT)  {
+            for (size_t i = 0, count = 0; i < pool->mThreadNumMax && THREAD_NUM_ONCE > count; ++i, ++count) {
+                if (pool->mWorkThread[i].ThreadStatus() == ThreadBase::THREAD_EXIT) {
                     pool->mWorkThread[i].setWorkFunc(worker);
                     pool->mWorkThread[i].setArg(arg);
                     pool->mWorkThread[i].run();
-                    ++count;
                     LOGI("Thread %s %d is running", pool->mWorkThread[i].GetThreadName(),
                         pool->mWorkThread[i].getKernalTid());
                     {
                         AutoLock<Mutex> lock(pool->mPoolMutex);
                         pool->mAliveThreadNum++;
                     }
-                }
-                if (pool->mWorkThread[i].ThreadStatus() == ThreadBase::THREAD_WAITING)  {
+                } else if (pool->mWorkThread[i].ThreadStatus() == ThreadBase::THREAD_WAITING) {
                     pool->mWorkThread[i].setWorkFunc(worker);
                     pool->mWorkThread[i].setArg(arg);
                     pool->mWorkThread[i].StartWork();
                     LOGI("Thread %s %d is running", pool->mWorkThread[i].GetThreadName(),
                         pool->mWorkThread[i].getKernalTid());
-                    ++count;
                     {
                         AutoLock<Mutex> lock(pool->mPoolMutex);
                         pool->mAliveThreadNum++;
@@ -141,9 +191,7 @@ int ThreadPool::manager(void *arg)
 
         // 任务减少，销毁线程
         if (queueSize < aliveNum * 2 && aliveNum > pool->mThreadNumMin) {
-            pool->mPoolMutex.lock();
             pool->mExitNum = 2;
-            pool->mPoolMutex.unlock();
             for (size_t i = 0; i < 2; ++i) {
                 pool->mQueueCond.signal();
             }
@@ -171,25 +219,25 @@ int ThreadPool::manager(void *arg)
 
 int  ThreadPool::worker(void *arg)
 {
-    ThreadPool *pool = static_cast<ThreadPool*>(arg);
+    ThreadPool *pool = static_cast<ThreadPool *>(arg);
     LOG_ASSERT(pool != nullptr, "pool is nullptr");
     while (!pool->mShouldExit.load(std::memory_order_acquire)) // mShouldExit = true 退出
     {
-        while (pool->mTask->taskNumber() == 0) {
+        // 当任务数量小于线程存活数的2倍时
+        while (pool->mTask->taskNumber() < pool->mAliveThreadNum.load() * 2) {
             // 任务队列条件变量
             // 作用：当前任务数量为0，则需阻塞线程，使
             pool->mTask->mQueueMutex.lock();
             pool->mQueueCond.wait(pool->mTask->mQueueMutex);
-            pool->mTask->mQueueMutex.unlock();
-            AutoLock<Mutex> lock(pool->mPoolMutex);
-            if (pool->mExitNum > 0) {
+            if (pool->mExitNum.load() > 0) {
                 pool->threadExit();
-                return OK;
+                return Thread::THREAD_WAITING;
             }
+            pool->mTask->mQueueMutex.unlock();
         }
-        Task t = pool->mTask->task();
-        
-        if (t.func == nullptr) {
+
+        const Task &t = pool->mTask->front();
+        if (t.cb == nullptr) {
             LOGW("task.func is nullptr");
             continue;
         }
@@ -197,23 +245,19 @@ int  ThreadPool::worker(void *arg)
             AutoLock<Mutex> lock(pool->mPoolMutex);
             pool->mBusyNum++;
         }
-        t.func(t.data);
-        if (t.data) {
-            delete t.data;
-            t.data = nullptr;
-        }
+        t.cb(t.data.get());
         {
             AutoLock<Mutex> lock(pool->mPoolMutex);
             pool->mBusyNum--;
         }
     }
-    return OK;
+    return Thread::THREAD_WAITING;
 }
 
 void ThreadPool::threadExit()
 {
     LOGI("ThreadPool::threadExit() Thread %d exit\n", gettid());
-    pthread_exit(NULL);
+    // pthread_exit(NULL);
 }
 
 } // namespace Jarvis

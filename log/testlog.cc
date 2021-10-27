@@ -16,6 +16,8 @@ void *thread(void *)
 int main()
 {
     Jarvis::InitLog(Jarvis::LogLevel::INFO, true);
+    Jarvis::addOutputNode(Jarvis::LogWrite::FILEOUT);
+
     pthread_t tid;
     pthread_create(&tid, nullptr, thread, nullptr);
     int num = 0;

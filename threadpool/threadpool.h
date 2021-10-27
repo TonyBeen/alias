@@ -8,11 +8,12 @@
 #ifndef __ALIAS_THREAD_POOL_H__
 #define __ALIAS_THREAD_POOL_H__
 
-#include <stdio.h>
 #include <utils/utils.h>
 #include <utils/mutex.h>
 #include <utils/thread.h>
-#include <threaddef.h>
+#include <utils/threaddef.h>
+#include <memory>
+#include <functional>
 #include <list>
 #include <atomic>
 
@@ -29,18 +30,25 @@
 
 namespace Jarvis {
 struct Task {
-    Task() : func(nullptr), data(nullptr) {}
-    Task(user_thread_function f, void *d) : func(f), data(d) {}
+    Task() : cb(nullptr), data(nullptr) {}
+    Task(std::function<int(void *)> f, std::shared_ptr<void *>  d) : cb(f), data(d) {}
+    Task(const Task& t)
+    {
+        this->cb = t.cb;
+        this->data = t.data;
+    }
+    Task &operator=(const Task& t)
+    {
+        this->cb = t.cb;
+        this->data = t.data;
+    }
     ~Task() {
-        if (data) {
-            delete data;
-        }
         data = nullptr;
-        func = nullptr;
+        cb = nullptr;
     }
 
-    user_thread_function func;
-    void *data;
+    std::function<int(void *)> cb;
+    std::shared_ptr<void *> data;
 };
 
 class TaskQueue
@@ -48,14 +56,14 @@ class TaskQueue
 public:
     TaskQueue();
     ~TaskQueue();
-    void    addTask(const Task& task);
-    Task    task();    // 取出头任务
-    size_t  taskNumber();
+    void        addTask(const Task& task, bool insertFront = false);
+    const Task &front();    // 取出头任务
+    size_t      taskNumber();
 
     mutable Mutex mQueueMutex;
 
 private:
-    std::list<Task> mQueue;
+    std::list<Task> mTaskQueue;
 };
 
 class ThreadPool
@@ -67,7 +75,10 @@ public:
     ThreadPool(size_t minThreadNum, size_t maxThreadNum);
     ~ThreadPool();
 
-    void    addWork(const Task&);
+    void startWork();
+    void addWork(const Task&);
+    bool isValid() const { return mValid; }
+    bool Reinit();
 
 private:
     static int  manager(void *arg);
@@ -80,14 +91,14 @@ private:
     const uint32_t      mThreadNumMax;
     const uint32_t      mThreadNumMin;
 
-    uint32_t            mExitNum;
-    uint32_t            mAliveThreadNum;
-    uint32_t            mBusyNum;
+    std::atomic<uint32_t> mExitNum;
+    std::atomic<uint32_t> mAliveThreadNum;
+    std::atomic<uint32_t> mBusyNum;
 
     Thread*             mManagerThread;
     Thread*             mWorkThread;
     std::atomic_bool    mShouldExit;
-    static const size_t THREAD_NUM_ONCE = 2;
+    bool                mValid;
 };
 
 } // namespace Jarvis

@@ -10,26 +10,25 @@
 #include <error.h>
 #include "Errors.h"
 
+#define DEFAULT_STRING_SIZE 128
+
 namespace Jarvis {
 
 char *String8::getBuffer(size_t numChars)
 {
     char *ret = nullptr;
-    if (numChars <= 0) {
-        ret = (char *)malloc(1);
-        mCapacity = 1;
-        if (ret) {
-            *ret = '\0';
-        }
-        return ret;
+    if (numChars == 0) {
+        ret = (char *)malloc(DEFAULT_STRING_SIZE);
+        mCapacity = DEFAULT_STRING_SIZE;
     } else if (numChars > 0) {
         ret = (char *)malloc(numChars * 2);
         mCapacity = numChars * 2;
-        if (ret) {
-            memset(ret, 0, numChars + 1);
-        }
-        return ret;
     }
+
+    if (ret) {
+        memset(ret, 0, mCapacity);
+    }
+    return ret;
 }
 
 void String8::release()

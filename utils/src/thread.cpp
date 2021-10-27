@@ -7,6 +7,7 @@
 
 #include "thread.h"
 #include "Errors.h"
+#include "exception.h"
 #include <string.h>
 
 #define DEBUG
@@ -18,12 +19,12 @@
 
 namespace Jarvis {
 ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
-    mThreadStatus(THREAD_EXIT),
     mExitStatus(false),
     mPid(0),
     mTid(0),
     mKernalTid(0)
 {
+    mThreadStatusAtomic = THREAD_EXIT;
     if (threadName) {
         mThreadName = threadName;
     }
@@ -32,15 +33,14 @@ ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
 
 ThreadBase::~ThreadBase()
 {
-
+    if (ThreadStatus() != THREAD_EXIT) { // 等待线程退出，否则在析构完成之后会导致线程段错误问题
+        Interrupt();
+    }
 }
 
-ThreadBase::thread_status_t ThreadBase::ThreadStatus() const
+uint32_t ThreadBase::ThreadStatus() const
 {
-    AutoLock<Mutex> _l(mMutex);
-    // __data.__owner -> 表示当前持锁线程
-    // SLOGD("thread %d status mutex owner %d\n", mKernalTid, mStatusMutex.mutex()->__data.__owner);
-    return mThreadStatus;
+    return mThreadStatusAtomic.load();
 }
 
 void ThreadBase::Interrupt()
@@ -49,8 +49,14 @@ void ThreadBase::Interrupt()
         AutoLock<Mutex> _l(mMutex);
         mExitStatus = true;
     }
+    if (mThreadStatusAtomic.load() == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
+        mCond.broadcast();
+    }
+}
 
-    mCond.broadcast();  // 如果线程处于等待用户状态，则需要通知线程
+bool ThreadBase::ForceExit()
+{
+    return pthread_cancel(mTid) == 0;
 }
 
 bool ThreadBase::ShouldExit()
@@ -63,7 +69,7 @@ bool ThreadBase::ShouldExit()
 int ThreadBase::run(size_t stackSize)
 {
     AutoLock<Mutex> _lock(mMutex);
-    if (mThreadStatus != THREAD_EXIT) {
+    if (mThreadStatusAtomic.load() != THREAD_EXIT) {
         return INVALID_OPERATION;
     }
     pthread_attr_t attr;
@@ -77,45 +83,60 @@ int ThreadBase::run(size_t stackSize)
 
     int ret = pthread_create(&mTid, &attr, (ThreadFunc)threadloop, this);
     if (ret == 0) {
-        mThreadStatus = THREAD_RUNNING;
+        mThreadStatusAtomic = THREAD_RUNNING;
     } else {
         SLOGD("pthread_create error %s\n", strerror(ret));
-        return ret;
     }
     pthread_attr_destroy(&attr);
-    return 0;
+    return ret;
 }
 
+
+/**
+ * @brief 如果线程运行中，直接返回；如果等待则broadcast；如果退出，则另起线程
+ */
 void ThreadBase::StartWork()
 {
-    mCond.broadcast();
+    switch (mThreadStatusAtomic.load())
+    {
+    case THREAD_WAITING:
+        mCond.broadcast();
+        break;
+    case THREAD_RUNNING:
+        break;
+    case THREAD_EXIT:
+        run();
+    default:
+        break;
+    }
 }
 
+/**
+ * @brief 线程循环，子类执行函数入口
+ */
 int ThreadBase::threadloop(void *user)
 {
     SLOGD("%s() start \n", __func__);
     ThreadBase *threadBase = (ThreadBase *)user;
     threadBase->mKernalTid = gettid();
+    pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);    // 设置任何时间点都可以取消线程
+
     while (threadBase->ShouldExit() == false) {
         SLOGD("thread is going to run...\n");
         int result = threadBase->threadWorkFunction(threadBase->userData);
-
         if (result == THREAD_EXIT || threadBase->ShouldExit() == true) {
-            AutoLock<Mutex> _l(threadBase->mMutex);
-            threadBase->mThreadStatus = THREAD_EXIT;
+            threadBase->mThreadStatusAtomic = THREAD_EXIT;
             break;
         }
 
-        {
-            AutoLock<Mutex> _l(threadBase->mMutex);
-            threadBase->mThreadStatus = THREAD_WAITING;
-        }
+        threadBase->mThreadStatusAtomic = THREAD_WAITING;
+
         SLOGD("thread wait...\n");
+        AutoLock<Mutex> _l(threadBase->mMutex);
         threadBase->mCond.wait(threadBase->mMutex);     // 阻塞线程，由用户决定下一次执行任务的时间
-        threadBase->mThreadStatus = THREAD_RUNNING;
-        threadBase->mMutex.unlock();
+        threadBase->mThreadStatusAtomic = THREAD_RUNNING;
     }
-    SLOGD("Thread exit...\n");
+    SLOGD("thread exit...\n");
     return 0;
 }
 
@@ -123,7 +144,7 @@ Thread::Thread() : ThreadBase("ThreadBase")
 {
     userData = nullptr;
     function = nullptr;
-    mFuncReturn = 0xFFFF;
+    mFuncReturn = THREAD_FUNC_RETURN;
 }
 
 Thread::Thread(const char *threadName, user_thread_function func, uint8_t isDetach) :
@@ -131,16 +152,12 @@ Thread::Thread(const char *threadName, user_thread_function func, uint8_t isDeta
 {
     userData = nullptr;
     this->function = func;
-    mFuncReturn = 0xFFFF;
+    mFuncReturn = THREAD_FUNC_RETURN;
 }
 
 Thread::~Thread()
 {
-    while (ThreadStatus() != THREAD_EXIT) // 等待线程退出，否则在析构完成之后会导致线程段错误问题
-    {
-        Interrupt();
-        msleep(1);
-    }
+
 }
 
 int Thread::threadWorkFunction(void *arg)

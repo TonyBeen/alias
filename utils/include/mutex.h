@@ -47,8 +47,10 @@ public:
     int  lock() const;
     void unlock() const;
     int  trylock() const;
+
     operator pthread_mutex_t *() { return &mMutex; }
     pthread_mutex_t *mutex() { return &mMutex; }
+
 private:
     friend class Condition;
     mutable pthread_mutex_t mMutex;
@@ -58,10 +60,9 @@ private:
 template<typename WRMutexType>
 class WRAutoLock {
 public:
-    WRAutoLock(const WRMutexType& mtx)
+    WRAutoLock(const WRMutexType& mtx) : mutex(mtx)
     {
-        mutex = mtx;
-        mtx.wlock();
+        mutex.wlock();
     }
     ~WRAutoLock()
     {
@@ -76,10 +77,9 @@ private:
 template<typename RDMutexType>
 class RDAutoLock {
 public:
-    RDAutoLock(const RDMutexType& mtx)
+    RDAutoLock(const RDMutexType& mtx) : mutex(mtx)
     {
-        mutex = mtx;
-        mtx.rlock();
+        mutex.rlock();
     }
     ~RDAutoLock()
     {
@@ -98,12 +98,12 @@ public:
 
     RWMutex();
     ~RWMutex();
-    void rlock();
-    void wlock();
-    void unlock();
+    void rlock() const;
+    void wlock() const;
+    void unlock() const;
 
 private:
-    pthread_rwlock_t    mRWMutex;
+    mutable pthread_rwlock_t mRWMutex;
 };
 
 } // namespace Jarvis 

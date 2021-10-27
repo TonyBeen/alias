@@ -14,6 +14,8 @@
 #define __TIMER_H__
 
 #include "mutex.h"
+#include "thread.h"
+#include <sys/epoll.h>
 #include <stdint.h>
 #include <set>
 #include <memory>
@@ -30,9 +32,9 @@ class Timer : public std::enable_shared_from_this<Timer>
 public:
     typedef std::shared_ptr<Timer> sp;
     typedef std::function<int(void *)> CallBack;
-    Timer();
-    Timer(uint64_t ms, CallBack cb, uint32_t recycle);
     ~Timer();
+
+    Timer &operator=(const Timer& timer);
 
     void setNextTime(uint64_t timeMs) { mTime = timeMs; }
     void setCallback(CallBack cb) { mCb = cb; }
@@ -51,10 +53,15 @@ public:
     static uint64_t getCurrentTime();
 
 private:
+    Timer();
+    Timer(uint64_t ms, CallBack cb, uint32_t recycle);
+    Timer(const Timer& timer);
+
+private:
     friend class TimerManager;
     struct Comparator {
         // 传给set的比较器，从小到大排序
-        bool operator()(const Timer::sp &l, const Timer::sp &r) {
+        bool operator()(const Timer *l, const Timer *r) {
             if (l == nullptr && r == nullptr) {
                 return false;
             }
@@ -65,7 +72,7 @@ private:
                 return false;
             }
             if (l->mTime == r->mTime) { // 时间相同，比较地址
-                return l.get() < r.get();
+                return l->mUniqueId < r->mUniqueId;
             }
             return l->mTime < r->mTime;
         }
@@ -75,23 +82,33 @@ private:
     uint64_t    mRecycleTime;   // 循环时间ms
     CallBack    mCb;            // 回调函数
     std::shared_ptr<void *> mArg;   // 函数参数
+    uint64_t    mUniqueId;      // 定时器唯一ID
 };
 
 class TimerManager
 {
 public:
-    typedef std::set<Timer::sp, Timer::Comparator>::iterator TimerIterator;
+    typedef std::set<Timer *, Timer::Comparator>::iterator TimerIterator;
     TimerManager();
     ~TimerManager();
 
-    const Timer::sp &getNearTimer() { return *(mTimers.begin()); }
-    TimerIterator addTimer(uint64_t ms, Timer::CallBack cb,
+    int StartTimer();
+
+    const Timer *getNearTimer() { return *(mTimers.begin()); }
+    uint64_t addTimer(uint64_t ms, Timer::CallBack cb,
         std::shared_ptr<void *> arg = nullptr, uint32_t recycle = 0);
-    void delTimer(TimerIterator it);
+    void addTimer(Timer *timer);
+    bool delTimer(uint64_t uniqueId);
+
+private:
+    static int timer_thread_loop(void *arg);
 
 private:
     RWMutex mRWMutex;
-    std::set<Timer::sp, Timer::Comparator>  mTimers;        // 定时器集合
+    int     mEpollFd;
+    Thread  mThread;
+
+    std::set<Timer *, Timer::Comparator>  mTimers;        // 定时器集合
 };
 
 } // namespace Jarvis

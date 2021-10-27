@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "mutex.h"
+#include <stdio.h>
 #include <errno.h>
 #include <assert.h>
 
@@ -30,8 +31,11 @@ Mutex::~Mutex()
 {
     int ret = 0;
     do {
-        ret = pthread_mutex_destroy(&mMutex);;
-    } while (ret == EAGAIN);
+        if (ret == EBUSY) {
+            unlock();
+        }
+        ret = pthread_mutex_destroy(&mMutex);
+    } while (ret == EBUSY);
     assert(ret == 0);
 }
 
@@ -60,17 +64,17 @@ RWMutex::~RWMutex()
     pthread_rwlock_destroy(&mRWMutex);
 }
 
-void RWMutex::rlock()
+void RWMutex::rlock() const
 {
     pthread_rwlock_rdlock(&mRWMutex);
 }
 
-void RWMutex::wlock()
+void RWMutex::wlock() const
 {
     pthread_rwlock_wrlock(&mRWMutex);
 }
 
-void RWMutex::unlock()
+void RWMutex::unlock() const
 {
     pthread_rwlock_unlock(&mRWMutex);
 }

@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <netinet/in.h> // for inet_ntoa
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <ifaddrs.h>    // for getifaddrs
 
 nsec_t seconds(uint16_t sec)
 {
@@ -21,14 +25,14 @@ nsec_t mseconds(uint16_t ms)
     return ms * 1000 * 1000;
 }
 
-static  bool __lstat(const char *path)
+bool __lstat(const char *path)
 {
     struct stat lst;
     int ret = lstat(path, &lst);
     return ret;
 }
 
-static  bool __mkdir(const char *path)
+bool __mkdir(const char *path)
 {
     if(access(path, F_OK) == 0) {
         return 0;
@@ -143,6 +147,29 @@ std::string getNameByPid(pid_t pid)
         return name;
     }
     return "";
+}
+
+std::vector<std::string> getLocalAddress()
+{
+    static std::vector<std::string> ips;
+    if (ips.size() == 0) {
+        struct ifaddrs *ifaddr = nullptr;
+        getifaddrs(&ifaddr);
+        struct ifaddrs *root = ifaddr;  // need to free
+        while (ifaddr != nullptr) {
+            if (ifaddr->ifa_addr->sa_family == AF_INET) {   // IPv4
+                if (std::string("lo") == ifaddr->ifa_name) {    // remove 127.0.0.1
+                    ifaddr = ifaddr->ifa_next;
+                    continue;
+                }
+                in_addr *tmp = &((sockaddr_in *)ifaddr->ifa_addr)->sin_addr;
+                ips.push_back(inet_ntoa(*tmp));
+            }
+            ifaddr = ifaddr->ifa_next;
+        }
+        freeifaddrs(root);
+    }
+    return ips;
 }
 
 pid_t GetThreadId()

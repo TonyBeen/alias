@@ -99,7 +99,7 @@ FileLogWrite::FileLogWrite(uint32_t fileFlag, uint32_t fileMode) :
     mFileFlag(fileFlag),
     mFileMode(fileMode)
 {
-    mFileDesc = (int *)mmap(nullptr, sizeof(int), 
+    mFileDesc = (int *)mmap(nullptr, sizeof(int),
         PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     mFileSize = (uint64_t *)mmap(nullptr, sizeof(uint64_t), 
         PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
@@ -145,7 +145,11 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
         ret = write(*mFileDesc, msg.c_str(), msg.length());
     }
     if (ret >= 0) {
+        fsync(*mFileDesc);
         *mFileSize += ret;
+        
+    } else {
+        perror("write error");
     }
     pthread_mutex_unlock(mMutex);
     return ret;
@@ -172,14 +176,14 @@ bool FileLogWrite::setFileFlag(uint32_t flag)
     mFileFlag = flag;
 }
 
-static  bool __lstat(const char *path)
+static int __lstat(const char *path)
 {
     struct stat lst;
     int ret = lstat(path, &lst);
     return ret;
 }
 
-static  bool __mkdir(const char *path)
+static bool __mkdir(const char *path)
 {
     if(access(path, F_OK) == 0) {
         return 0;
