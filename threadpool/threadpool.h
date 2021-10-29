@@ -76,8 +76,8 @@ public:
     ~ThreadPool();
 
     void startWork();
-    void addWork(const Task&);
-    void addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg);
+    void addWork(const Task&, bool insertFront = false);
+    void addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg, bool insertFront = false);
     bool isValid() const { return mValid; }
     bool Reinit();
 

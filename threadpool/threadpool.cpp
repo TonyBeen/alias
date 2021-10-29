@@ -147,23 +147,23 @@ void ThreadPool::startWork()
     LOGD("startWork() end");
 }
 
-void ThreadPool::addWork(const Task& td)
+void ThreadPool::addWork(const Task& td, bool insertFront)
 {
     AutoLock<Mutex> lock(mPoolMutex);
     if (mTask != nullptr) {
-        mTask->addTask(td);
+        mTask->addTask(td, insertFront);
+        mQueueCond.signal();
     }
-    mQueueCond.signal();
 }
 
-void ThreadPool::addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg)
+void ThreadPool::addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg, bool insertFront)
 {
     AutoLock<Mutex> lock(mPoolMutex);
     if (mTask != nullptr) {
         Task t(f, arg);
-        mTask->addTask(t);
+        mTask->addTask(t, insertFront);
+        mQueueCond.signal();
     }
-    mQueueCond.signal();
 }
 
 int ThreadPool::manager(void *arg)
