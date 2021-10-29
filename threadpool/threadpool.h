@@ -54,10 +54,10 @@ struct Task {
 class TaskQueue
 {
 public:
-    TaskQueue();
-    ~TaskQueue();
+    TaskQueue() {}
+    ~TaskQueue() {}
     void        addTask(const Task& task, bool insertFront = false);
-    const Task &front();    // 取出头任务
+    Task        front();    // 取出头任务
     size_t      taskNumber();
 
     mutable Mutex mQueueMutex;
@@ -77,6 +77,7 @@ public:
 
     void startWork();
     void addWork(const Task&);
+    void addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg);
     bool isValid() const { return mValid; }
     bool Reinit();
 
