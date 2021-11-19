@@ -34,6 +34,7 @@
 namespace Jarvis {
 
 /**
+ * @brief 假如在InitLog之前调用过LOGX，则此函数只对日志级别有影响
  * @param lev   最小输出级别
  * @param sync  日志输出方式采用同步还是异步，异步采用线程处理
  */
