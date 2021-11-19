@@ -7,6 +7,7 @@
 
 #include "Buffer.h"
 #include "debug.h"
+#include <assert.h>
 
 namespace Jarvis {
 ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
@@ -42,8 +43,9 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other)
 ByteBuffer::ByteBuffer(ByteBuffer&& other)
 {
     SLOGD("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
+    char *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
-    other.mBuffer = nullptr;
+    other.mBuffer = tmp;
 }
 
 ByteBuffer::~ByteBuffer()
@@ -76,15 +78,13 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 
 char& ByteBuffer::operator[](size_t index)
 {
-    if (index < mDataSize) {
-        return mBuffer[index];
-    }
-    return mBuffer[0];
+    assert(index < mDataSize);
+    return mBuffer[index];
 }
 
 size_t ByteBuffer::set(const char *data, size_t dataSize, size_t offset)
 {
-    if (data == nullptr || offset > mDataSize) {
+    if (data == nullptr) {
         return 0;
     }
     char *temp = nullptr;

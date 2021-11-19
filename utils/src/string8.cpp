@@ -11,6 +11,7 @@
 #include "Errors.h"
 
 #define DEFAULT_STRING_SIZE 128
+#define MAXSIZE (1024 * 8)
 
 namespace Jarvis {
 
@@ -20,7 +21,7 @@ char *String8::getBuffer(size_t numChars)
     if (numChars == 0) {
         ret = (char *)malloc(DEFAULT_STRING_SIZE);
         mCapacity = DEFAULT_STRING_SIZE;
-    } else if (numChars > 0) {
+    } else if (numChars > 0 && numChars < MAXSIZE / 2) {
         ret = (char *)malloc(numChars * 2);
         mCapacity = numChars * 2;
     }
@@ -38,6 +39,7 @@ void String8::release()
     }
     free(mString);
     mString = nullptr;
+    mCapacity = 0;
 }
 
 String8::String8()
@@ -116,7 +118,7 @@ int32_t String8::find(const char* other, size_t start) const
 
 int32_t String8::find(const char c, size_t start) const
 {
-    const char *index = strchr(mString, c);
+    const char *index = strchr(mString + start, c);
     return index ? index - mString : -1;
 }
 
@@ -307,7 +309,7 @@ String8& String8::operator+=(const char* other)
     this->append(other);
     return *this;
 }
-String8  String8::operator+(const char* other) const
+String8 String8::operator+(const char* other) const
 {
     String8 tmp(*this);
     tmp += other;
@@ -652,28 +654,26 @@ int String8::appendFormatV(const char* fmt, va_list args)
     va_copy(tmp_args, args);
     n = vsnprintf(nullptr, 0, fmt, tmp_args);
     va_end(tmp_args);
-    if (n < 0) {
+    if (n <= 0) {
         return n;
     }
 
-    if (n > 0) {
-        size_t oldLength = length();
-        if ((size_t)n > MAXSIZE - 1 ||
-            oldLength > MAXSIZE - (size_t)n - 1) {
-            return -1;
-        }
-        char *buf = (char *)malloc(oldLength + n);
-        if (buf == nullptr) {
-            return -1;
-        }
-        if (oldLength > 0) {
-            memcpy(buf, mString, oldLength);
-        }
-
-        release();
-        vsnprintf(buf + oldLength, n + 1, fmt, args);
-        mString = buf;
+    size_t oldLength = length();
+    if (n > MAXSIZE - 1 || (oldLength + n) > MAXSIZE - 1) {
+        return -1;
     }
+    char *buf = getBuffer(oldLength + n);
+    if (buf == nullptr) {
+        return -1;
+    }
+    if (oldLength > 0) {
+        memcpy(buf, mString, oldLength);
+    }
+
+    release();
+    vsnprintf(buf + oldLength, n + 1, fmt, args);
+    mString = buf;
+
     return n;
 }
 

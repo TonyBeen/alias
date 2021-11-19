@@ -92,7 +92,7 @@ public:
     TimerManager();
     ~TimerManager();
 
-    int StartTimer();
+    int StartTimer(bool useCallerThread = false);
 
     const Timer *getNearTimer() { return *(mTimers.begin()); }
     uint64_t addTimer(uint64_t ms, Timer::CallBack cb,

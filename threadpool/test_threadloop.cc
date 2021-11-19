@@ -14,20 +14,19 @@ using namespace std;
 
 #define LOG_TAG "test threadpool"
 
-int func(void *arg)
+void func(void *arg)
 {
     for (int i = 0; i < 50; ++i) {
         msleep(4);
     }
     LOGI("thread %ld excute over.\n", gettid());
-    return 0;
 }
 
 int addWorkThread(void *arg)
 {
     Jarvis::ThreadPool *threadPool = (Jarvis::ThreadPool *)arg;
     while (1) {
-        threadPool->addWork(func, nullptr);
+        threadPool->addWork(std::bind(&func, nullptr));
         msleep(80);
     }
 }
@@ -40,7 +39,7 @@ int main(int argc, char **argv)
         thread.setArg(&threadPool);
         thread.run();
         for (int i = 0; i < 100; ++i) {
-            threadPool.addWork(func, nullptr);
+            threadPool.addWork(std::bind(&func, nullptr));
         }
         threadPool.startWork();
         while(1) {

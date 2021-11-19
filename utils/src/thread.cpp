@@ -10,7 +10,7 @@
 #include "exception.h"
 #include <string.h>
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     #define SLOGD printf
 #else

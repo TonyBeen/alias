@@ -8,7 +8,13 @@
 #ifndef __MUTEX_H__
 #define __MUTEX_H__
 
+#include "string8.h"
+#include <stdint.h>
 #include <pthread.h>
+#include <semaphore.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
 
 namespace Jarvis {
 class NonCopyAble {
@@ -106,6 +112,23 @@ private:
     mutable pthread_rwlock_t mRWMutex;
 };
 
-} // namespace Jarvis 
+class Sem : public NonCopyAble {
+public:
+    Sem(const char *semPath, uint8_t val);      // 此种走有名信号量
+    Sem(uint8_t valBase);                       // 此种走无名信号量
+    ~Sem();
+
+    bool post();
+    bool wait();
+    bool trywait();
+    bool timedwait(uint32_t ms);
+
+private:
+    sem_t  *mSem;       // 信号量
+    String8 mFilePath;  // 有名信号量使用
+    bool    isNamedSemaphore;
+};
+
+} // namespace Jarvis
 
 #endif // __MUTEX_H__

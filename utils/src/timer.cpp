@@ -112,7 +112,7 @@ TimerManager::~TimerManager()
     mThread.Interrupt();
 }
 
-int TimerManager::StartTimer()
+int TimerManager::StartTimer(bool useCallerThread)
 {
     mEpollFd = epoll_create(1);
     if (mEpollFd < 0) {
@@ -123,6 +123,9 @@ int TimerManager::StartTimer()
     ev.data.fd = 0;
     epoll_ctl(mEpollFd, EPOLL_CTL_ADD, 0, &ev);
     printf("epoll fd = %d\n", mEpollFd);
+    if (useCallerThread) {
+        return timer_thread_loop(this);
+    }
     return mThread.run();
 }
 

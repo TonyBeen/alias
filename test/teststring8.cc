@@ -6,6 +6,12 @@
 #define LOG_TAG "String8 test"
 
 using namespace Jarvis;
+using namespace std;
+
+void testAdd(const String8 &str)
+{
+    cout << str << endl;
+}
 
 int main()
 {
@@ -126,6 +132,18 @@ int main()
         std::cout << String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110) << std::endl;
         String8 str1 = String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110);
         std::cout << std::endl;
+    }
+
+    {
+        // 测试operator+
+        String8 str1 = "0123456789";
+        String8 str2 = str1 + str1;
+        std::cout << str2 << std::endl;
+        testAdd(str1 + str2);
+        for (int i = 0; i < 3; ++i) {
+            str1.appendFormat("[]");
+        }
+        str1.append("***************");
     }
 
     return 0;

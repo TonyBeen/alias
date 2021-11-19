@@ -30,25 +30,21 @@
 
 namespace Jarvis {
 struct Task {
-    Task() : cb(nullptr), data(nullptr) {}
-    Task(std::function<int(void *)> f, std::shared_ptr<void *>  d) : cb(f), data(d) {}
+    Task() : cb(nullptr){}
+    Task(std::function<void()> f) : cb(f) {}
     Task(const Task& t)
     {
         this->cb = t.cb;
-        this->data = t.data;
     }
     Task &operator=(const Task& t)
     {
         this->cb = t.cb;
-        this->data = t.data;
     }
-    ~Task() {
-        data = nullptr;
-        cb = nullptr;
+    ~Task()
+    {
     }
 
-    std::function<int(void *)> cb;
-    std::shared_ptr<void *> data;
+    std::function<void()> cb;
 };
 
 class TaskQueue
@@ -76,8 +72,17 @@ public:
     ~ThreadPool();
 
     void startWork();
-    void addWork(const Task&, bool insertFront = false);
-    void addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg, bool insertFront = false);
+
+    template<typename Func>
+    void addWork(Func &&f, bool insertFront = false)
+    {
+        AutoLock<Mutex> lock(mPoolMutex);
+        if (mTask != nullptr) {
+            Task t(std::forward<Func>(f));
+            mTask->addTask(t, insertFront);
+            mQueueCond.signal();
+        }
+    }
     bool isValid() const { return mValid; }
     bool Reinit();
 

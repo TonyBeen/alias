@@ -9,13 +9,14 @@
 #define __ALIAS_SQL_CONN_H__
 
 #include "sql_base.h"
+#include <utils/utils.h>
 #include <map>
 
 namespace Jarvis {
 class MySqlConn : public SqlBase
 {
 public:
-    MySqlConn();
+    DISALLOW_COPY_AND_ASSIGN(MySqlConn);
     MySqlConn(const char *sqlUser, const char *passwd, const char *db,
             const char *ip = "127.0.0.1", uint16_t port = 3306);
     ~MySqlConn();
@@ -27,19 +28,21 @@ public:
     int  InsertSql(const char *table, const char *value) override;
     int  UpdateSql(const char *table, const char *value, const char *cond) override;
     int  DeleteSql(const char *table, const char *cond) override;
-
+    int  SqlCommond(const char *sql);
 
     int64_t         getAffectedRows() const;
     SqlResBase::sp  getSqlRes() override;
     uint32_t        getErrno() override { return mysql_errno(mSqlHandle); }
     const char *    getErrorStr() override { return mysql_error(mSqlHandle); }
+    std::string     getFieldByIdx(uint32_t idx) const;
 
     bool isSqlValid() const { return mSqlInit; }
     void CloseConn();
     operator MYSQL*() { return mSqlHandle; }
 
 protected:
-    bool KeepField(const char *value) override;
+    bool KeepField(const char *table, const char *value) override;
+    bool KeepFieldByQuery(const char *table);
 
 private:
     MYSQL *                     mSqlHandle;

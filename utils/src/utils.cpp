@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "utils.h"
+#include "Errors.h"
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -64,6 +65,16 @@ bool Mkdir(const std::string &path)
     } while(0);
     free(filePath);
     return false;
+}
+
+int32_t GetFileLength(const Jarvis::String8 &path)
+{
+    static struct stat lst;
+    int ret = lstat(path.c_str(), &lst);
+    if (ret != 0) {
+        return Jarvis::status_t::NOT_FOUND;
+    }
+    return static_cast<int32_t>(lst.st_size);
 }
 
 int msleep(uint32_t ms)

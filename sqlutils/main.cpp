@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include <iostream>
-#include "mysql_conn.h"
+#include "mysql.h"
 #include <log/log.h>
 #include <utils/Errors.h>
 
@@ -25,8 +25,8 @@ int main(int argc, char **argv)
         return -1;
     }
     int nRetCode = OK;
-    nRetCode = sql.SelectSql("userinfo", "user_id, user_name, user_password, user_login_ip",
-        "user_name = \"hsz\"");
+    // "user_id, user_name, user_password, user_login_ip"
+    nRetCode = sql.SelectSql("userinfo", nullptr, "user_name = \"hsz\"");
     if (nRetCode != OK) {
         LOGE("return code = %d", nRetCode);
         if (nRetCode == UNKNOWN_ERROR) {
@@ -36,6 +36,12 @@ int main(int argc, char **argv)
     MySqlRes::sp res = sql.getSqlRes();
     if (res->isVaild()) {
         int fields = res->getColumnCount();
+        LOGI("fields = %d", fields);
+        for (int i = 0; i < fields; ++i) {
+            cout << sql.getFieldByIdx(i);
+            cout << "\t";
+        }
+        cout << endl;
         while (res->next()) {
             for (int i = 0; i < fields; ++i) {
                 cout << res->getString(i) << "\t";
@@ -45,6 +51,6 @@ int main(int argc, char **argv)
     } else {
         LOGE("Unable to get resource");
     }
-
+    
     return 0;
 }

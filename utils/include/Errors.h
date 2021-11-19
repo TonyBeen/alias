@@ -4,7 +4,7 @@
 #include <errno.h>
 
 namespace Jarvis {
-typedef enum {
+typedef enum Status {
     OK                = 0,
     NO_ERROR          = OK,
 
@@ -13,7 +13,7 @@ typedef enum {
     NO_MEMORY           = -ENOMEM,      /* Out of memory */
     INVALID_OPERATION   = -ENOSYS,      /* Illegal operation */
     INVALID_PARAM       = -EINVAL,      /* Invalid argument */
-    NAME_NOT_FOUND      = -ENOENT,      /* No such file or directory */
+    NOT_FOUND           = -ENOENT,      /* No such file or directory */
     PERMISSION_DENIED   = -EPERM,       /* Operation not permitted */
     NO_INIT             = -ENODEV,      /* Uninitialized */
     ALREADY_EXISTS      = -EEXIST,      /* File exists */

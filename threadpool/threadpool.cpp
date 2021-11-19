@@ -33,7 +33,11 @@ Task TaskQueue::front()
     AutoLock<Mutex> lock(mQueueMutex);
     gExcuteCount++;
     Task t;
-    t = mTaskQueue.front();
+    auto it = mTaskQueue.begin();
+    if (it == mTaskQueue.end()) {
+        return t;
+    }
+    t = *it;
     mTaskQueue.pop_front();
     return t;
 }
@@ -82,7 +86,7 @@ ThreadPool::ThreadPool(size_t minThreadNum, size_t maxThreadNum) :
         mWorkThread[i].setWorkFunc(worker);
         mWorkThread[i].setArg(this);
     }
-    LOGI("%s() end", __func__);
+    LOGD("%s() end", __func__);
     mValid = true;
 }
 
@@ -147,30 +151,11 @@ void ThreadPool::startWork()
     LOGD("startWork() end");
 }
 
-void ThreadPool::addWork(const Task& td, bool insertFront)
-{
-    AutoLock<Mutex> lock(mPoolMutex);
-    if (mTask != nullptr) {
-        mTask->addTask(td, insertFront);
-        mQueueCond.signal();
-    }
-}
-
-void ThreadPool::addWork(std::function<int(void *)> f, std::shared_ptr<void *> arg, bool insertFront)
-{
-    AutoLock<Mutex> lock(mPoolMutex);
-    if (mTask != nullptr) {
-        Task t(f, arg);
-        mTask->addTask(t, insertFront);
-        mQueueCond.signal();
-    }
-}
-
 int ThreadPool::manager(void *arg)
 {
     ThreadPool *pool = static_cast<ThreadPool*>(arg);
     LOG_ASSERT(pool != nullptr, "pool is nullptr");
-    LOGI("manager() start");
+    LOGD("manager() start");
     while (!pool->mShouldExit.load(std::memory_order_acquire))
     {
         // 管理者线程每1s检查一次
@@ -178,11 +163,11 @@ int ThreadPool::manager(void *arg)
 
         pool->mPoolMutex.lock();
         int queueSize = pool->mTask->taskNumber();
-        int busyNum = pool->mBusyNum;
+        int busyNum = pool->mBusyNum.load();
         pool->mPoolMutex.unlock();
         int aliveNum = pool->mAliveThreadNum.load();
 
-        LOGI("%s() queueSize = %d, busyNum = %d, aliveNum = %d, minThreadNum = %d, maxThreadNum = %d", 
+        LOGD("%s() queueSize = %d, busyNum = %d, aliveNum = %d, minThreadNum = %d, maxThreadNum = %d", 
             __func__, queueSize, busyNum, aliveNum, pool->mThreadNumMin, pool->mThreadNumMax);
         // 任务过多，添加线程
         if ((queueSize / 4 > aliveNum) && (aliveNum < pool->mThreadNumMax)) {
@@ -219,22 +204,22 @@ int ThreadPool::manager(void *arg)
             pool->mWorkThread[i].Interrupt();
         }
     }
+    return Thread::THREAD_EXIT;
 }
 
 int  ThreadPool::worker(void *arg)
 {
     ThreadPool *pool = static_cast<ThreadPool *>(arg);
     LOG_ASSERT(pool != nullptr, "pool is nullptr");
-    LOGI("%s() begin", __func__);
     while (!pool->mShouldExit.load(std::memory_order_acquire)) // mShouldExit = true 退出
     {
-        // 当任务数量小于线程存活数的2倍时
-        while (pool->mTask->taskNumber() < pool->mAliveThreadNum.load()) {
+        // 当任务数量小于线程存活数
+        while (pool->mTask->taskNumber() == 0) {
             // 任务队列条件变量
             // 作用：当前任务数量为0，则需阻塞线程
             AutoLock<Mutex> lock(pool->mTask->mQueueMutex);
             LOGI("worker thread %ld wait", gettid());
-            pool->mQueueCond.wait(pool->mTask->mQueueMutex);    // TODO: 线程阻塞在这，减少线程存在问题
+            pool->mQueueCond.wait(pool->mTask->mQueueMutex);
             if (pool->mExitNum.load() > 0) {
                 pool->mAliveThreadNum--;
                 pool->mExitNum--;
@@ -248,9 +233,11 @@ int  ThreadPool::worker(void *arg)
             LOGW("task.func is nullptr");
             continue;
         }
+        LOGD("excute callback");
         pool->mBusyNum++;
-        t.cb(t.data.get());
+        t.cb();
         pool->mBusyNum--;
+        LOGD("excute callback over");
     }
     return Thread::THREAD_WAITING;
 }

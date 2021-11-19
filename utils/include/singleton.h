@@ -8,41 +8,47 @@
 #ifndef __SINGLETON_H__
 #define __SINGLETON_H__
 
-#include <memory>
-using std::shared_ptr;
+#include <bits/move.h>
 
 namespace Jarvis {
 
-/**
- * @brief 单例, 无参构造
- */
-template<typename DataType>
-class Singleton
-{
+template<typename T>
+class Singleton {
 public:
-    static DataType *GetInstacnce()
+    template<typename... Args>
+    static T *get(Args... args)
     {
-        static DataType t;
-        return &t;
+        if (mInstance == nullptr) {
+            mInstance = new T(std::forward<Args>(args)...);
+        }
+        return mInstance;
     }
-    ~Singleton() {}
+
+    template<typename... Args>
+    static T *reset(Args... args)
+    {
+        free();
+        mInstance = new T(std::forward<Args>(args)...);
+        return mInstance;
+    }
+
+    static void free()
+    {
+        if (mInstance != nullptr) {
+            delete mInstance;
+            mInstance = nullptr;
+        }
+    }
 private:
+    static T *mInstance;
+
     Singleton() {}
     Singleton(const Singleton&) = delete;
     Singleton& operator=(const Singleton&) = delete;
 };
 
-/**
- * @brief 智能指针单例
- */
-template<typename DataType>
-class SingletonPtr
-{
-public:
-    typedef std::shared_ptr<DataType> ptr;
-    SingletonPtr() {}
-    ~SingletonPtr() {}
-};
+template<typename T>
+T *Singleton<T>::mInstance = nullptr;
 
 } // namespace Jarvis
 

@@ -5,7 +5,7 @@
     > Created Time: Fri 20 Aug 2021 09:12:37 AM CST
  ************************************************************************/
 
-#include "mysql_conn.h"
+#include "mysql.h"
 #include <log/log.h>
 #include <utils/Errors.h>
 #include <utils/utils.h>
@@ -14,18 +14,11 @@
 static const char *INSERT_SQL_FMT = "insert into %s value(%s);";
 static const char *SELECT_SQL_FMT = "select %s from %s where(%s);";
 static const char *UPDATE_SQL_FMT = "update %s set %s where(%s);";
-static const char *DELETE_SQL_FMT = "delete from %s where(%s)";
+static const char *DELETE_SQL_FMT = "delete from %s where(%s);";
 
-#define SQL_BUF_LEN (1024U)
+#define SQL_BUF_LEN (512U)
 
 namespace Jarvis {
-MySqlConn::MySqlConn() :
-    mSqlHandle(nullptr),
-    mSqlInit(false)
-{
-    mSqlHandle = mysql_init(mSqlHandle);
-}
-
 MySqlConn::MySqlConn(const char *sqlUser, const char *passwd, const char *db,
             const char *ip, uint16_t port) :
     mSqlHandle(nullptr),
@@ -79,7 +72,8 @@ int MySqlConn::ConnectSql(const char *sqlUser, const char *passwd, const char *d
     }
     MYSQL *pSql = mysql_real_connect(mSqlHandle, ip, sqlUser, passwd, db, port, nullptr, 0);
     if (pSql == nullptr) {
-        LOGE("mysql_real_connect error: %s", mysql_error(mSqlHandle));
+        LOGE("mysql_real_connect ip:%s, port:%u db:%s error: %s",
+            ip, port, db, mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;
     }
     mSqlInit = true;
@@ -91,7 +85,7 @@ int MySqlConn::ConnectSql(const char *sqlUser, const char *passwd, const char *d
  * @param table {const char *} 数据库表名
  * @param value {const char *} 字段名，为空则是表中所有字段, 前后禁止加括号。标准格式：v1, v2, v3
  * @param cond  {const char *} 查询条件，where 后面的值
- * @return {int}
+ * @return int
  */
 int  MySqlConn::SelectSql(const char *table, const char *value, const char *cond)
 {
@@ -105,18 +99,17 @@ int  MySqlConn::SelectSql(const char *table, const char *value, const char *cond
     // len 比实际长度大6个字节
     uint32_t len = strlen(SELECT_SQL_FMT) + strlen(table) + 
         (value ? strlen(value) : 1) + (cond ? strlen(cond) : 4);
-    LOGD("sql len = %u\n", len);
-    KeepField(value);
+    KeepField(table, value);
     if (len > SQL_BUF_LEN) {
         return NO_MEMORY;
     }
-    static char buf[SQL_BUF_LEN] = {0};
+    char buf[SQL_BUF_LEN] = {0};
     memset(buf, 0, SQL_BUF_LEN);
     snprintf(buf, SQL_BUF_LEN - 1, SELECT_SQL_FMT, (value ? value : "*"), table, (cond ? cond : "true"));
     LOGD("%s() buf = %s\n", __func__, buf);
     if (mysql_query(mSqlHandle, buf)) {
-        LOGE("mysql query error. errno: %u, errmsg: %s\n",
-            mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+        LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+            __func__, buf, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;
     }
 
@@ -140,14 +133,14 @@ int  MySqlConn::InsertSql(const char *table, const char *value)
     if (len >= SQL_BUF_LEN) {
         return NO_MEMORY;
     }
-    static char buf[SQL_BUF_LEN] = {0};
+    char buf[SQL_BUF_LEN] = {0};
     memset(buf, 0, SQL_BUF_LEN);
     snprintf(buf, SQL_BUF_LEN - 1, INSERT_SQL_FMT, table, value);
     LOGD("%s() buf = %s\n", __func__, buf);
     int nRetCode = mysql_query(mSqlHandle, buf);
     if (nRetCode) {
-        LOGE("%s() in mysql_query error. [errno: %u, errmsg: %s]",
-            __func__, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+        LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+            __func__, buf, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;
     }
     return OK;
@@ -164,14 +157,14 @@ int  MySqlConn::UpdateSql(const char *table, const char *value, const char *cond
     if (len >= SQL_BUF_LEN) {
         return NO_MEMORY;
     }
-    static char buf[SQL_BUF_LEN] = {0};
+    char buf[SQL_BUF_LEN] = {0};
     memset(buf, 0, SQL_BUF_LEN);
     snprintf(buf, SQL_BUF_LEN - 1, UPDATE_SQL_FMT, table, value, cond);
     LOGD("%s() buf = %s\n", __func__, buf);
     int nRetCode = mysql_query(mSqlHandle, buf);
     if (nRetCode) {
-        LOGE("%s() mysql_query error. [errno: %u, errmsg: %s]",
-            __func__, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+        LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+            __func__, buf, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;
     }
     return OK;
@@ -193,15 +186,29 @@ int  MySqlConn::DeleteSql(const char *table, const char *cond)
     if (len >= SQL_BUF_LEN) {
         return NO_MEMORY;
     }
-    static char buf[SQL_BUF_LEN];
+    char buf[SQL_BUF_LEN];
     memset(buf, 0, SQL_BUF_LEN);
     snprintf(buf, SQL_BUF_LEN - 1, DELETE_SQL_FMT, table, cond);
     LOGD("%s() buf = %s\n", __func__, buf);
     if (mysql_query(mSqlHandle, buf)) {
-        LOGE("%s() mysql_query error. [errno: %u, errmsg: %s]",
-            __func__, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+        LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+            __func__, buf, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;
     }
+    return OK;
+}
+
+int MySqlConn::SqlCommond(const char *sql)
+{
+    if (sql == nullptr) {
+        return INVALID_PARAM;
+    }
+    if (mysql_query(mSqlHandle, sql)) {
+        LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+            __func__, sql, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+        return UNKNOWN_ERROR;
+    }
+    
     return OK;
 }
 
@@ -218,6 +225,15 @@ int64_t MySqlConn::getAffectedRows() const
         LOGE("mysql_store_result() should have returned data, but occer errors");
         return UNKNOWN_ERROR;
     }
+}
+
+std::string MySqlConn::getFieldByIdx(uint32_t idx) const
+{
+    auto it = mFieldMap.find(idx);
+    if (it == mFieldMap.end()) {
+        return "";
+    }
+    return it->second;
 }
 
 SqlResBase::sp MySqlConn::getSqlRes()
@@ -238,11 +254,11 @@ void MySqlConn::CloseConn()
  * @param value {char *} 查询表字段字符串
  * @return bool
  */
-bool MySqlConn::KeepField(const char *value)
+bool MySqlConn::KeepField(const char *table, const char *value)
 {
     mFieldMap.clear();
     if (value == nullptr) {
-        return true;
+        return KeepFieldByQuery(table);
     }
 
     uint32_t valueLen = strlen(value);
@@ -273,6 +289,41 @@ bool MySqlConn::KeepField(const char *value)
     return true;
 }
 
+bool MySqlConn::KeepFieldByQuery(const char *table)
+{
+    static const char *DESC_FORMAT = "show columns from %s;";   // desc %s 也可以
+    LOG_ASSERT(table != nullptr, "%s %d %s()", __FILE__, __LINE__, __func__);
+    char sqlBuf[SQL_BUF_LEN] = {0};
+    snprintf(sqlBuf, SQL_BUF_LEN, DESC_FORMAT, table);
+    MYSQL_RES *sqlRes = nullptr;
+    std::shared_ptr<MYSQL_RES> resSP;
+    if (mysql_query(mSqlHandle, sqlBuf)) {
+    LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
+        __func__, sqlBuf, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
+    return false;
+    }
+    sqlRes = mysql_store_result(mSqlHandle);
+    if (sqlRes == nullptr) {
+        return false;
+    }
+    resSP.reset(sqlRes, mysql_free_result);
+
+    int fields = mysql_num_fields(sqlRes);
+    if (fields < 1) {
+        return false;
+    }
+    MYSQL_ROW row = mysql_fetch_row(sqlRes);
+    int index = 0;
+    while (row) {
+        mFieldMap[index++] = row[0];
+        row = mysql_fetch_row(sqlRes);
+    }
+
+    for (auto it : mFieldMap) {
+        LOGI("[%d, %s]", it.first, it.second.c_str());
+    }
+    return true;
+}
 
 MySqlRes::MySqlRes(MYSQL_RES* res, int eno, const char* estr) :
     mErrno(eno),

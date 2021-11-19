@@ -22,8 +22,8 @@ int func2(void *arg)
 int main()
 {
     // 单位ms
-    gTimerManager.addTimer(100, func2);
-    uint64_t uniqueId = gTimerManager.addTimer(6000, func);
+    gTimerManager.addTimer(100, func2, nullptr, 1000);
+    uint64_t uniqueId = gTimerManager.addTimer(6000, func, nullptr, 2000);
     LOGI("timer start");
     gTimerManager.StartTimer();
 

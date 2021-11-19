@@ -1,11 +1,11 @@
 CC := g++
 STATIC_LIB := /usr/local/lib/libmysqlclient.a
-SO_DEPENDENCE :=  -laliaslog -lutils -lpthread -ldl
+SO_DEPENDENCE :=  -llog -lutils -lpthread -ldl
 # -lcrypto -lssl  -lz -lm -lrt -latomic	之前的依赖
 SO_FLAGS := -fPIC
 CFLAGS := -std=c++11
 
-src := mysql_conn.cpp
+src := mysql.cpp
 headerfile := $(wildcard ./*.h)
 obj := $(patsubst %.cpp, %.o, $(src))
 
@@ -35,6 +35,7 @@ insall: libsqlutils.so
 
 uninstall:
 	sudo rm -rf $(DESTDIR)/lib/libsqlutils.so
+	sudo rm -rf $(DESTDIR)/include/sqlutils
 
 .PHONY:	all clean test
 

@@ -2,7 +2,7 @@ cppflags := -std=c++11
 shared_lib := -lunwind -llog -lutils -lpthread
 cc := g++
 
-all : testbuffer testmutex testrwmutex teststring8 testthread teststring8_2 testtimer
+all : testbuffer testmutex testrwmutex teststring8 testthread teststring8_2 testtimer testsingleton
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -28,10 +28,13 @@ testcallstack : testcallstack.cc
 testtimer : test_timer.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
+testsingleton : test_singleton.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
 testyaml : testyaml.cc
 	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
 
-.PHONY : testbuffer testmutex teststring8 testthread testcallstack testtimer testrwmutex clean
+.PHONY : testbuffer testmutex teststring8 testthread testcallstack testtimer testrwmutex testsingleton clean
 
 clean :
-	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testcallstack testtimer testrwmutex
+	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testcallstack testtimer testrwmutex testsingleton

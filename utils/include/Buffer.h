@@ -31,13 +31,16 @@ public:
     ByteBuffer& operator=(ByteBuffer&& other);
     char&       operator[](size_t index);
 
-    size_t      set(const char *data, size_t dataSize, size_t offset = 0);  // 在offset之后设为data
+    // 在offset之后设为data
+    size_t      set(const char *data, size_t dataSize, size_t offset = 0);
     void        append(const char *data, size_t dataSize);
-    size_t      insert(const char *data, size_t dataSize, size_t offset = 0);   // 在offset之后插入数据而不覆盖之后的数据
+    // 在offset之后插入数据而不覆盖之后的数据
+    size_t      insert(const char *data, size_t dataSize, size_t offset = 0);
 
     char*       data() { return mBuffer ? mBuffer : nullptr; }
-    const char* begin() const { return mBuffer ? mBuffer : nullptr; }    // 返回数据开始地址
-    const char* end() const { return mBuffer ? (mBuffer + mDataSize) : nullptr; }      // 返回数据结束地址
+    const char *const_data() const { return mBuffer ? mBuffer : nullptr; }
+    const char* begin() const { return mBuffer ? mBuffer : nullptr; }                       // 返回数据开始地址
+    const char* end() const { return mBuffer ? (mBuffer + mDataSize - 1) : nullptr; }       // 返回数据结束地址
     void        resize(size_t newSize);
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }

@@ -36,7 +36,7 @@ public:
     virtual void CloseConn() = 0;
 
 protected:
-    virtual bool KeepField(const char *value) { return true; }
+    virtual bool KeepField(const char *table, const char *value) { return true; }
 };
 
 class SqlResBase {

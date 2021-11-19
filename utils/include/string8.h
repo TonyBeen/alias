@@ -17,9 +17,6 @@
 #include <string>
 
 namespace Jarvis {
-
-#define MAXSIZE (1024 * 8)
-
 class String8 {
 public:
                         String8();

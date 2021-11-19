@@ -8,6 +8,7 @@
 #ifndef __UTILS_FUNCTION_H__
 #define __UTILS_FUNCTION_H__
 
+#include "string8.h"
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -41,6 +42,7 @@ typedef unsigned long long nsec_t;
 nsec_t  seconds(uint16_t sec);
 nsec_t  mseconds(uint16_t ms);
 bool    Mkdir(const std::string &path);
+int32_t GetFileLength(const Jarvis::String8 &path);
 int     msleep(uint32_t ms);
 
 std::vector<int>    getPidByName(const char *procName);
