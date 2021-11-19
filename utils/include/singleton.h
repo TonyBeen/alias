@@ -24,11 +24,15 @@ public:
         return mInstance;
     }
 
+    /**
+     * @brief 重置实例, 会返回一个新的地址，所以原来的会失效，对于单例模式，此方法用的不太多 
+     */
     template<typename... Args>
     static T *reset(Args... args)
     {
         free();
         mInstance = new T(std::forward<Args>(args)...);
+        // *mInstance = T(std::forward<Args>(args)...);
         return mInstance;
     }
 
