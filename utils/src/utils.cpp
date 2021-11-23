@@ -163,6 +163,7 @@ std::string getNameByPid(pid_t pid)
 std::vector<std::string> getLocalAddress()
 {
     static std::vector<std::string> ips;
+    struct ifaddrs *lo = nullptr;
     if (ips.size() == 0) {
         struct ifaddrs *ifaddr = nullptr;
         getifaddrs(&ifaddr);
@@ -170,6 +171,7 @@ std::vector<std::string> getLocalAddress()
         while (ifaddr != nullptr) {
             if (ifaddr->ifa_addr->sa_family == AF_INET) {   // IPv4
                 if (std::string("lo") == ifaddr->ifa_name) {    // remove 127.0.0.1
+                    lo = ifaddr;
                     ifaddr = ifaddr->ifa_next;
                     continue;
                 }
@@ -179,6 +181,13 @@ std::vector<std::string> getLocalAddress()
             ifaddr = ifaddr->ifa_next;
         }
         freeifaddrs(root);
+    }
+
+    if (ips.size() == 0) {
+        std::vector<std::string> ret;
+        in_addr *tmp = &((sockaddr_in *)lo->ifa_addr)->sin_addr;
+        ret.push_back(inet_ntoa(*tmp));
+        return ret;
     }
     return ips;
 }
