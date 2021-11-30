@@ -28,7 +28,7 @@ public:
 template<typename MutexType>
 class AutoLock : public NonCopyAble{
 public:
-    AutoLock(const MutexType& mutex) : mMutex(mutex)
+    AutoLock(MutexType& mutex) : mMutex(mutex)
     {
         mMutex.lock();
     }
@@ -37,7 +37,7 @@ public:
         mMutex.unlock();
     }
 private:
-    const MutexType& mMutex;
+    MutexType& mMutex;
 };
 
 class Condition;
@@ -48,11 +48,13 @@ public:
         SHARED = 1
     };
 
+    void setMutexName(const String8 &name) { mName = name; }
+    const String8 &getMutexName() const { return mName; }
     Mutex(int type = PRIVATE);
     ~Mutex();
-    int  lock() const;
-    void unlock() const;
-    int  trylock() const;
+    int  lock();
+    void unlock();
+    int  trylock();
 
     operator pthread_mutex_t *() { return &mMutex; }
     pthread_mutex_t *mutex() { return &mMutex; }
@@ -60,6 +62,7 @@ public:
 private:
     friend class Condition;
     mutable pthread_mutex_t mMutex;
+    String8 mName;
 };
 
 // 局部写锁

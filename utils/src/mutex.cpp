@@ -15,7 +15,8 @@
 #include <string.h>
 
 namespace Jarvis {
-Mutex::Mutex(int type)
+Mutex::Mutex(int type) :
+    mName("NONE")
 {
     int ret = 0;
     if (type == SHARED) {
@@ -43,17 +44,17 @@ Mutex::~Mutex()
     assert(ret == 0);
 }
 
-int Mutex::lock() const
+int Mutex::lock()
 {
     return pthread_mutex_lock(&mMutex);
 }
 
-void Mutex::unlock() const
+void Mutex::unlock()
 {
     pthread_mutex_unlock(&mMutex);
 }
 
-int Mutex::trylock() const
+int Mutex::trylock()
 {
     return pthread_mutex_trylock(&mMutex);
 }
