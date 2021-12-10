@@ -41,6 +41,7 @@ public:
     const String8&  GetThreadName() const { return mThreadName; }
     const uint32_t& getKernalTid() const { return mKernalTid; }
     const pthread_t getTid() const { return mTid; }
+
 protected:
             void    *userData;       // 用户传参数据块
     virtual int     threadWorkFunction(void *arg) = 0;

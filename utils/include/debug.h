@@ -9,11 +9,11 @@
 
 //#define DEBUG
 #ifdef DEBUG
-    #ifndef SLOGD
-        #define SLOGD printf
+    #ifndef LOG
+        #define LOG printf
     #endif
 #else
-    #ifndef SLOGD
-        #define SLOGD(...)
+    #ifndef LOG
+        #define LOG(...)
     #endif
 #endif

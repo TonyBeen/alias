@@ -5,17 +5,13 @@
     > Created Time: 2021年05月30日 星期日 10时06分39秒
  ************************************************************************/
 
+#define DEBUG
+
 #include "thread.h"
 #include "Errors.h"
+#include "debug.h"
 #include "exception.h"
 #include <string.h>
-
-//#define DEBUG
-#ifdef DEBUG
-    #define SLOGD printf
-#else
-    #define SLOGD(...)
-#endif
 
 namespace Jarvis {
 ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
@@ -62,7 +58,7 @@ bool ThreadBase::ForceExit()
 bool ThreadBase::ShouldExit()
 {
     AutoLock<Mutex> _l(mMutex);
-    // SLOGD("thread %d exit mutex owner %d\n", mKernalTid, mMutex.mutex()->__data.__owner);
+    // LOG("thread %d exit mutex owner %d\n", mKernalTid, mMutex.mutex()->__data.__owner);
     return mExitStatus;
 }
 
@@ -85,7 +81,7 @@ int ThreadBase::run(size_t stackSize)
     if (ret == 0) {
         mThreadStatusAtomic = THREAD_RUNNING;
     } else {
-        SLOGD("pthread_create error %s\n", strerror(ret));
+        LOG("pthread_create error %s\n", strerror(ret));
     }
     pthread_attr_destroy(&attr);
     return ret;
@@ -116,13 +112,13 @@ void ThreadBase::StartWork()
  */
 int ThreadBase::threadloop(void *user)
 {
-    SLOGD("%s() start \n", __func__);
+    LOG("%s() start \n", __func__);
     ThreadBase *threadBase = (ThreadBase *)user;
     threadBase->mKernalTid = gettid();
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);    // 设置任何时间点都可以取消线程
 
     while (threadBase->ShouldExit() == false) {
-        SLOGD("thread is going to run...\n");
+        LOG("thread is going to run...\n");
         int result = threadBase->threadWorkFunction(threadBase->userData);
         if (result == THREAD_EXIT || threadBase->ShouldExit() == true) {
             threadBase->mThreadStatusAtomic = THREAD_EXIT;
@@ -131,12 +127,12 @@ int ThreadBase::threadloop(void *user)
 
         threadBase->mThreadStatusAtomic = THREAD_WAITING;
 
-        SLOGD("thread wait...\n");
+        LOG("thread wait...\n");
         AutoLock<Mutex> _l(threadBase->mMutex);
         threadBase->mCond.wait(threadBase->mMutex);     // 阻塞线程，由用户决定下一次执行任务的时间
         threadBase->mThreadStatusAtomic = THREAD_RUNNING;
     }
-    SLOGD("thread exit...\n");
+    LOG("thread exit...\n");
     return 0;
 }
 
@@ -164,7 +160,7 @@ int Thread::threadWorkFunction(void *arg)
 {
     if (function) {
         mFuncReturn = function(arg);
-        SLOGD("user functions return %d\n", mFuncReturn);
+        LOG("user functions return %d\n", mFuncReturn);
     }
     return mFuncReturn;
 }

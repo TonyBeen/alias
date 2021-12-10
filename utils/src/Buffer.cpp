@@ -19,7 +19,7 @@ ByteBuffer::ByteBuffer(size_t size) :
     mBuffer(nullptr)
 {
     mCapacity = getBuffer(size);
-    SLOGD("%s(size_t size) mCapacity = %zu\n", __func__, mCapacity);
+    LOG("%s(size_t size) mCapacity = %zu\n", __func__, mCapacity);
 }
 
 ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
@@ -28,7 +28,7 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mDataSize(0)
 {
     set(data, dataLength);
-    SLOGD("%s(const char *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
+    LOG("%s(const char *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
 }
 
 ByteBuffer::ByteBuffer(const ByteBuffer& other)
@@ -42,7 +42,7 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other)
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other)
 {
-    SLOGD("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
+    LOG("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
     char *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
@@ -55,21 +55,21 @@ ByteBuffer::~ByteBuffer()
 
 ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 {
-    SLOGD("%s(const ByteBuffer& other)\n", __func__);
+    LOG("%s(const ByteBuffer& other)\n", __func__);
     set(other.mBuffer, other.mDataSize);
     return *this;
 }
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 {
-    SLOGD("%s(ByteBuffer& other)\n", __func__);
+    LOG("%s(ByteBuffer& other)\n", __func__);
     set(other.mBuffer, other.mDataSize);
     return *this;
 }
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
-    SLOGD("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p\n", __func__, mBuffer);
+    LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p\n", __func__, mBuffer);
     char *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
@@ -100,7 +100,7 @@ size_t ByteBuffer::set(const char *data, size_t dataSize, size_t offset)
         freeBuffer();
         mCapacity = getBuffer(calculate(dataSize + offset));
     }
-    SLOGD("ByteBuffer::%s() data(%s), dataSize(%zu), offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
+    LOG("ByteBuffer::%s() data(%s), dataSize(%zu), offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
             __func__, data, dataSize, offset, mBuffer, mCapacity, mDataSize);
 
     if (mCapacity > 0) {
@@ -198,7 +198,7 @@ size_t ByteBuffer::getBuffer(size_t size)
     }
     if (mBuffer == nullptr) {
         mBuffer = (char *)malloc(size);
-        SLOGD("new buffer %p\n", mBuffer);
+        LOG("new buffer %p\n", mBuffer);
         if (mBuffer) {
             memset(mBuffer, 0, size);
             return size;
@@ -209,10 +209,10 @@ size_t ByteBuffer::getBuffer(size_t size)
 
 void  ByteBuffer::freeBuffer()
 {
-    SLOGD("free() %p\n", mBuffer);
+    LOG("free() %p\n", mBuffer);
     if (mBuffer) {
         free(mBuffer);
-        SLOGD("free %p\n", mBuffer);
+        LOG("free %p\n", mBuffer);
     }
     mBuffer = nullptr;
 }

@@ -8,12 +8,21 @@
 #include "timer.h"
 #include "exception.h"
 #include "Errors.h"
+#include <assert.h>
 #include <time.h>
 #include <unistd.h>
 #include <atomic>
 
+#define DEBUG
+#ifdef DEBUG
+#define LOG printf
+#else
+#define LOG(...)
+#endif
+
 namespace Jarvis {
 static std::atomic<uint64_t> gTimerCount = {0};
+static const uint32_t gMaxEpollEvents = 2;
 
 Timer::Timer(uint64_t ms, CallBack cb, uint32_t recycle) :
     mCb(cb),
@@ -51,7 +60,7 @@ Timer &Timer::operator=(const Timer& timer)
 /**
  * @brief 取消执行回调
  */
-void Timer::concel()
+void Timer::cancel()
 {
     mCb = nullptr;
 }
@@ -89,11 +98,11 @@ uint64_t Timer::getCurrentTime()
 }
 
 TimerManager::TimerManager() :
-    mEpollFd(-1)
+    mEpollFd(-1),
+    ThreadBase("timer thread", true),
+    mSignal(0)
 {
-    mThread.setWorkFunc(timer_thread_loop);
-    mThread.setArg(this);
-    mThread.setThreadName("Timer thread");
+
 }
 
 TimerManager::~TimerManager()
@@ -109,12 +118,11 @@ TimerManager::~TimerManager()
     }
     mTimers.clear();
     mRWMutex.unlock();
-    mThread.Interrupt();
 }
 
 int TimerManager::StartTimer(bool useCallerThread)
 {
-    mEpollFd = epoll_create(1);
+    mEpollFd = epoll_create(gMaxEpollEvents);
     if (mEpollFd < 0) {
         return UNKNOWN_ERROR;
     }
@@ -122,11 +130,12 @@ int TimerManager::StartTimer(bool useCallerThread)
     ev.events = EPOLLIN | EPOLLET;
     ev.data.fd = 0;
     epoll_ctl(mEpollFd, EPOLL_CTL_ADD, 0, &ev);
-    printf("epoll fd = %d\n", mEpollFd);
+    LOG("epoll fd = %d\n", mEpollFd);
+
     if (useCallerThread) {
-        return timer_thread_loop(this);
+        return threadWorkFunction(this);
     }
-    return mThread.run();
+    return run();
 }
 
 /**
@@ -178,63 +187,78 @@ bool TimerManager::delTimer(uint64_t uniqueId)
     return flag;
 }
 
-int TimerManager::timer_thread_loop(void *arg)
+void TimerManager::ListExpireTimer()
 {
-    TimerManager *tm = nullptr;
-    if (arg == nullptr) {
-        return Thread::THREAD_EXIT;
+    struct timespec ti;
+    if (clock_gettime(CLOCK_MONOTONIC, &ti)) {
+        return;
     }
 
-    tm = (TimerManager *)arg;
-    TimerManager::TimerIterator it;
-    epoll_event ev;
-    int n = -1;
+    uint64_t currTimeMs = ti.tv_sec * 1000 + ti.tv_nsec / 1000 / 1000;
+    WRAutoLock<RWMutex> wrLock(mRWMutex);
+    for (TimerManager::TimerIterator it = mTimers.begin(); it != mTimers.end();) {
+        if ((*it)->mTime < currTimeMs) {
+            mExpireTimerVec.push_back(*it);
+            it = mTimers.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
 
-    timespec sleepTime;
+int TimerManager::threadWorkFunction(void *arg)
+{
+    TimerManager::TimerIterator it;
+    epoll_event ev[gMaxEpollEvents];
+    int n = 0;
+    struct timespec sleepTime;
     sleepTime.tv_nsec = 1000000;
     sleepTime.tv_sec = 0;
-    printf("timer thread loop begin\n");
-    while (1) {
+
+    LOG("timer thread loop begin\n");
+    while (true) {
         {
-            WRAutoLock<RWMutex> lock(tm->mRWMutex);
-            printf("1 timers size %zu\n", tm->mTimers.size());
-            it = tm->mTimers.begin();
-            if (it == tm->mTimers.end()) {
-                break;
+            RDAutoLock<RWMutex> lock(mRWMutex);
+            LOG("timers size %zu\n", mTimers.size());
+            if (mTimers.size() == 0) {
+                LOG("timer wait");
+                mSignal.wait();
             }
-            printf("unique id = %lu\n", (*it)->mUniqueId);
         }
 
+        it = mTimers.begin();
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
         if (nextTime > 0) {
-            n = epoll_wait(tm->mEpollFd, &ev, 1, nextTime);
+            n = epoll_wait(mEpollFd, ev, gMaxEpollEvents, nextTime);
         }
-
-        // TODO: epoll_wait返回后，启用线程还是协程处理？
-        // 另外，当有多个时间相同时如何做到在短时间内处理，线城池还是协程池
         if (n == 0 || nextTime < 0) {
-            try {
-                (*it)->mCb((*it)->mArg.get());
-            } catch (const std::exception& e) {
-                printf("%s", e.what());
-            } catch (...) {
-                printf("%lu ms, unknow error.", (*it)->mTime);
+            ListExpireTimer();
+            for (auto &vecIt : mExpireTimerVec) {
+                if (vecIt->mCb != nullptr) {
+                    try {
+                        vecIt->mCb(vecIt->mArg.get());
+                    } catch (const Exception &e) {
+                        LOG("%s\n", e.what());
+                    } catch (...) {
+
+                    }
+                }
+                if (vecIt->mRecycleTime > 0) {
+                    vecIt->mTime += vecIt->mRecycleTime;
+                    addTimer(vecIt);
+                } else {
+                    delete vecIt;
+                }
             }
+            mExpireTimerVec.clear();
         }
-        printf("func execute over\n");
-        {
-            static Timer *ptr;
-            ptr = *it;
-            tm->delTimer(ptr->mUniqueId);
-            if (ptr->mRecycleTime > 0) {
-                tm->addTimer(ptr);
-            }
-            printf("2 timers size %zu\n", tm->mTimers.size());
+        if (n < 0) {
+            LOG("epoll_wait error. [%d, %s]", errno, strerror(errno));
+            break;
         }
     }
-    printf("timer thread wait");
-    return Thread::THREAD_WAITING;
-    // 线程处于等待状态，需在addTimer调用startWork。
+
+    return ThreadBase::THREAD_WAITING;
 }
 
 } // namespace Jarvis

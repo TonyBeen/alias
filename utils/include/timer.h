@@ -15,6 +15,7 @@
 
 #include "mutex.h"
 #include "thread.h"
+#include "singleton.h"
 #include <sys/epoll.h>
 #include <stdint.h>
 #include <set>
@@ -40,7 +41,7 @@ public:
     void setCallback(CallBack cb) { mCb = cb; }
     void setRecycleTime(uint64_t ms) { mRecycleTime = ms; }
 
-    void concel();
+    void cancel();
     void refresh();
     void setArg(std::shared_ptr<void *> arg) { mArg = arg; }
 
@@ -78,14 +79,14 @@ private:
         }
     };
 private:
-    uint64_t    mTime;          // (绝对时间)下一次执行时间
+    uint64_t    mTime;          // (绝对时间)下一次执行时间(ms)
     uint64_t    mRecycleTime;   // 循环时间ms
     CallBack    mCb;            // 回调函数
     std::shared_ptr<void *> mArg;   // 函数参数
     uint64_t    mUniqueId;      // 定时器唯一ID
 };
 
-class TimerManager
+class TimerManager : public ThreadBase
 {
 public:
     typedef std::set<Timer *, Timer::Comparator>::iterator TimerIterator;
@@ -97,18 +98,21 @@ public:
     const Timer *getNearTimer() { return *(mTimers.begin()); }
     uint64_t addTimer(uint64_t ms, Timer::CallBack cb,
         std::shared_ptr<void *> arg = nullptr, uint32_t recycle = 0);
-    void addTimer(Timer *timer);
     bool delTimer(uint64_t uniqueId);
 
-private:
-    static int timer_thread_loop(void *arg);
+protected:
+    virtual int threadWorkFunction(void *arg) override;
+    void ListExpireTimer();
+    void addTimer(Timer *timer);
 
 private:
+    Sem     mSignal;
     RWMutex mRWMutex;
     int     mEpollFd;
-    Thread  mThread;
 
+    std::vector<Timer *> mExpireTimerVec;
     std::set<Timer *, Timer::Comparator>  mTimers;        // 定时器集合
+    friend class Singleton<TimerManager>;
 };
 
 } // namespace Jarvis
