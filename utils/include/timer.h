@@ -72,7 +72,7 @@ private:
             if (r == nullptr) {
                 return false;
             }
-            if (l->mTime == r->mTime) { // 时间相同，比较地址
+            if (l->mTime == r->mTime) { // 时间相同，比较ID
                 return l->mUniqueId < r->mUniqueId;
             }
             return l->mTime < r->mTime;
