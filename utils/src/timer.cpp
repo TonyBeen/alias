@@ -193,12 +193,7 @@ bool TimerManager::delTimer(uint64_t uniqueId)
 
 void TimerManager::ListExpireTimer()
 {
-    struct timespec ti;
-    if (clock_gettime(CLOCK_MONOTONIC, &ti)) {
-        return;
-    }
-
-    uint64_t currTimeMs = ti.tv_sec * 1000 + ti.tv_nsec / 1000 / 1000;
+    uint64_t currTimeMs = Timer::getCurrentTime();
     WRAutoLock<RWMutex> wrLock(mRWMutex);
     for (TimerManager::TimerIterator it = mTimers.begin(); it != mTimers.end(); /**/) {
         if ((*it)->mTime < currTimeMs) {
