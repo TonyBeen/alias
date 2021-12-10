@@ -5,20 +5,16 @@
     > Created Time: Thu 16 Sep 2021 02:33:01 PM CST
  ************************************************************************/
 
+// #define DEBUG
+
 #include "timer.h"
 #include "exception.h"
 #include "Errors.h"
+#include "debug.h"
 #include <assert.h>
 #include <time.h>
 #include <unistd.h>
 #include <atomic>
-
-#define DEBUG
-#ifdef DEBUG
-#define LOG printf
-#else
-#define LOG(...)
-#endif
 
 namespace Jarvis {
 static std::atomic<uint64_t> gTimerCount = {0};
