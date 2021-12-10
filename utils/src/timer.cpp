@@ -93,7 +93,7 @@ uint64_t Timer::getCurrentTime()
 {
     timespec curTime;
     clock_gettime(CLOCK_MONOTONIC, &curTime);   // 获取系统运行时间，如果使用realtime，可能存在修改系统时间的进程，导致定时器出问题
-    uint64_t time = curTime.tv_sec * 1000 + curTime.tv_nsec / 1000;
+    uint64_t time = curTime.tv_sec * 1000 + curTime.tv_nsec / 1000 / 1000;
     return time;
 }
 
@@ -157,9 +157,13 @@ uint64_t TimerManager::addTimer(
     timer->setArg(arg);
     auto pair = mTimers.insert(timer);
     if (pair.second) {
+        if (mTimers.size() == 1) {
+            mSignal.post();
+        }
         return (*pair.first)->mUniqueId;
     }
 
+    delete timer;
     return 0;
 }
 
@@ -196,7 +200,7 @@ void TimerManager::ListExpireTimer()
 
     uint64_t currTimeMs = ti.tv_sec * 1000 + ti.tv_nsec / 1000 / 1000;
     WRAutoLock<RWMutex> wrLock(mRWMutex);
-    for (TimerManager::TimerIterator it = mTimers.begin(); it != mTimers.end();) {
+    for (TimerManager::TimerIterator it = mTimers.begin(); it != mTimers.end(); /**/) {
         if ((*it)->mTime < currTimeMs) {
             mExpireTimerVec.push_back(*it);
             it = mTimers.erase(it);
@@ -204,6 +208,7 @@ void TimerManager::ListExpireTimer()
             ++it;
         }
     }
+    LOG("mExpireTimerVec size = %zu\n", mExpireTimerVec.size());
 }
 
 int TimerManager::threadWorkFunction(void *arg)
@@ -228,6 +233,7 @@ int TimerManager::threadWorkFunction(void *arg)
 
         it = mTimers.begin();
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
+        LOG("nextTime = %d\n", nextTime);
         if (nextTime > 0) {
             n = epoll_wait(mEpollFd, ev, gMaxEpollEvents, nextTime);
         }
