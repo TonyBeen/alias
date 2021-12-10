@@ -19,14 +19,29 @@ int func2(void *arg)
     return 0;
 }
 
-int main()
+void test_main_loop()
 {
-    // 单位ms
     gTimerManager.addTimer(2000, func2, nullptr, 1000);
     uint64_t uniqueId = gTimerManager.addTimer(6000, func, nullptr, 2000);
     LOGI("timer start");
     gTimerManager.StartTimer(true);
+}
 
+void test_thread_loop()
+{
+    LOGI("timer start");
+    gTimerManager.StartTimer(false);
+    gTimerManager.addTimer(2000, func2, nullptr, 1000);
+    uint64_t uniqueId = gTimerManager.addTimer(6000, func, nullptr, 2000);
+
+    while (1) {
+        /* code */
+    }
+}
+
+int main()
+{
+    test_main_loop();
     printf(".....\n");
     return 0;
 }
