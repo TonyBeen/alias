@@ -218,11 +218,13 @@ int TimerManager::threadWorkFunction(void *arg)
             LOG("timers size %zu\n", mTimers.size());
             if (mTimers.size() == 0) {
                 LOG("timer wait");
+                mRWMutex.unlock();
                 mSignal.wait();
             }
+            mRWMutex.rlock();
+            it = mTimers.begin();
         }
 
-        it = mTimers.begin();
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
         LOG("nextTime = %d\n", nextTime);
         if (nextTime > 0) {
