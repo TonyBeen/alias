@@ -5,7 +5,7 @@
     > Created Time: Thu 16 Sep 2021 02:33:01 PM CST
  ************************************************************************/
 
-// #define DEBUG
+// #define _DEBUG
 
 #include "timer.h"
 #include "exception.h"

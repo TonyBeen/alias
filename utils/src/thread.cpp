@@ -5,7 +5,7 @@
     > Created Time: 2021年05月30日 星期日 10时06分39秒
  ************************************************************************/
 
-#define DEBUG
+#define _DEBUG
 
 #include "thread.h"
 #include "Errors.h"
