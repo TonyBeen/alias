@@ -56,7 +56,7 @@ static inline void rbtree_init(rbtree_t *tree)
     rbt_black(tree->root);
 }
 
-int rbtree_insert(rbtree_t *tree, RBTREE_TYPE key);
+int rbtree_insert(rbtree_t *tree, const RBTREE_TYPE &key);
 int rbtree_erase(rbtree_t *tree, rbtree_node_t *node);
 rbtree_node_t *rbtree_find(rbtree_t *tree, RBTREE_TYPE key);
 
