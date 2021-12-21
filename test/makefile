@@ -1,8 +1,17 @@
-cppflags := -std=c++11
+cppflags := -std=c++11 -g
 shared_lib := -lunwind -llog -lutils -lpthread
 cc := g++
 
-all : testbuffer testmutex testrwmutex teststring8 testthread teststring8_2 testtimer testsingleton
+all : 
+	make testbuffer
+	make testmutex
+	make testrwmutex
+	make teststring8
+	make testthrea
+	make teststring8_2
+	make testtimer
+	make testsingleton
+	make testrbtree
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -31,10 +40,15 @@ testtimer : test_timer.cc
 testsingleton : test_singleton.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
+testrbtree : test_rbtree.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
 testyaml : testyaml.cc
 	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
 
-.PHONY : testbuffer testmutex teststring8 testthread testcallstack testtimer testrwmutex testsingleton clean
+.PHONY : testbuffer testmutex teststring8 testthread testcallstack \
+	testtimer testrwmutex testsingleton testrbtree clean all
 
 clean :
-	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testcallstack testtimer testrwmutex testsingleton
+	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 \
+		testcallstack testtimer testrwmutex testsingleton testrbtree

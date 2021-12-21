@@ -30,6 +30,7 @@ static bool rbtree_insert_value(rbtree_t *tree, rbtree_node_t *node)
         tree->root = node;
         tree->root->left = tree->null;
         tree->root->right = tree->null;
+        rbt_black(tree->root);
         ++tree->size;
         return true;
     }
@@ -51,11 +52,6 @@ static bool rbtree_insert_value(rbtree_t *tree, rbtree_node_t *node)
         parent->left = node;
     } else { // 右子树
         parent->right = node;
-    }
-    if (rbt_is_red(parent)) {
-        rbt_black(node);
-    } else {
-        rbt_red(node);
     }
     return true;
 }
@@ -97,9 +93,9 @@ static void rbtree_insert_fixup(rbtree_t *tree, rbtree_node_t *node)
 {
     rbtree_node_t *root = tree->root;
     rbtree_node_t *uncle = NULL;
-    while (node != root && rbt_is_red(node)) {
+    while (node != root && rbt_is_red(node->parent)) {
         if (node->parent == node->parent->parent->left) {   // 父节点是祖父节点的左节点
-            uncle = node->parent->parent->right;
+            uncle = node->parent->parent->right;    // ?
             if (rbt_is_red(uncle)) {
                 rbt_black(node->parent);
                 rbt_black(uncle);
@@ -132,6 +128,7 @@ static void rbtree_insert_fixup(rbtree_t *tree, rbtree_node_t *node)
             }
         }
     }
+    rbt_black(root);
 }
 
 // 以node节点左旋
