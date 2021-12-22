@@ -11,7 +11,7 @@
 #include <string>
 #include <string.h>
 
-namespace Jarvis {
+namespace eular {
 class LogLevel {
 public:
     enum Level {
@@ -96,5 +96,5 @@ public:
     }
 };
 
-} // namespace Jarvis
+} // namespace eular
 #endif // #ifndef __LOG_LEVEL_H__

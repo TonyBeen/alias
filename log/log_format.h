@@ -19,7 +19,7 @@
 #define LOG_BUF_SIZE (512 + 128)
 
 // 05-24 10:10:10.100 12345 12345 I TAG: msg(\n)
-namespace Jarvis {
+namespace eular {
 class LogFormat {
 public:
     LogFormat();
@@ -35,6 +35,6 @@ private:
     static std::atomic<int> mLevel;     // 可以输出的最小level
 };
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __LOG_FORMAT_H__

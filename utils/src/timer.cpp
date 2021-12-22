@@ -16,7 +16,7 @@
 #include <unistd.h>
 #include <atomic>
 
-namespace Jarvis {
+namespace eular {
 static std::atomic<uint64_t> gTimerCount = {0};
 static const uint32_t gMaxEpollEvents = 2;
 
@@ -260,4 +260,4 @@ int TimerManager::threadWorkFunction(void *arg)
     return ThreadBase::THREAD_WAITING;
 }
 
-} // namespace Jarvis
+} // namespace eular

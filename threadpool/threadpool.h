@@ -28,7 +28,7 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-namespace Jarvis {
+namespace eular {
 struct Task {
     Task() : cb(nullptr){}
     Task(std::function<void()> f) : cb(f) {}
@@ -107,5 +107,5 @@ private:
     bool                mValid;
 };
 
-} // namespace Jarvis
+} // namespace eular
 #endif // __ALIAS_THREAD_POOL_H__

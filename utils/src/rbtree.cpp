@@ -59,12 +59,12 @@ static bool rbtree_insert_value(rbtree_t *tree, rbtree_node_t *node)
 int rbtree_insert(rbtree_t *tree, const RBTREE_TYPE &key)
 {
     if (!tree) {
-        return Jarvis::INVALID_PARAM;
+        return eular::INVALID_PARAM;
     }
 
     rbtree_node_t *temp = (rbtree_node_t *)malloc(sizeof(rbtree_node_t));
     if (!temp) {
-        return Jarvis::NO_MEMORY;
+        return eular::NO_MEMORY;
     }
     memset(temp, 0, sizeof(rbtree_node_t));
     rbt_red(temp);
@@ -73,7 +73,7 @@ int rbtree_insert(rbtree_t *tree, const RBTREE_TYPE &key)
     temp->right = tree->null;
     if (rbtree_insert_value(tree, temp) == false) {
         free(temp);
-        return Jarvis::ALREADY_EXISTS;
+        return eular::ALREADY_EXISTS;
     }
     rbtree_insert_fixup(tree, temp);
 }

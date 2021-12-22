@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-namespace Jarvis
+namespace eular
 {
 
 class CryptoBase
@@ -23,6 +23,6 @@ public:
     virtual int decode(uint8_t *out, uint8_t *src, const uint32_t &srcLen) = 0;
 };
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif

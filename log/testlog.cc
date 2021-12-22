@@ -15,8 +15,8 @@ void *thread(void *)
 
 int main()
 {
-    Jarvis::InitLog(Jarvis::LogLevel::INFO, true);
-    Jarvis::addOutputNode(Jarvis::LogWrite::FILEOUT);
+    eular::InitLog(eular::LogLevel::INFO, true);
+    eular::addOutputNode(eular::LogWrite::FILEOUT);
 
     pthread_t tid;
     pthread_create(&tid, nullptr, thread, nullptr);

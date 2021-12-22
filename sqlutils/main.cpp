@@ -13,7 +13,7 @@
 #define LOG_TAG __FILE__
 
 using namespace std;
-using namespace Jarvis;
+using namespace eular;
 
 void test_select()
 {
@@ -96,7 +96,7 @@ void test_insert(const char *file)
         return;
     }
     fmtSize = sprintf(querySql.get(), "'%s', '%s'", file, fmtBuf.get());
-    if (sql.InsertSqlBin(table, querySql.get(), fmtSize) == Jarvis::Status::OK) {
+    if (sql.InsertSqlBin(table, querySql.get(), fmtSize) == eular::Status::OK) {
         LOGI("insert %s to image OK", file);
     } else {
         LOGE("insert %s error. [%d, %s]", file, fmtBuf.get(), sql.getErrno(), sql.getErrorStr());

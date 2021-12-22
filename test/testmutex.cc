@@ -9,7 +9,7 @@
 #include <memory>
 
 using namespace std;
-using namespace Jarvis;
+using namespace eular;
 
 Mutex gMutex;
 
@@ -49,7 +49,7 @@ void testmutex()
     pthread_join(pid, nullptr);
 }
 
-Jarvis::Sem gSemaphore(0);
+eular::Sem gSemaphore(0);
 
 void testUnnamedSemaphore()
 {
@@ -67,12 +67,12 @@ int unnamed_thread_func(void *)
 
 void unnamed_thread_main()
 {
-    Jarvis::Thread th("test sem", unnamed_thread_func);
+    eular::Thread th("test sem", unnamed_thread_func);
     th.run();
     testUnnamedSemaphore();
 }
 
-Jarvis::Sem gSemNamed(nullptr, 0);
+eular::Sem gSemNamed(nullptr, 0);
 
 void test_named_sem()
 {
@@ -90,7 +90,7 @@ int named_thread_func(void *)
 
 void named_thread_main()
 {
-    Jarvis::Thread th("test sem", named_thread_func);
+    eular::Thread th("test sem", named_thread_func);
     th.run();
     test_named_sem();
 }

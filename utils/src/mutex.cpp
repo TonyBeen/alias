@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <string.h>
 
-namespace Jarvis {
+namespace eular {
 Mutex::Mutex(int type) :
     mName("NONE")
 {

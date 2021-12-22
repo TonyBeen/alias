@@ -11,7 +11,7 @@
 #include "crypto.h"
 #include <openssl/evp.h>
 
-namespace Jarvis {
+namespace eular {
 class Base64 : public CryptoBase
 {
 public:
@@ -59,6 +59,6 @@ protected:
 };
 
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __BASE64_H__

@@ -9,7 +9,7 @@
 #include <utils/Errors.h>
 #include <assert.h>
 
-namespace Jarvis {
+namespace eular {
 Base64::Base64()
 {
     init();    
@@ -122,4 +122,4 @@ int Base64::decode(uint8_t *out, uint8_t *src, const uint32_t &srcLen)
     return total;
 }
 
-} // namespace Jarvis
+} // namespace eular

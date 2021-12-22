@@ -13,7 +13,7 @@
 #define DEFAULT_STRING_SIZE 128
 #define MAXSIZE (1024 * 8)
 
-namespace Jarvis {
+namespace eular {
 
 char *String8::getBuffer(size_t numChars)
 {
@@ -683,4 +683,4 @@ std::ostream& operator<<(std::ostream &out, const String8& in)
     return out;
 }
 
-} // namespace Jarvis
+} // namespace eular

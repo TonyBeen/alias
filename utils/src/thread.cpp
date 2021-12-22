@@ -13,7 +13,7 @@
 #include "exception.h"
 #include <string.h>
 
-namespace Jarvis {
+namespace eular {
 ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
     mExitStatus(false),
     mPid(0),
@@ -180,4 +180,4 @@ void Thread::setWorkFunc(user_thread_function func)
     this->function = func;
 }
 
-} // namespace Jarvis
+} // namespace eular

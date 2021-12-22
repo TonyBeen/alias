@@ -11,7 +11,7 @@
 
 struct Data {
     int num;
-    Jarvis::String8 str;
+    eular::String8 str;
 };
 
 int function(void *arg)
@@ -29,7 +29,7 @@ int function(void *arg)
 
 int main(int argc, char **argv)
 {
-    Jarvis::Thread thread("test", function);
+    eular::Thread thread("test", function);
     Data *data = new Data;
     if (data == nullptr) {
         perror("malloc");
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
 
     {
         printf("\n------------------\n    测试delete\n------------------\n");
-        Jarvis::Thread *thread2 = new Jarvis::Thread("test", function);
+        eular::Thread *thread2 = new eular::Thread("test", function);
         Data *data = new Data;
         if (data == nullptr) {
             perror("malloc");

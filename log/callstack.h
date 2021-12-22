@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <vector>
 
-namespace Jarvis {
+namespace eular {
 
 class CallStack {
 public:
@@ -41,6 +41,6 @@ private:
     uint32_t                mSkip;
     uint32_t                mSkipEnd;
 };
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __ALIAS_CALLSTACK_H__

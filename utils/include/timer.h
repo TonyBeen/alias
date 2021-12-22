@@ -26,7 +26,7 @@ using std::set;
 using std::function;
 using std::shared_ptr;
 
-namespace Jarvis {
+namespace eular {
 class TimerManager;
 class Timer : public std::enable_shared_from_this<Timer>
 {
@@ -115,6 +115,6 @@ private:
     friend class Singleton<TimerManager>;
 };
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __TIMER_H__

@@ -8,11 +8,11 @@ namespace ns
     template <typename T, typename U>
     void func(T t, U u)
     {
-        Jarvis::CallStack cs;
+        eular::CallStack cs;
         cs.update();
-        Jarvis::String8 str = cs.toString();
+        eular::String8 str = cs.toString();
         printf("%s\n\n", str.c_str());
-        cs.log("callstack", Jarvis::LogLevel::INFO);
+        cs.log("callstack", eular::LogLevel::INFO);
     }
 }
 
@@ -22,7 +22,7 @@ struct Len
 public:
     void len()
     {
-        Jarvis::String8 s;
+        eular::String8 s;
         ns::func(t, s);
     }
 private:
@@ -41,7 +41,7 @@ int main()
     Len<int> l;
     l.len();
 
-    Jarvis::Thread th("Thread", thread);
+    eular::Thread th("Thread", thread);
     th.run();
     sleep(2);
     return 0;

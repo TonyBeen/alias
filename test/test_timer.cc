@@ -3,7 +3,7 @@
 
 #define LOG_TAG "test_timer"
 
-using namespace Jarvis;
+using namespace eular;
 
 TimerManager gTimerManager;
 

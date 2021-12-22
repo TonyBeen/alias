@@ -11,7 +11,7 @@
 #include <libunwind/libunwind.h>
 #include <stdlib.h>
 
-namespace Jarvis {
+namespace eular {
 CallStack::CallStack() :
     mSkip(2),
     mSkipEnd(0)
@@ -88,4 +88,4 @@ String8 CallStack::toString() const
     return std::move(str);
 }
 
-} // namespace Jarvis
+} // namespace eular

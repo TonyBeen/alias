@@ -8,7 +8,7 @@
 #include <iostream>
 #include "singlelist.h"
 using namespace std;
-using namespace Jarvis;
+using namespace eular;
 
 void print(void *data)
 {
@@ -18,7 +18,7 @@ void print(void *data)
 
 int main(int argc, char **argv)
 {
-    Jarvis::SingleList<int> sl;
+    eular::SingleList<int> sl;
     sl.InsertBack(10);
     sl.InsertBack(20);
     sl.InsertBack(30);
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     sl.ForeachList(print);
     cout << "*********************\n";
     cout << "list size = " << sl.getSize() << endl;
-    Jarvis::SingleList<int> tmp = sl;
+    eular::SingleList<int> tmp = sl;
     cout << "*********************\n";
     cout << "list size = " << tmp.getSize() << endl;
     return 0;

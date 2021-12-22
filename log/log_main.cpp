@@ -1,8 +1,8 @@
 #include "log_main.h"
 
-static Jarvis::LogManager *lm = nullptr;
+static eular::LogManager *lm = nullptr;
 
-namespace Jarvis {
+namespace eular {
 LogManager::LogManager(bool isDetach, bool sync)
 {
     pthread_mutex_init(&mListMutex, nullptr);

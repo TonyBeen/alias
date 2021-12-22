@@ -16,7 +16,7 @@
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-namespace Jarvis {
+namespace eular {
 class NonCopyAble {
 public:
     NonCopyAble() = default;
@@ -132,6 +132,6 @@ private:
     bool    isNamedSemaphore;
 };
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __MUTEX_H__

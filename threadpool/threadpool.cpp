@@ -13,7 +13,7 @@
 
 #define LOG_TAG "ThreadPool"
 
-namespace Jarvis {
+namespace eular {
 static const uint32_t THREAD_NUM_ONCE = 2;
 
 static uint64_t gExcuteCount = 0;
@@ -248,4 +248,4 @@ void ThreadPool::threadExit()
     // pthread_exit(NULL);
 }
 
-} // namespace Jarvis
+} // namespace eular

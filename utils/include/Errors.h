@@ -3,7 +3,7 @@
 
 #include <errno.h>
 
-namespace Jarvis {
+namespace eular {
 typedef enum Status {
     OK                = 0,
     NO_ERROR          = OK,
@@ -24,6 +24,6 @@ typedef enum Status {
     TIMED_OUT           = -ETIMEDOUT,   /* Something timed out */
 } status_t;
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __ERRORS_H__

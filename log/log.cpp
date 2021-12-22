@@ -8,7 +8,7 @@
 
 #define MSG_BUF_SIZE 512
 
-namespace Jarvis {
+namespace eular {
 static LogManager *gLogManager = nullptr;
 static bool gSync = true;
 static LogLevel::Level gLevel = LogLevel::DEBUG;
@@ -133,4 +133,4 @@ void log_write_assertv(const LogEvent *ev)
     exit(0);
 }
 
-} // namespace Jarvis
+} // namespace eular

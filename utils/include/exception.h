@@ -11,7 +11,7 @@
 #include "string8.h"
 #include <exception>
 
-namespace Jarvis {
+namespace eular {
 
 class Exception : public std::exception
 {
@@ -45,6 +45,6 @@ private:
 };
 
     
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __EXCEPTION_H__

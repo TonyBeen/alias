@@ -18,7 +18,7 @@
 
 #define MAX_QUEUE_SIZE (1024 * 10)
 
-namespace Jarvis {
+namespace eular {
 class LogManager : public std::enable_shared_from_this<LogManager> {
 public:
     typedef std::list<LogWrite *>::iterator LogWriteIt;
@@ -53,5 +53,5 @@ private:
     bool mIsSync;
     volatile bool mIsInterrupt;
 };
-} // namespace Jarvis
+} // namespace eular
 #endif // __LOG_MAIN_H__

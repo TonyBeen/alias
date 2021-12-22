@@ -18,7 +18,7 @@
 
 #define THREAD_FUNC_RETURN 0xFFF
 
-namespace Jarvis {
+namespace eular {
 class ThreadBase
 {
 public:
@@ -81,6 +81,6 @@ private:
     volatile int  mFuncReturn;
 };
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __THREAD_H__

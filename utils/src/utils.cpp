@@ -67,12 +67,12 @@ bool Mkdir(const std::string &path)
     return false;
 }
 
-int32_t GetFileLength(const Jarvis::String8 &path)
+int32_t GetFileLength(const eular::String8 &path)
 {
     static struct stat lst;
     int ret = lstat(path.c_str(), &lst);
     if (ret != 0) {
-        return Jarvis::status_t::NOT_FOUND;
+        return eular::status_t::NOT_FOUND;
     }
     return static_cast<int32_t>(lst.st_size);
 }

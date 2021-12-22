@@ -24,7 +24,7 @@ void func(void *arg)
 
 int addWorkThread(void *arg)
 {
-    Jarvis::ThreadPool *threadPool = (Jarvis::ThreadPool *)arg;
+    eular::ThreadPool *threadPool = (eular::ThreadPool *)arg;
     while (1) {
         threadPool->addWork(std::bind(&func, nullptr));
         msleep(80);
@@ -33,9 +33,9 @@ int addWorkThread(void *arg)
 
 int main(int argc, char **argv)
 {
-    Jarvis::Thread thread("addWorkThread", addWorkThread);
+    eular::Thread thread("addWorkThread", addWorkThread);
     try {
-        Jarvis::ThreadPool threadPool(2, 4);
+        eular::ThreadPool threadPool(2, 4);
         thread.setArg(&threadPool);
         thread.run();
         for (int i = 0; i < 100; ++i) {
@@ -45,7 +45,7 @@ int main(int argc, char **argv)
         while(1) {
             sleep(1);
         }
-    } catch (const Jarvis::Exception &e) {
+    } catch (const eular::Exception &e) {
         cout << e.what() << endl;
     }
 

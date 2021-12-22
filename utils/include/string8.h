@@ -16,7 +16,7 @@
 #include <ctype.h>
 #include <string>
 
-namespace Jarvis {
+namespace eular {
 class String8 {
 public:
                         String8();
@@ -126,6 +126,6 @@ private:
 // 为了方便输出
 std::ostream&   operator<<(std::ostream &out, const String8& in);
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif // __STRING8_H__

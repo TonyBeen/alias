@@ -9,7 +9,7 @@
 #include "debug.h"
 #include <assert.h>
 
-namespace Jarvis {
+namespace eular {
 ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 {
 }
@@ -217,4 +217,4 @@ void  ByteBuffer::freeBuffer()
     mBuffer = nullptr;
 }
 
-} // namespace Jarvis
+} // namespace eular

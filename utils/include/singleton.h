@@ -10,7 +10,7 @@
 
 #include <bits/move.h>
 
-namespace Jarvis {
+namespace eular {
 
 template<typename T>
 class Singleton {
@@ -54,6 +54,6 @@ private:
 template<typename T>
 T *Singleton<T>::mInstance = nullptr;
 
-} // namespace Jarvis
+} // namespace eular
 
 #endif  // __SINGLETON_H__

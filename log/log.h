@@ -7,31 +7,31 @@
 #include <sys/time.h>
 
 #ifndef LOGD
-#define LOGD(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGD(...) ((void)eular::log_write(eular::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGI
-#define LOGI(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::INFO, LOG_TAG, __VA_ARGS__))
+#define LOGI(...) ((void)eular::log_write(eular::LogLevel::Level::INFO, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGW
-#define LOGW(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::WARN, LOG_TAG, __VA_ARGS__))
+#define LOGW(...) ((void)eular::log_write(eular::LogLevel::Level::WARN, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGE
-#define LOGE(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::ERROR, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)eular::log_write(eular::LogLevel::Level::ERROR, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGF
-#define LOGF(...) ((void)Jarvis::log_write(Jarvis::LogLevel::Level::FATAL, LOG_TAG, __VA_ARGS__))
+#define LOGF(...) ((void)eular::log_write(eular::LogLevel::Level::FATAL, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOG_ASSERT
 #define LOG_ASSERT(cond, ...) \
-    (!(cond) ? ((void)Jarvis::log_write_assert(Jarvis::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
+    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
 #endif
 
-namespace Jarvis {
+namespace eular {
 
 /**
  * @brief 假如在InitLog之前调用过LOGX，则此函数只对日志级别有影响

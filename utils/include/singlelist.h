@@ -12,7 +12,7 @@
 #include <stddef.h>
 #include <stdio.h>
 
-namespace Jarvis {
+namespace eular {
 
 /* 1、提供拷贝构造；2、重载 ==，<，> */
 template <typename T>
@@ -344,5 +344,5 @@ private:
     nodeptr_t mListBack;
 };
 
-} // namespace Jarvis
+} // namespace eular
 #endif

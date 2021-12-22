@@ -5,7 +5,7 @@
 #include <sys/socket.h>
 #include <sys/mman.h>
 
-namespace Jarvis {
+namespace eular {
 LogWrite::LogWrite()
 {
     int ret = 0;

@@ -1,6 +1,6 @@
 #include "log_format.h"
 
-namespace Jarvis {
+namespace eular {
 // 静态成员变量初始化
 std::atomic<int> LogFormat::mLevel(LogLevel::DEBUG);
 
@@ -30,4 +30,4 @@ std::string LogFormat::Format(const LogEvent *ev)
     return std::string(buf);
 }
 
-} // namespace Jarvis
+} // namespace eular
