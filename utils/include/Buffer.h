@@ -14,7 +14,6 @@
 
 #define DEFAULT_BUFFER_SIZE (4096)
 
-
 namespace eular {
 class ByteBuffer final
 {
@@ -22,6 +21,7 @@ public:
     ByteBuffer();                       // call ByteBuffer(4096);
     ByteBuffer(size_t size);            // size == 0 ? 创建4096大小, 内容为空的buf : size
     ByteBuffer(const char *data, size_t dataLength);  // 如果data为null，则和上面一致
+    ByteBuffer(const uint8_t *data, size_t dataLength);
     ByteBuffer(ByteBuffer&& other);
     ~ByteBuffer();
 

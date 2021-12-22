@@ -31,6 +31,14 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     LOG("%s(const char *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
 }
 
+ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
+    mBuffer(nullptr),
+    mCapacity(0),
+    mDataSize(0)
+{
+    set((const char *)data, dataLength);
+}
+
 ByteBuffer::ByteBuffer(const ByteBuffer& other)
 {
     if (&other == this) {   // is that possible?
