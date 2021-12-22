@@ -30,6 +30,12 @@ public:
     static uint32_t GetSpaceSize(const uint32_t &len, bool isEncode = true);
 
     /**
+     * @brief 1为不采用换行
+     * @param noNewLine 取值0||1
+     */
+    void SetEncodeFlag(uint8_t noNewLine = 1);
+
+    /**
      * @brief 对src进行编码，输出至out
      * @param out 编码输出缓存
      * @param src 要进行编码的缓存
