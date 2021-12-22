@@ -24,9 +24,10 @@ public:
     /**
      * @brief 获取编码输出缓存所需的大小
      * @param len 将要编码的长度
+     * @param isEncode 获取编码输出长度为true，解码为false，默认true
      * @return 成功返回大于0，失败返回0
      */
-    uint32_t GetSpaceSize(const uint32_t &len);
+    static uint32_t GetSpaceSize(const uint32_t &len, bool isEncode = true);
 
     /**
      * @brief 对src进行编码，输出至out

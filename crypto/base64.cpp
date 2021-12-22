@@ -51,7 +51,7 @@ bool Base64::destroy()
     return true;
 }
 
-uint32_t Base64::GetSpaceSize(const uint32_t &len)
+uint32_t Base64::GetSpaceSize(const uint32_t &len, bool isEncode)
 {
     // uint32_t baseSize = 0;
     // if (len > 0) {
@@ -74,7 +74,7 @@ uint32_t Base64::GetSpaceSize(const uint32_t &len)
     // }
 
     // return baseSize + 1;    // 防止溢出
-    return EVP_ENCODE_LENGTH(len);
+    return isEncode ? EVP_ENCODE_LENGTH(len) : EVP_DECODE_LENGTH(len);
 }
 
 // 可以编码大小写字母，数字，--=+/*%@$#()/.,:# !
