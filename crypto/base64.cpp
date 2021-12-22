@@ -35,7 +35,7 @@ bool Base64::init()
     }
 
     EVP_EncodeSetFlag(mEncodeCtx, 1);   // 去掉openssl默认每48字节加一个换行符，自己加的函数
-    return (mEncodeCtx && mDecodeCtx) ? true : false;
+    return (mEncodeCtx && mDecodeCtx);
 }
 
 bool Base64::destroy()
