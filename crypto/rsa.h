@@ -80,7 +80,6 @@ private:
     bool reinit();
     void destroy();
 
-
 protected:
     RSA *mPublicKey;
     RSA *mPrivatKey;

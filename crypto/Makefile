@@ -1,12 +1,12 @@
 CC := g++
 CXXFLAGS := -std=c++11 -g
-NO_DEPRECATED_WARN := -Wno-deprecated-declarations # -Wno-error=deprecated-declarations 
+NO_DEPRECATED_WARN := -Wno-deprecated-declarations # -Wno-error=deprecated-declarations
 SOFLAGS := -fPIC
 
 INCLUDEPATH := -I./
 
 LIBPATH := -L/usr/local/lib/
-LIBLIST := -lutils -llog -lcrypto -lpthread -ldl
+LIBLIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
 
 INCLUDELIST := $(wildcard *.h)
 INCLUDELIST += $(wildcard *.hpp)
