@@ -42,7 +42,7 @@ public:
      * @param srcLen src的长度
      * @return 失败返回负值，成功返回已编码的长度
      */
-    virtual int encode(uint8_t *out, uint8_t *src, const uint32_t &srcLen) override;
+    virtual int encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
 
     /**
      * @brief 对src进行解码，输出至out
@@ -51,7 +51,7 @@ public:
      * @param srcLen src的长度
      * @return 失败返回负值，成功返回已编码的长度
      */
-    virtual int decode(uint8_t *out, uint8_t *src, const uint32_t &srcLen) override;
+    virtual int decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
 
 protected:
     EVP_ENCODE_CTX *mEncodeCtx;

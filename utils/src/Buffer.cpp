@@ -9,6 +9,8 @@
 #include "debug.h"
 #include <assert.h>
 
+#define DEFAULT_BUFFER_SIZE (4096)
+
 namespace eular {
 ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 {
@@ -27,8 +29,8 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
-    set(data, dataLength);
-    LOG("%s(const char *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
+    set((const uint8_t *)data, dataLength);
+    LOG("%s(const uint8_t *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
 }
 
 ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
@@ -36,7 +38,7 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
-    set((const char *)data, dataLength);
+    set((const uint8_t *)data, dataLength);
 }
 
 ByteBuffer::ByteBuffer(const ByteBuffer& other)
@@ -51,7 +53,7 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other)
 ByteBuffer::ByteBuffer(ByteBuffer&& other)
 {
     LOG("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
-    char *tmp = this->mBuffer;
+    uint8_t *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
 }
@@ -78,27 +80,27 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
     LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p\n", __func__, mBuffer);
-    char *tmp = this->mBuffer;
+    uint8_t *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
     return *this;
 }
 
-char& ByteBuffer::operator[](size_t index)
+uint8_t& ByteBuffer::operator[](size_t index)
 {
     assert(index < mDataSize);
     return mBuffer[index];
 }
 
-size_t ByteBuffer::set(const char *data, size_t dataSize, size_t offset)
+size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
 {
     if (data == nullptr) {
         return 0;
     }
-    char *temp = nullptr;
+    uint8_t *temp = nullptr;
     if (mCapacity < (dataSize + offset)) {
         if (offset > 0) {
-            temp = (char *)malloc(offset);
+            temp = (uint8_t *)malloc(offset);
             if (temp == nullptr) {
                 return 0;
             }
@@ -117,6 +119,7 @@ size_t ByteBuffer::set(const char *data, size_t dataSize, size_t offset)
             free(temp);
             temp = nullptr;
         }
+        memset(mBuffer + offset, 0, mCapacity - offset); // 清空offset之后的数据
         memcpy(mBuffer + offset, data, dataSize);
         mDataSize = offset + dataSize;
         return dataSize;
@@ -128,19 +131,19 @@ size_t ByteBuffer::set(const char *data, size_t dataSize, size_t offset)
     return 0;
 }
 
-void ByteBuffer::append(const char *data, size_t dataSize)
+void ByteBuffer::append(const uint8_t *data, size_t dataSize)
 {
     set(data, dataSize, size());
 }
 
-size_t ByteBuffer::insert(const char *data, size_t dataSize, size_t offset)
+size_t ByteBuffer::insert(const uint8_t *data, size_t dataSize, size_t offset)
 {
-    if (data == nullptr || offset > mDataSize) { // offset范围必须在0-mDataSize，等于mDataSize相当于尾插，offset=0相当于头插+
+    if (data == nullptr || offset > mDataSize) { // offset范围必须在0-mDataSize，等于mDataSize相当于尾插，offset=0相当于头插
         return 0;
     }
-    char *temp = nullptr;
+    uint8_t *temp = nullptr;
     if (mCapacity < (dataSize + mDataSize)) {
-        temp = (char *)malloc(mDataSize);
+        temp = (uint8_t *)malloc(mDataSize);
         if (temp == nullptr) {
             return 0;
         }
@@ -150,7 +153,7 @@ size_t ByteBuffer::insert(const char *data, size_t dataSize, size_t offset)
         mCapacity = getBuffer(calculate(dataSize + offset));
     }
 
-    if (mCapacity > 0) { 
+    if (mCapacity > 0) {
         if (temp) {
             memcpy(mBuffer, temp, offset);
             memcpy(mBuffer + offset + dataSize, temp + offset, mDataSize - offset);
@@ -199,13 +202,13 @@ size_t ByteBuffer::calculate(size_t dataSize)
     return dataSize;
 }
 
-size_t ByteBuffer::getBuffer(size_t size)
+size_t ByteBuffer::getBuffer(size_t size = DEFAULT_BUFFER_SIZE)
 {
     if (size == 0) {
         size = DEFAULT_BUFFER_SIZE;
     }
     if (mBuffer == nullptr) {
-        mBuffer = (char *)malloc(size);
+        mBuffer = (uint8_t *)malloc(size);
         LOG("new buffer %p\n", mBuffer);
         if (mBuffer) {
             memset(mBuffer, 0, size);

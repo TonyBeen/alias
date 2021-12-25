@@ -85,7 +85,7 @@ void Base64::SetEncodeFlag(uint8_t noNewLine)
 }
 
 // 可以编码大小写字母，数字，--=+/*%@$#()/.,:# !
-int Base64::encode(uint8_t *out, uint8_t *src, const uint32_t &srcLen)
+int Base64::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
     if (mEncodeCtx == nullptr) {
         return NO_INIT;
@@ -105,7 +105,7 @@ int Base64::encode(uint8_t *out, uint8_t *src, const uint32_t &srcLen)
     return total;
 }
 
-int Base64::decode(uint8_t *out, uint8_t *src, const uint32_t &srcLen)
+int Base64::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
     if (mDecodeCtx == nullptr) {
         return NO_INIT;

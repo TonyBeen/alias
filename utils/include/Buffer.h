@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEFAULT_BUFFER_SIZE (4096)
+
 
 namespace eular {
 class ByteBuffer final
@@ -29,18 +29,18 @@ public:
     ByteBuffer& operator=(const ByteBuffer& other);
     ByteBuffer& operator=(ByteBuffer& other);
     ByteBuffer& operator=(ByteBuffer&& other);
-    char&       operator[](size_t index);
+    uint8_t&    operator[](size_t index);
 
     // 在offset之后设为data
-    size_t      set(const char *data, size_t dataSize, size_t offset = 0);
-    void        append(const char *data, size_t dataSize);
+    size_t      set(const uint8_t *data, size_t dataSize, size_t offset = 0);
+    void        append(const uint8_t *data, size_t dataSize);
     // 在offset之后插入数据而不覆盖之后的数据
-    size_t      insert(const char *data, size_t dataSize, size_t offset = 0);
+    size_t      insert(const uint8_t *data, size_t dataSize, size_t offset = 0);
 
-    char*       data() { return mBuffer ? mBuffer : nullptr; }
-    const char *const_data() const { return mBuffer ? mBuffer : nullptr; }
-    const char* begin() const { return mBuffer ? mBuffer : nullptr; }                       // 返回数据开始地址
-    const char* end() const { return mBuffer ? (mBuffer + mDataSize - 1) : nullptr; }       // 返回数据结束地址
+    uint8_t *   data() { return mBuffer ? mBuffer : nullptr; }
+    const uint8_t *const_data() const { return mBuffer ? mBuffer : nullptr; }
+    const uint8_t *begin() const { return mBuffer ? mBuffer : nullptr; }                       // 返回数据开始地址
+    const uint8_t *end() const { return mBuffer ? (mBuffer + mDataSize - 1) : nullptr; }       // 返回数据结束地址
     void        resize(size_t newSize);
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
@@ -48,13 +48,13 @@ public:
 
 private:
     size_t      calculate(size_t);
-    size_t      getBuffer(size_t size = DEFAULT_BUFFER_SIZE);
+    size_t      getBuffer(size_t size);
     void        freeBuffer();
 
 private:
-    char*   mBuffer;
-    size_t  mDataSize;
-    size_t  mCapacity;
+    uint8_t*    mBuffer;
+    size_t      mDataSize;
+    size_t      mCapacity;
 };
 
 } // namespace eular

@@ -19,8 +19,8 @@ public:
     CryptoBase() {}
     virtual ~CryptoBase() {}
 
-    virtual int encode(uint8_t *out, uint8_t *src, const uint32_t &srcLen) = 0;
-    virtual int decode(uint8_t *out, uint8_t *src, const uint32_t &srcLen) = 0;
+    virtual int encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) = 0;
+    virtual int decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) = 0;
 };
 
 } // namespace eular
