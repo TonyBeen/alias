@@ -178,6 +178,9 @@ size_t ByteBuffer::insert(const uint8_t *data, size_t dataSize, size_t offset)
 
 void ByteBuffer::resize(size_t newSize)
 {
+    if (resize == 0) {
+        return;
+    }
     mCapacity = newSize;
     ByteBuffer tmp(mBuffer, mDataSize);
     freeBuffer();
