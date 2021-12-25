@@ -5,6 +5,7 @@
     > Created Time: Mon Jul  5 13:09:00 2021
  ************************************************************************/
 
+// #define _DEBUG
 #include "Buffer.h"
 #include "debug.h"
 #include <assert.h>
@@ -30,7 +31,8 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mDataSize(0)
 {
     set((const uint8_t *)data, dataLength);
-    LOG("%s(const uint8_t *data, size_t dataLength) mCapacity = %zu\n", __func__, mCapacity);
+    LOG("%s(const uint8_t *data, size_t dataLength) mDataSize = %zu, mCapacity = %zu\n",
+        __func__, mDataSize, mCapacity);
 }
 
 ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
@@ -50,7 +52,8 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other)
     set(other.mBuffer, other.mDataSize);
 }
 
-ByteBuffer::ByteBuffer(ByteBuffer&& other)
+ByteBuffer::ByteBuffer(ByteBuffer&& other) :
+    mBuffer(nullptr)
 {
     LOG("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
     uint8_t *tmp = this->mBuffer;
@@ -88,7 +91,7 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 
 uint8_t& ByteBuffer::operator[](size_t index)
 {
-    assert(index < mDataSize);
+    assert(index < mCapacity);
     return mBuffer[index];
 }
 

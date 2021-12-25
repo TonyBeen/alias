@@ -31,7 +31,7 @@ public:
     // 使用私钥解密
     int privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
 
-    // 根据秘钥或公钥获得单位加密字节数，受padding影响
+    // 根据秘钥或公钥获得单位加密/解密字节数，受padding影响
     int getPubRsaSize() const { return RSA_size(mPublicKey); }
     int getPriRsaSize() const { return RSA_size(mPrivatKey); }
 

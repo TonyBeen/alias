@@ -23,7 +23,7 @@ int main()
     printf("data = %p\n", buf.data());
 
     printf("3 测试append函数-----------------\n");
-    buf.append("-----", 5);
+    buf.append((const uint8_t *)"-----", 5);
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
