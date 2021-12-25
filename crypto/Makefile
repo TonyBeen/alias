@@ -21,7 +21,7 @@ libeularcrypto.so : $(OBJLIST)
 	$(CC) $^ -o $@ -shared $(LIBPATH) $(LIBLIST)
 	rm -rf $(OBJLIST)
 
-testrsa : test/test_rsa.cc rsa.cpp
+test/testrsa : test/test_rsa.cc rsa.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 
 %.o : %.cpp

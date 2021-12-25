@@ -9,8 +9,8 @@
 
 using namespace eular;
 
-static const char *publicKeyFile = "public.key";
-static const char *privateKeyFile = "private.key";
+static const char *publicKeyFile = "./test/public.key";
+static const char *privateKeyFile = "./test/private.key";
 
 // 测试公钥加密，私钥解密
 void test_publicEncode_privateDecode()
