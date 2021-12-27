@@ -31,7 +31,7 @@ Rsa::Rsa(const String8 &pubkeyFile, const String8 &prikeyFile) :
 
 Rsa::~Rsa()
 {
-    destroy();    
+    destroy();
 }
 
 int Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint32_t len)
@@ -139,14 +139,23 @@ Rsa::BufferPtr Rsa::publicEncode(const uint8_t *from, uint32_t fromLen)
         return nullptr;
     }
     Rsa::BufferPtr ptr(new ByteBuffer);
-    ptr->resize(getEncodeSpaceByDataLen(fromLen, false));
-
-    return ptr;
+    ptr->resize(getEncodeSpaceByDataLen(fromLen, false) + 1);
+    int encodeSize = publicEncode(ptr->data(), from, fromLen);
+    ptr->setDataSize(encodeSize);
+    return encodeSize > 0 ? ptr : nullptr;
 }
 
 int Rsa::publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
+    if (!src || !srcLen) {
+        return INVALID_PARAM;
+    }
 
+    out.resize(getEncodeSpaceByDataLen(srcLen, false) + 1);
+    uint8_t *outputBuf = out.data();
+    int encodeSize = publicEncode(outputBuf, src, srcLen);
+    out.setDataSize(encodeSize);
+    return encodeSize;
 }
 
 int Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
@@ -188,12 +197,32 @@ int Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
 Rsa::BufferPtr Rsa::publicDecode(const uint8_t *from, uint32_t fromLen)
 {
+    if (!from || !fromLen) {
+        return nullptr;
+    }
 
+    BufferPtr ptr(new ByteBuffer());
+    if (ptr != nullptr) {
+        ptr->resize(getDecodeSpaceByDataLen(fromLen, false) + 1);
+        int decodeSize = publicDecode(ptr->data(), from, fromLen);
+        ptr->setDataSize(decodeSize);
+    }
+
+    return ptr;
 }
 
 int Rsa::publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
+    if (!src || !srcLen) {
+        return INVALID_PARAM;
+    }
 
+    out.resize(getDecodeSpaceByDataLen(srcLen, false) + 1);
+    uint8_t *outputBuf = out.data();
+    int decodeSize = publicDecode(outputBuf, src, srcLen);
+    out.setDataSize(decodeSize);
+
+    return decodeSize;
 }
 
 

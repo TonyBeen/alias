@@ -45,6 +45,7 @@ public:
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
     void        clear();
+    void        setDataSize(size_t sz) { mDataSize = sz; }
 
 private:
     size_t      calculate(size_t);
