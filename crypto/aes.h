@@ -39,7 +39,6 @@ public:
     virtual int decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen);
 
 protected:
-    void free(void *ptr);
     std::shared_ptr<ByteBuffer> PKCS7Padding(const uint8_t *in, uint32_t inLen);
 
 protected:
