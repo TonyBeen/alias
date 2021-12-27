@@ -34,8 +34,7 @@ bool Aes::reinit(const uint8_t *userKey, Aes::KeyType userKeytype, Aes::EncodeTy
     case Aes::KeyType::AES256:
         break;
     default:
-        String8 errorMsg = String8::format("Invalid AES Type: %d", userKeytype);
-        throw(Exception(errorMsg));
+        throw(Exception(String8::format("Invalid AES Type: %d", userKeytype)));
         break;
     }
     memcpy(mUserKey, userKey, userKeytype);
