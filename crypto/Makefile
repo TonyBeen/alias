@@ -23,6 +23,8 @@ libeularcrypto.so : $(OBJLIST)
 
 test/testrsa : test/test_rsa.cc rsa.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+test/testaes : test/test_aes.cc aes.cpp
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 
 %.o : %.cpp
 	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
