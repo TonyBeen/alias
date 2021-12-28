@@ -71,7 +71,6 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     int n = vsnprintf(nullptr, 0, fmt, tmpArgs);
     va_end(tmpArgs);
 
-    printf("------------ n = %d\n", n);
     uint32_t outSize = MSG_BUF_SIZE;
     if (n > MSG_BUF_SIZE) { // 扩充buffer
         outSize = n;
