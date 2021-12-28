@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 
     int decodeLen = base64.decode(from, out, encodeLen);
     LOGD("strlen(from) = %zu, decodeLen = %d", strlen((char *)from), decodeLen);
-    LOGD("decode end. [%d,\n%s]", decodeLen, from);
-    write(STDOUT_FILENO, from, decodeLen);
+    LOGD("decode end. decodesize = %d,\n%s", decodeLen, from);
+    LOG_ASSERT(decodeLen == buf.size(), "test base64 fialed");
     return 0;
 }

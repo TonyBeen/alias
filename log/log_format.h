@@ -16,7 +16,8 @@
 #include <stdint.h>
 #include <atomic>
 
-#define LOG_BUF_SIZE (2048)
+#define PERFIX_SIZE (128)
+#define LOG_BUF_SIZE (2048 + PERFIX_SIZE)
 
 // 05-24 10:10:10.100 12345 12345 I TAG: msg(\n)
 namespace eular {

@@ -15,7 +15,18 @@ std::string LogFormat::Format(const LogEvent *ev)
         return std::string("");
     }
 
-    char buf[LOG_BUF_SIZE] = {0};
+    char output[LOG_BUF_SIZE] = {0};
+    char *buf = output;
+    int neededBufSize = strlen(ev->msg) + PERFIX_SIZE;
+    int bufSize = neededBufSize;
+    if (neededBufSize > LOG_BUF_SIZE) {
+        buf = (char *)malloc(neededBufSize);
+        if (buf == nullptr) {
+            buf = output;
+            bufSize = LOG_BUF_SIZE;
+        }
+        memset(buf, 0, bufSize);
+    }
     int index = 0;
 
     // time

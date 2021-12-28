@@ -6,7 +6,7 @@
 #define gettid() syscall(__NR_gettid)
 #endif
 
-#define MSG_BUF_SIZE 512
+#define MSG_BUF_SIZE (1024)
 
 namespace eular {
 static LogManager *gLogManager = nullptr;
@@ -54,6 +54,7 @@ void delOutputNode(int type)
 void log_write(int level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
+    char *out = buf;
     LogEvent ev;
     struct timeval tv;
     gettimeofday(&tv, nullptr);
@@ -64,16 +65,31 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     ev.pid = getpid();
     ev.tid = gettid();
 
-    va_list ap;
+    va_list ap, tmpArgs;
     va_start(ap, fmt);
-    vsnprintf(buf, MSG_BUF_SIZE - 1, fmt, ap);
+    va_copy(tmpArgs, ap);
+    int n = vsnprintf(nullptr, 0, fmt, tmpArgs);
+    va_end(tmpArgs);
+
+    printf("------------ n = %d\n", n);
+    uint32_t outSize = MSG_BUF_SIZE;
+    if (n > MSG_BUF_SIZE) { // 扩充buffer
+        outSize = n;
+        out = (char *)malloc(n + 8);
+        if (out == nullptr) {
+            out = buf;
+            outSize = MSG_BUF_SIZE;
+        }
+        memset(out, 0, n + 8);
+    }
+    int formatSize = vsnprintf(out, outSize + 7, fmt, ap);
     va_end(ap);
 
-    size_t len = strlen(buf);
-    if (len && buf[len - 1] != '\n') {
-        buf[len] = '\n';
+    size_t len = strlen(out);
+    if (len && out[len - 1] != '\n') {
+        out[len] = '\n';
     }
-    ev.msg = buf;
+    ev.msg = out;
     log_writev(&ev);
 }
 
