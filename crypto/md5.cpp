@@ -25,7 +25,7 @@ int Md5::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
     MD5_Update(&mMd5, src, srcLen);
     MD5_Final(out, &mMd5);
 
-    return 16;
+    return MD5_BUF_SIZE;
 }
 
 int Md5::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)

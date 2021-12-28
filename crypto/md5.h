@@ -18,7 +18,7 @@ public:
     Md5();
     virtual ~Md5();
 
-    static const uint8_t md5BufSize = 16;
+    static const uint8_t MD5_BUF_SIZE = 16;
 
     virtual int encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen);
     virtual int decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen);

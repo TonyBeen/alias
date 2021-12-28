@@ -21,9 +21,16 @@ libeularcrypto.so : $(OBJLIST)
 	$(CC) $^ -o $@ -shared $(LIBPATH) $(LIBLIST)
 	rm -rf $(OBJLIST)
 
+testall:
+	make test/testrsa
+	make test/testaes
+	make test/testmd5
+
 test/testrsa : test/test_rsa.cc rsa.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 test/testaes : test/test_aes.cc aes.cpp
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+test/testmd5  : test/test_md5.cc md5.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 
 %.o : %.cpp
@@ -31,7 +38,8 @@ test/testaes : test/test_aes.cc aes.cpp
 %.o : %.cc
 	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
 
-.PHONY: install uninstall clean testrsa libeularcrypto.so
+.PHONY: install uninstall clean testrsa libeularcrypto.so \
+		testall test/testrsa test/testaes test/testaes
 
 clean :
 	-rm -rf $(OBJLIST) $(TESTOBJLIST)
