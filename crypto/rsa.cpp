@@ -9,7 +9,7 @@
  * 公钥和私钥是一对，用公钥对数据加密，只能用对应的私钥解密。用私钥对数据加密，只能用对应的公钥进行解密。
  * 由于非对称加密的计算复杂，计算时间长，而对称加密加密所消耗的时间少，但由于秘钥在传递过程中容易泄露，
  * 所以采用非对称加密对'对称加密'的秘钥进行加密后传递
- * 但是，公钥所有人都可以获得，那对称加密的秘钥岂不是也可以解出来！
+ * 但是，公钥所有人都可以获得，那通过秘钥加密的数据岂不是也可以解出来！
  */
 
 #include "rsa.h"
@@ -24,7 +24,9 @@
 namespace eular {
 Rsa::Rsa(const String8 &pubkeyFile, const String8 &prikeyFile) :
     mPubKeyPath(pubkeyFile),
-    mPriKeyPath(prikeyFile)
+    mPriKeyPath(prikeyFile),
+    mPublicKey(nullptr),
+    mPrivatKey(nullptr)
 {
     reinit();
 }
