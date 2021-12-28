@@ -65,5 +65,6 @@ int main(int argc, char **argv)
     int decodeLen = base64.decode(from, out, encodeLen);
     LOGD("strlen(from) = %zu, decodeLen = %d", strlen((char *)from), decodeLen);
     LOGD("decode end. [%d,\n%s]", decodeLen, from);
+    write(STDOUT_FILENO, from, decodeLen);
     return 0;
 }
