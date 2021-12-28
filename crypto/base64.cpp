@@ -10,7 +10,10 @@
 #include <assert.h>
 
 namespace eular {
-Base64::Base64()
+Base64::Base64() :
+    mEncodeCtx(nullptr),
+    mDecodeCtx(nullptr)
+
 {
     init();    
 }

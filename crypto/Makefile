@@ -32,6 +32,8 @@ test/testaes : test/test_aes.cc aes.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 test/testmd5  : test/test_md5.cc md5.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+test/testbase64  : test/test_base64.cc base64.cpp
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
 
 %.o : %.cpp
 	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
