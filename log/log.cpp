@@ -55,6 +55,7 @@ void log_write(int level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     char *out = buf;
+    uint8_t needFree = 0;
     LogEvent ev;
     struct timeval tv;
     gettimeofday(&tv, nullptr);
@@ -78,6 +79,8 @@ void log_write(int level, const char *tag, const char *fmt, ...)
         if (out == nullptr) {
             out = buf;
             outSize = MSG_BUF_SIZE;
+        } else {
+            needFree = 1;
         }
         memset(out, 0, n + 8);
     }
@@ -90,6 +93,9 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     }
     ev.msg = out;
     log_writev(&ev);
+    if (needFree) {
+        free(out);
+    }
 }
 
 static void log_writev(const LogEvent *ev)

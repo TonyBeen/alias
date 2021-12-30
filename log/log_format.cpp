@@ -15,8 +15,10 @@ std::string LogFormat::Format(const LogEvent *ev)
         return std::string("");
     }
 
+    std::string ret;
     char output[LOG_BUF_SIZE] = {0};
     char *buf = output;
+    uint8_t needFree = 0;
     int neededBufSize = strlen(ev->msg) + PERFIX_SIZE;
     int bufSize = neededBufSize;
     if (neededBufSize > LOG_BUF_SIZE) {
@@ -24,6 +26,8 @@ std::string LogFormat::Format(const LogEvent *ev)
         if (buf == nullptr) {
             buf = output;
             bufSize = LOG_BUF_SIZE;
+        } else {
+            needFree = 1;
         }
         memset(buf, 0, bufSize);
     }
@@ -38,7 +42,11 @@ std::string LogFormat::Format(const LogEvent *ev)
     index += sprintf(buf + index, " %5d %5ld %s %s: %s",
         ev->pid, ev->tid, LogLevel::ToFormatString(ev->level).c_str(), ev->tag, ev->msg);
 
-    return std::string(buf);
+    ret = buf;
+    if (needFree) {
+        free(buf);
+    }
+    return ret;
 }
 
 } // namespace eular
