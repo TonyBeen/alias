@@ -288,8 +288,9 @@ String8& String8::operator=(const char* other)
 
 String8& String8::operator=(String8&& other)
 {
+    char *tmp = this->mString;
     this->mString = other.mString;
-    other.mString = nullptr;
+    other.mString = tmp;
     return *this;
 }
 
