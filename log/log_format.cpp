@@ -21,6 +21,7 @@ std::string LogFormat::Format(const LogEvent *ev)
     uint8_t needFree = 0;
     int neededBufSize = strlen(ev->msg) + PERFIX_SIZE;
     int bufSize = neededBufSize;
+
     if (neededBufSize > LOG_BUF_SIZE) {
         buf = (char *)malloc(neededBufSize);
         if (buf == nullptr) {
