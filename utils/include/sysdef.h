@@ -10,13 +10,13 @@
 
 #include <stdio.h>
 
-#if defined(WIN32)
-#define WINDOWS
+#if defined(WIN32) || defined(WIN64)
+#define OS_WINDOWS
 #elif defined(__linux__)
 #define OS_UNIX
 #endif
 
-#if defined(WINDOWS)
+#if defined(OS_WINDOWS)
 #ifdef SYS_DLL
     #define DLL_PORT __declspec(dllexport)
 #else
@@ -24,6 +24,14 @@
 #endif
 #elif defined(OS_UNIX)
     #define DLL_PORT
+#endif
+
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define NORETURN __attribute__((__noreturn__))
+#define UNUSED __attribute__((__unused__))
+#else
+#define NORETURN
+#define UNUSED
 #endif
 
 #ifndef NULL
