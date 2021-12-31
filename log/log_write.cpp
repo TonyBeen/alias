@@ -67,7 +67,7 @@ size_t StdoutLogWrite::getFileSize()
 
 uint32_t StdoutLogWrite::getFileMode()
 {
-    return 0;
+    return O_WRONLY;
 }
 
 bool StdoutLogWrite::setFileMode(uint32_t mode)
@@ -147,7 +147,6 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
     if (ret >= 0) {
         fsync(*mFileDesc);
         *mFileSize += ret;
-        
     } else {
         perror("write error");
     }
