@@ -21,8 +21,8 @@ int func2(void *arg)
 
 void test_main_loop()
 {
-    gTimerManager.addTimer(2000, func2, nullptr, 1000);
-    uint64_t uniqueId = gTimerManager.addTimer(6000, func, nullptr, 2000);
+    gTimerManager.addTimer(2000, func2, nullptr);
+    uint64_t uniqueId = gTimerManager.addTimer(6000, func, nullptr);
     LOGI("timer start");
     gTimerManager.StartTimer(true);
 }

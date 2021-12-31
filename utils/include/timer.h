@@ -110,6 +110,7 @@ private:
     RWMutex mRWMutex;
     int     mEpollFd;
 
+    std::atomic<uint8_t> mShouldExit;
     std::vector<Timer *> mExpireTimerVec;
     std::set<Timer *, Timer::Comparator>  mTimers;        // 定时器集合
     friend class Singleton<TimerManager>;

@@ -5,7 +5,7 @@
     > Created Time: Thu 16 Sep 2021 02:33:01 PM CST
  ************************************************************************/
 
-// #define _DEBUG
+#define _DEBUG
 
 #include "timer.h"
 #include "exception.h"
@@ -96,13 +96,16 @@ uint64_t Timer::getCurrentTime()
 TimerManager::TimerManager() :
     mEpollFd(-1),
     ThreadBase("timer thread", true),
-    mSignal(0)
+    mSignal(0),
+    mShouldExit(0)
 {
 
 }
 
 TimerManager::~TimerManager()
 {
+    mSignal.post();
+    mShouldExit.store(1);
     if (mEpollFd > 0) {
         close(mEpollFd);
     }
@@ -212,17 +215,20 @@ int TimerManager::threadWorkFunction(void *arg)
     sleepTime.tv_sec = 0;
 
     LOG("timer thread loop begin\n");
-    while (true) {
+    while (!mShouldExit.load()) {
         {
             RDAutoLock<RWMutex> lock(mRWMutex);
             LOG("timers size %zu\n", mTimers.size());
             if (mTimers.size() == 0) {
-                LOG("timer wait");
+                LOG("timer wait\n");
                 mRWMutex.unlock();
                 mSignal.wait();
+                mRWMutex.rlock();
             }
-            mRWMutex.rlock();
             it = mTimers.begin();
+        }
+        if (it == mTimers.end()) {
+            continue;
         }
 
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
@@ -230,6 +236,7 @@ int TimerManager::threadWorkFunction(void *arg)
         if (nextTime > 0) {
             n = epoll_wait(mEpollFd, ev, gMaxEpollEvents, nextTime);
         }
+        LOG("epoll_wait return\n");
         if (n == 0 || nextTime < 0) {
             ListExpireTimer();
             for (auto &vecIt : mExpireTimerVec) {
