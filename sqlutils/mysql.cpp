@@ -249,7 +249,13 @@ std::shared_ptr<char> MySqlConn::FormatHexString(const char *src, uint32_t srcSi
     if (src == nullptr || srcSize == 0) {
         return nullptr;
     }
-    std::shared_ptr<char> ptr(new char[srcSize * 2 + 1]);
+
+    static auto freePtr = [](void *ptr) {
+        if (ptr) {
+            delete [] ptr;
+        }
+    };
+    std::shared_ptr<char> ptr(new char[srcSize * 2 + 1], freePtr);
     if (ptr == nullptr) {
         return ptr;
     }
