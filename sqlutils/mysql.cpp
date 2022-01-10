@@ -250,7 +250,7 @@ std::shared_ptr<char> MySqlConn::FormatHexString(const char *src, uint32_t srcSi
         return nullptr;
     }
 
-    static auto freePtr = [](void *ptr) {
+    static auto freePtr = [](char *ptr) {
         if (ptr) {
             delete [] ptr;
         }
