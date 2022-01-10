@@ -12,6 +12,7 @@ all :
 	make testtimer
 	make testsingleton
 	make testrbtree
+	make testutils
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -46,9 +47,12 @@ testrbtree : test_rbtree.cc
 testyaml : testyaml.cc
 	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
 
-.PHONY : testbuffer testmutex teststring8 testthread testcallstack \
+testutils : test_utils.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
+.PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
 	testtimer testrwmutex testsingleton testrbtree clean all
 
 clean :
-	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 \
+	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testutils \
 		testcallstack testtimer testrwmutex testsingleton testrbtree
