@@ -161,7 +161,11 @@ int MySqlConn::InsertSqlBin(const char *table, const char *value, uint32_t size)
         return INVALID_PARAM;
     }
     uint32_t len = strlen(table) + size + strlen(INSERT_SQL_FMT);
-    std::shared_ptr<char> ptr(new char[len]);
+    std::shared_ptr<char> ptr(new char[len], [](char *ptr) {
+        if (ptr) {
+            delete []ptr;
+        }
+    });
     if (ptr == nullptr) {
         return NO_MEMORY;
     }
