@@ -231,12 +231,12 @@ int  MySqlConn::DeleteSql(const char *table, const char *cond)
     return OK;
 }
 
-int MySqlConn::SqlCommond(const char *sql)
+int MySqlConn::SqlCommond(const char *sql, uint32_t len)
 {
-    if (sql == nullptr) {
+    if (sql == nullptr || !len) {
         return INVALID_PARAM;
     }
-    if (mysql_query(mSqlHandle, sql)) {
+    if (mysql_real_query(mSqlHandle, sql, len)) {
         LOGE("%s() mysql_query \"%s\" error. [errno: %u, errmsg: %s]",
             __func__, sql, mysql_errno(mSqlHandle), mysql_error(mSqlHandle));
         return UNKNOWN_ERROR;

@@ -30,7 +30,7 @@ public:
     int  InsertSqlBin(const char *table, const char *value, uint32_t size);
     int  UpdateSql(const char *table, const char *value, const char *cond) override;
     int  DeleteSql(const char *table, const char *cond) override;
-    int  SqlCommond(const char *sql);
+    int  SqlCommond(const char *sql, uint32_t len);
     std::shared_ptr<char> FormatHexString(const char *src, uint32_t srcSize, uint32_t &fmtSize);
 
     int64_t         getAffectedRows() const;
