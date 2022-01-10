@@ -10,7 +10,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <dirent.h>
 #include <netinet/in.h> // for inet_ntoa
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -190,6 +189,44 @@ std::vector<std::string> getLocalAddress()
         return ret;
     }
     return ips;
+}
+
+bool isPicture(const std::string &fileName)
+{
+    static const char *extentArray[] = {
+        ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico"
+    };
+
+    size_t size = sizeof(extentArray) / sizeof(char *);
+    for (int i = 0; i < size; ++i) {
+        if (fileName.find_first_of(extentArray[i])) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::vector<std::string> getdir(const std::string &path)
+{
+    DIR *dir = nullptr;
+    struct dirent *ptr = nullptr;
+    std::vector<std::string> ret;
+
+    dir = opendir(path.c_str());
+    if (dir != nullptr) {
+        while ((ptr = readdir(dir)) != nullptr) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0))
+                continue;
+            if (ptr->d_type == DT_REG) {
+                ret.push_back(ptr->d_name);
+            }
+        }
+
+        closedir(dir);
+    }
+
+    return ret;
 }
 
 pid_t GetThreadId()
