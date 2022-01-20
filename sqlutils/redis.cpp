@@ -58,7 +58,14 @@ int RedisInterface::connect(const String8 &ip, uint16_t port, const char *pwd)
 
     mRedisCtx = redisConnect(mRedisHost.c_str(), mRedisPort);
     if (mRedisCtx == nullptr) {
-        LOG("%s() redisConnect (%s, %u) error.", __func__, mRedisHost.c_str(), mRedisPort);
+        LOGE("%s() redisConnect (%s, %u) error.", __func__, mRedisHost.c_str(), mRedisPort);
+        return REDIS_STATUS_CONNECT_ERROR;
+    }
+
+    if (mRedisCtx->err) {
+        LOGE("%s() redisConnectWithTimeout error. %s", __func__, mRedisCtx->errstr);
+        redisFree(mRedisCtx);
+        mRedisCtx = nullptr;
         return REDIS_STATUS_CONNECT_ERROR;
     }
 
@@ -66,8 +73,37 @@ int RedisInterface::connect(const String8 &ip, uint16_t port, const char *pwd)
         return REDIS_STATUS_OK;
     }
 
-    redisFree(mRedisCtx);
-    mRedisCtx = nullptr;
+    return REDIS_STATUS_AUTH_ERROR;
+}
+
+int RedisInterface::connecttimeout(const String8 &ip, uint16_t port,
+    const char *pwd, const struct timeval &timeout)
+{
+    if (mRedisCtx != nullptr) {
+        return REDIS_STATUS_OK;
+    }
+
+    mRedisHost = ip;
+    mRedisPort = port;
+    mRedisPwd = pwd;
+
+    mRedisCtx = redisConnectWithTimeout(ip.c_str(), port, timeout);
+    if (mRedisCtx == nullptr) {
+        LOGE("%s() redisConnect (%s, %u) error.", __func__, mRedisHost.c_str(), mRedisPort);
+        return REDIS_STATUS_CONNECT_ERROR;
+    }
+
+    if (mRedisCtx->err) {
+        LOGE("%s() redisConnectWithTimeout error. %s", __func__, mRedisCtx->errstr);
+        redisFree(mRedisCtx);
+        mRedisCtx = nullptr;
+        return REDIS_STATUS_CONNECT_ERROR;
+    }
+
+    if (authenticate(pwd)) {
+        return REDIS_STATUS_OK;
+    }
+
     return REDIS_STATUS_AUTH_ERROR;
 }
 
@@ -86,6 +122,7 @@ bool RedisInterface::authenticate(const char *pwd)
     if (pwd == nullptr) {
         return false;
     }
+
     redisReply *reply = nullptr;
     if (mRedisCtx) {
         static char buf[32];
@@ -116,16 +153,339 @@ end:
         freeReplyObject(reply);
         reply = nullptr;
     }
-    LOG("%s() auth %s error.\n", __func__, tmpBuf);
+    LOGE("%s() auth %s error.\n", __func__, tmpBuf);
     return false;
 }
 
 
-int RedisInterface::SqlCommand(const String8 &sql)
+RedisReply *RedisInterface::SqlCommand(const String8 &sql)
+{
+    if (mRedisCtx == nullptr) {
+        return nullptr;
+    }
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type == REDIS_REPLY_ERROR) {
+        if (reply) {
+            LOGE("%s() sql [%s] error. %s", __func__, sql.c_str(), reply->str);
+            freeReplyObject(reply);
+        }
+        return nullptr;
+    }
+
+    RedisReply *ret = new RedisReply(reply);
+    freeReplyObject(reply);
+    return ret;
+}
+
+/**
+ * @brief 选择数据库，0 - 15
+ * 
+ * @param dbNum 
+ * @return int 
+ */
+int RedisInterface::selectDB(uint16_t dbNum)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    if (dbNum > 15) {
+        return INVALID_PARAM;
+    }
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "select %d", dbNum);
+    if (reply == nullptr || reply->type != REDIS_REPLY_STATUS) {
+        goto error;
+    }
+
+    if (strcasecmp("OK", reply->str) == 0) {
+        freeReplyObject(reply);
+        return REDIS_STATUS_OK;
+    }
+
+error:
+    if (reply) {
+        LOGE("%s() select database error. %s", __func__, reply->str);
+        freeReplyObject(reply);
+    }
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 显示匹配到的键，如keys *表示所有的键
+ * 
+ * @param pattern 模糊的键名
+ * @return std::vector<String8> 返回所有匹配到的键
+ */
+std::vector<String8> RedisInterface::showKeys(const String8 &pattern)
+{
+    std::vector<String8> ret;
+
+    return ret;
+}
+
+/**
+ * @brief 判断键key是否存在
+ * 
+ * @param key 键名
+ * @return true 
+ * @return false 
+ */
+bool RedisInterface::isKeyExist(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return false;
+    }
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "exists %s", key.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        goto error;
+    }
+
+    if (reply->integer) {
+        freeReplyObject(reply);
+        return true;
+    }
+
+error:
+    if (reply) {
+        freeReplyObject(reply);
+    }
+    return false;
+}
+
+bool RedisInterface::delKey(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return false;
+    }
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "del %s", key.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        goto error;
+    }
+
+    if (reply->integer) {
+        freeReplyObject(reply);
+        return true;
+    }
+
+error:
+    if (reply) {
+        freeReplyObject(reply);
+    }
+    return false;
+}
+
+bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t seconds, bool isDeadTime)
 {
 
 }
 
+int RedisInterface::hashCreateOrReplace(const String8 &key,
+        const std::vector<std::pair<String8, String8>> &filedValue)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 filedAndVal;
+    for (auto it : filedValue) {
+        filedAndVal.appendFormat("%s %s ", it.first.c_str(), it.second.c_str());
+    }
+
+    const String8 &sql = String8::format("hmset %s", filedAndVal.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+        goto error;
+    }
+
+    if (strcasecmp("OK", reply->str) == 0) {
+        return REDIS_STATUS_OK;
+    }
+
+error:
+    if (reply) {
+        LOGE("%s() query error. [%s,%s]", __func__, reply->str, mRedisCtx->errstr);
+        freeReplyObject(reply);
+    }
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 将哈希表 key 中的字段 field 的值设为 value，如果键值已存在，则修改其值, 不存在则添加一个新的字段
+ * 
+ * @param key 键名
+ * @param filedValue 域-值
+ * @return 成功返回0，失败返回负值
+ */
+int RedisInterface::hashTableSetFiledValue(const String8 &key, const String8 &filed, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    const String8 &sql = String8::format("hset %s %s %s", key.c_str(), filed.c_str(), value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 获取存储在哈希表中指定字段的值
+ * 
+ * @param key 哈希表的键名
+ * @param filed 哈希表中的字段名
+ * @param ret 哈希表中的值输出位置
+ * @return int 成功返回0，失败返回负值
+ */
+int RedisInterface::hashGetKeyFiled(const String8 &key, const String8 &filed, String8 &ret)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    const String8 &sql = String8::format("hget %s %s", key.c_str(), filed.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    ret = reply->str;
+    freeReplyObject(reply);
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 获取在哈希表中指定 key 的所有字段和值
+ * 
+ * @param key 哈希表对应的键名
+ * @param ret 输出位置
+ * @return int 成功返回0，失败返回负值
+ */
+int RedisInterface::hashGetAllKey(const String8 &key, std::vector<std::pair<String8, String8>> &ret)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    const String8 &sql = String8::format("hgetall %s", key.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    LOG_ASSERT(reply->elements % 2 == 0, "redis fatal error: number of elements is not even");
+    ret.clear();
+
+    redisReply *filed, *value;
+    for (int i = 0; i < reply->elements; i += 2) {
+        filed = reply->element[i];
+        value = reply->element[i + 1];
+        if (value && filed) {
+            ret.push_back(std::make_pair<String8, String8>(filed->str, value->str));
+        }
+    }
+
+    freeReplyObject(reply);
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 删除一个或多个key下的字段
+ * 
+ * @param key 键名
+ * @param filed 字段集合
+ * @param fileds 字段的个数
+ * @return int 
+ */
+int RedisInterface::hashDelKeyOrFiled(const String8 &key, const char **filed, uint32_t fileds)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    if (!filed) {
+        return INVALID_PARAM;
+    }
+
+    String8 sql = String8::format("hdel %s ", key.c_str());
+    for (uint32_t i = 0; i < fileds; ++i) {
+        sql.appendFormat("%s ", filed[i]);
+    }
+    LOG("%s() query sql: [%s]\n", __func__, sql.c_str());
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    if (reply->integer >=0 && reply->integer <= fileds) {   // hash删除域的返回值的范围
+        freeReplyObject(reply);
+        return REDIS_STATUS_OK;
+    }
+
+    LOG_ASSERT(false, "sql: [%s], reply: %lld", sql.c_str(), reply->integer);
+    freeReplyObject(reply);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+int RedisInterface::hashDelKeyOrFiled(const String8 &key, const std::vector<String8> &filedVec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 sql = String8::format("hdel %s ", key.c_str());
+    for (auto it : filedVec) {
+        sql.appendFormat("%s ", it.c_str());
+    }
+
+    LOG("%s() query sql: [%s]\n", __func__, sql.c_str());
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    if (reply->integer >=0 && reply->integer <= filedVec.size()) {   // hash删除域的返回值的范围
+        freeReplyObject(reply);
+        return REDIS_STATUS_OK;
+    }
+
+    LOG_ASSERT(false, "sql: [%s], reply: %lld", sql.c_str(), reply->integer);
+    freeReplyObject(reply);
+    return REDIS_STATUS_QUERY_ERROR;
+}
 
 const char *RedisInterface::strerror(int no) const
 {
@@ -149,6 +509,21 @@ const char *RedisInterface::strerror(int no) const
     }
 
     return ret;
+}
+
+RedisReply::RedisReply(redisReply *reply) :
+    isVaild(false)
+{
+    if (reply == nullptr) {
+        return;
+    }
+    mReply.reset(reply, freeReplyObject);
+    isVaild = true;
+}
+
+RedisReply::~RedisReply()
+{
+
 }
 
 }
