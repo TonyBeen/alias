@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     RedisInterface redis;
     int ret = 0;
     if ((ret = redis.connect("127.0.0.1", 6379, "eular123")) < 0) {
-        printf("%d, %s\n", ret, redis.errstr(ret));
+        printf("%d, %s\n", ret, redis.strerror(ret));
         return 0;
     }
 
