@@ -64,7 +64,7 @@ public:
     int hashTableSetFiledValue(const String8 &key,
         const String8 &filed, const String8 &value);
     int hashGetKeyFiled(const String8 &key, const String8 &filed, String8 &ret);
-    int hashGetAllKey(const String8 &key, std::vector<std::pair<String8, String8>> &ret);
+    int hashGetKeyAll(const String8 &key, std::vector<std::pair<String8, String8>> &ret);
     int hashDelKeyOrFiled(const String8 &key, const char **filed, uint32_t fileds);
     int hashDelKeyOrFiled(const String8 &key, const std::vector<String8> &filedVec);
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <log/log.h>
 #include <utils/string8.h>
+#include <assert.h>
 
 #define LOG_TAG "String8 test"
 
@@ -35,6 +36,15 @@ int main()
     str3 = getString();
     printf("str3.mString ptr = %p\n", str3.c_str());
     std::cout << "str3: " << str3.toStdString() << std::endl;
+
+    eular::String8 str4;
+    std::cout << str4.appendFormat("%s", str3.c_str()) << std::endl;
+    std::cout << "str4: " << str4.c_str() << std::endl;
+    assert(str4 == str3);
+    for (int i = 0; i < 2; ++i) {
+        str4.appendFormat("%d%s%d", i, "----------", i);
+    }
+    std::cout << "str4: " << str4.c_str() << std::endl;
 
     return 0;
 }

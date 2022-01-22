@@ -458,6 +458,13 @@ error:
     return UNKNOWN_ERROR;
 }
 
+/**
+ * @brief 创建/替换哈希表，如果不存在就创建，如果已存在就替换
+ * 
+ * @param key 哈希键名
+ * @param filedValue 哈希字段及值
+ * @return 成功返回0，失败返回负值
+ */
 int RedisInterface::hashCreateOrReplace(const String8 &key,
         const std::vector<std::pair<String8, String8>> &filedValue)
 {
@@ -466,13 +473,16 @@ int RedisInterface::hashCreateOrReplace(const String8 &key,
     }
 
     String8 filedAndVal;
-    for (auto it : filedValue) {
+    for (const auto &it : filedValue) {
         filedAndVal.appendFormat("%s %s ", it.first.c_str(), it.second.c_str());
+        LOG("%s() [%s]\n", __func__, filedAndVal.c_str());
     }
 
-    const String8 &sql = String8::format("hmset %s", filedAndVal.c_str());
+    const String8 &sql = String8::format("hmset %s %s", key.c_str(), filedAndVal.c_str());
+    LOG("[%s] [%s]\n", key.c_str(), filedAndVal.c_str());
+    LOG("%s() sql [%s]\n", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
-    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+    if (reply == nullptr || reply->type != REDIS_REPLY_STATUS) {
         goto error;
     }
 
@@ -521,7 +531,7 @@ int RedisInterface::hashTableSetFiledValue(const String8 &key, const String8 &fi
  * @param key 哈希表的键名
  * @param filed 哈希表中的字段名
  * @param ret 哈希表中的值输出位置
- * @return int 成功返回0，失败返回负值
+ * @return 成功返回0，失败返回负值
  */
 int RedisInterface::hashGetKeyFiled(const String8 &key, const String8 &filed, String8 &ret)
 {
@@ -550,9 +560,9 @@ int RedisInterface::hashGetKeyFiled(const String8 &key, const String8 &filed, St
  * 
  * @param key 哈希表对应的键名
  * @param ret 输出位置
- * @return int 成功返回0，失败返回负值
+ * @return int 成功返回查询到的对数，失败返回负值
  */
-int RedisInterface::hashGetAllKey(const String8 &key, std::vector<std::pair<String8, String8>> &ret)
+int RedisInterface::hashGetKeyAll(const String8 &key, std::vector<std::pair<String8, String8>> &ret)
 {
     if (mRedisCtx == nullptr) {
         return REDIS_STATUS_NOT_CONNECTED;
@@ -568,7 +578,7 @@ int RedisInterface::hashGetAllKey(const String8 &key, std::vector<std::pair<Stri
 
         return REDIS_STATUS_QUERY_ERROR;
     }
-
+    int number = reply->elements / 2;
     LOG_ASSERT(reply->elements % 2 == 0, "redis fatal error: number of elements is not even");
     ret.clear();
 
@@ -582,7 +592,7 @@ int RedisInterface::hashGetAllKey(const String8 &key, std::vector<std::pair<Stri
     }
 
     freeReplyObject(reply);
-    return REDIS_STATUS_OK;
+    return number;
 }
 
 /**

@@ -6,24 +6,29 @@
  ************************************************************************/
 
 #include "string8.h"
-#include <errno.h>
-#include <error.h>
+#include "debug.h"
 #include "Errors.h"
+#include "exception.h"
+#include <error.h>
 
 #define DEFAULT_STRING_SIZE 128
 #define MAXSIZE (1024 * 8)
 
 namespace eular {
-
 char *String8::getBuffer(size_t numChars)
 {
     char *ret = nullptr;
-    if (numChars == 0) {
+    if (numChars < DEFAULT_STRING_SIZE) {   // 小于默认字符串长度
         ret = (char *)malloc(DEFAULT_STRING_SIZE);
         mCapacity = DEFAULT_STRING_SIZE;
-    } else if (numChars > 0 && numChars < MAXSIZE / 2) {
-        ret = (char *)malloc(numChars * 2);
-        mCapacity = numChars * 2;
+    } else if (numChars < MAXSIZE / 2) {    // 小于最大长度的二分之一就申请1.5倍
+        ret = (char *)malloc(numChars / 2 * 3);
+        mCapacity = numChars / 2 * 3;
+    } else if (numChars < MAXSIZE) {        // 大于最大长度二分之一小于最大长度，就申请最大长度
+        ret = (char *)malloc(MAXSIZE);
+        mCapacity = MAXSIZE;
+    } else {                                // 大于最大长度，抛出异常
+        throw Exception("Too many characters");
     }
 
     if (ret) {
@@ -86,7 +91,9 @@ String8::String8(const std::string& other)
 {
     size_t length = other.length();
     mString = getBuffer(length);
-    memcpy(mString, other.c_str(), length);
+    if (mString) {
+        memcpy(mString, other.c_str(), length);
+    }
 }
 
 String8::String8(String8 &&other)
@@ -660,21 +667,26 @@ int String8::appendFormatV(const char* fmt, va_list args)
     }
 
     size_t oldLength = length();
-    if (n > MAXSIZE - 1 || (oldLength + n) > MAXSIZE - 1) {
+    if ((oldLength + n) > MAXSIZE - 1) {
         return -1;
     }
-    char *buf = getBuffer(oldLength + n);
-    if (buf == nullptr) {
-        return -1;
+    char *buf = nullptr;
+    if (mCapacity < oldLength + n) {
+        buf = getBuffer(oldLength + n);
+        if (buf == nullptr) {
+            return -1;
+        }
     }
-    if (oldLength > 0) {
+
+    if (buf) {
         memcpy(buf, mString, oldLength);
+        vsnprintf(buf + oldLength, n + 1, fmt, args);   // 加1是包含最后的\0
+        release();
+        mString = buf;
+        return n;
     }
 
-    release();
-    vsnprintf(buf + oldLength, n + 1, fmt, args);
-    mString = buf;
-
+    vsnprintf(mString + oldLength, n + 1, fmt, args);
     return n;
 }
 
