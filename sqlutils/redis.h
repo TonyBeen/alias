@@ -50,10 +50,11 @@ public:
     int selectDB(uint16_t dbNum);
     std::vector<String8> showKeys(const String8 &pattern); // not implemented
     int  setKeyValue(const String8 &key, const String8 &val);
+    String8  getKeyValue(const String8 &key);
     int  getKeyValue(const std::vector<String8> &keyVec, std::vector<String8> &valVec);
     bool isKeyExist(const String8 &key);
     bool delKey(const String8 &key);
-    bool setKeyLifeCycle(const String8 &key, uint64_t milliseconds, bool isTimeStamp);
+    bool setKeyLifeCycle(const String8 &key, uint64_t milliseconds, bool isTimeStamp = false);
     bool delKeyLifeCycle(const String8 &key);
     int64_t getKeyTTLMS(const String8 &key);
 

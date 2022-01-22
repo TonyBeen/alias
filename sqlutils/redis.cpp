@@ -5,7 +5,7 @@
     > Created Time: Mon 10 Jan 2022 03:12:48 PM CST
  ************************************************************************/
 
-// #define _DEBUG
+#define _DEBUG
 #include "redis.h"
 #include <utils/debug.h>
 #include <utils/Errors.h>
@@ -226,6 +226,13 @@ std::vector<String8> RedisInterface::showKeys(const String8 &pattern)
     return ret;
 }
 
+/**
+ * @brief 设置键值
+ * 
+ * @param key 键
+ * @param val 键的值
+ * @return 成功返回0，失败返回负值
+ */
 int RedisInterface::setKeyValue(const String8 &key, const String8 &val)
 {
     if (mRedisCtx == nullptr) {
@@ -233,7 +240,7 @@ int RedisInterface::setKeyValue(const String8 &key, const String8 &val)
     }
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "set %s %s", key.c_str(), val.c_str());
-    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+    if (reply == nullptr || reply->type != REDIS_REPLY_STATUS) {
         goto error;
     }
 
@@ -250,6 +257,27 @@ error:
     return REDIS_STATUS_QUERY_ERROR;
 }
 
+String8 RedisInterface::getKeyValue(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return "";
+    }
+
+    String8 ret;
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "get %s", key.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+        if (reply) {
+            LOGE("%s() get error. %s", __func__, reply->str);
+            freeReplyObject(reply);
+        }
+        return ret;
+    }
+
+    ret = reply->str;
+    freeReplyObject(reply);
+    return ret;
+}
+
 int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<String8> &valVec)
 {
     if (mRedisCtx == nullptr) {
@@ -264,7 +292,7 @@ int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<
     for (const auto &it : keyVec) {
         sql.appendFormat("%s ", it.c_str());
     }
-    LOG("%s() sql \"%s\"\n", sql.c_str());
+    LOG("%s() sql \"%s\"\n", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
         if (reply) {
@@ -353,9 +381,9 @@ bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t milliseconds, 
 
     String8 sql;
     if (isTimeStamp) { // 时间戳
-        sql.appendFormat("expireat %s %llu", key.c_str(), milliseconds);
+        sql.appendFormat("expireat %s %lu", key.c_str(), milliseconds);
     } else { // 生存时间
-        sql.appendFormat("pexpire %s %llu", key.c_str(), milliseconds);
+        sql.appendFormat("pexpire %s %lu", key.c_str(), milliseconds);
     }
     LOG("%s() %s\n", __func__, sql.c_str());
 
