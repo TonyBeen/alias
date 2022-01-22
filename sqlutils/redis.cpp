@@ -19,6 +19,7 @@
 #define REDIS_STATUS_QUERY_ERROR        -3  // 查询失败
 #define REDIS_STATUS_NOT_CONNECTED      -4  // 未连接
 #define REDIS_STATUS_UNAUTHENTICATED    -5  // 未鉴权
+#define REDIS_STATUS_NOT_EXISTED        -6  // 键不存在
 
 namespace eular {
 RedisInterface::RedisInterface() :
@@ -225,6 +226,63 @@ std::vector<String8> RedisInterface::showKeys(const String8 &pattern)
     return ret;
 }
 
+int RedisInterface::setKeyValue(const String8 &key, const String8 &val)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "set %s %s", key.c_str(), val.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+        goto error;
+    }
+
+    if (strcasecmp(reply->str, "OK") == 0) {
+        freeReplyObject(reply);
+        return REDIS_STATUS_OK;
+    }
+
+error:
+    if (reply) {
+        LOGE("%s() set %s failed. %s", __func__, key.c_str(), reply->str);
+        freeReplyObject(reply);
+    }
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<String8> &valVec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    if (keyVec.size() == 0) {
+        return INVALID_PARAM;
+    }
+
+    String8 sql = "mget ";
+    for (const auto &it : keyVec) {
+        sql.appendFormat("%s ", it.c_str());
+    }
+    LOG("%s() sql \"%s\"\n", sql.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
+        if (reply) {
+            LOGE("%s() mget error. %s", __func__, reply->str);
+            freeReplyObject(reply);
+        }
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    redisReply *curr = nullptr;
+    for (int i = 0; i < reply->elements; ++i) {
+        curr = reply->element[i];
+        if (curr != nullptr) {
+            valVec.push_back(curr->str);
+        }
+    }
+}
+
 /**
  * @brief 判断键key是否存在
  * 
@@ -278,9 +336,98 @@ error:
     return false;
 }
 
-bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t seconds, bool isDeadTime)
+/**
+ * @brief 设置键的失效时间
+ * 
+ * @param key 键名
+ * @param milliseconds 取决于isTimeStamp (为0会删除此键)
+ * @param isTimeStamp isTimeStamp ? 是一个时间戳 : 多久后失效
+ * @return true 成功
+ * @return false 失败
+ */
+bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t milliseconds, bool isTimeStamp)
 {
+    if (mRedisCtx == nullptr) {
+        return false;
+    }
 
+    String8 sql;
+    if (isTimeStamp) { // 时间戳
+        sql.appendFormat("expireat %s %llu", key.c_str(), milliseconds);
+    } else { // 生存时间
+        sql.appendFormat("pexpire %s %llu", key.c_str(), milliseconds);
+    }
+    LOG("%s() %s\n", __func__, sql.c_str());
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        goto error;
+    }
+    if (reply->integer) {
+        freeReplyObject(reply);
+        return true;
+    }
+
+error:
+    if (reply) {
+        LOGE("%s() failed to set expire time. %s", __func__, reply->str);
+        freeReplyObject(reply);
+    }
+    return false;
+}
+
+bool RedisInterface::delKeyLifeCycle(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return false;
+    }
+
+    const String8 &sql = String8::format("persist %s", key.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        goto error;
+    }
+
+    freeReplyObject(reply);
+    return true;
+
+error:
+    if (reply) {
+        LOGE("%s() failed to delete expire time. %s", __func__, reply->str);
+        freeReplyObject(reply);
+    }
+    return false;
+}
+
+/**
+ * @brief 获取key的生存时间(毫秒)
+ * 
+ * @param key 键名
+ * @return -1表示未设置生存时间，-2表示键不存在，其他负值未知; 成功返回大于0的值
+ */
+int64_t RedisInterface::getKeyTTLMS(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    int64_t ret = 0;
+    String8 sql = String8::format("pttl %s", key.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        goto error;
+    }
+
+    ret = reply->integer;
+    freeReplyObject(reply);
+    return ret;
+
+error:
+    if (reply) {
+        LOGE("%s() failed to get expire time. %s", __func__, reply->str);
+        freeReplyObject(reply);
+    }
+    return UNKNOWN_ERROR;
 }
 
 int RedisInterface::hashCreateOrReplace(const String8 &key,

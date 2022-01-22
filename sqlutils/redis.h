@@ -48,20 +48,14 @@ public:
     RedisReply *SqlCommand(const String8 &sql);
 
     int selectDB(uint16_t dbNum);
-    std::vector<String8> showKeys(const String8 &pattern);
+    std::vector<String8> showKeys(const String8 &pattern); // not implemented
+    int  setKeyValue(const String8 &key, const String8 &val);
+    int  getKeyValue(const std::vector<String8> &keyVec, std::vector<String8> &valVec);
     bool isKeyExist(const String8 &key);
     bool delKey(const String8 &key);
-
-    /**
-     * @brief 设置键的失效时间
-     * 
-     * @param key 键名
-     * @param seconds 取决于isDeadTime
-     * @param isDeadTime isDeadTime ? 是一个时间戳 : 多久后失效
-     * @return true 成功
-     * @return false 失败
-     */
-    bool setKeyLifeCycle(const String8 &key, uint64_t seconds, bool isDeadTime);
+    bool setKeyLifeCycle(const String8 &key, uint64_t milliseconds, bool isTimeStamp);
+    bool delKeyLifeCycle(const String8 &key);
+    int64_t getKeyTTLMS(const String8 &key);
 
     // hash
     int hashCreateOrReplace(const String8 &key,
