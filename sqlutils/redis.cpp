@@ -601,7 +601,7 @@ int RedisInterface::hashGetKeyAll(const String8 &key, std::vector<std::pair<Stri
  * @param key 键名
  * @param filed 字段集合
  * @param fileds 字段的个数
- * @return int 
+ * @return 成功返回0，失败返回负值
  */
 int RedisInterface::hashDelKeyOrFiled(const String8 &key, const char **filed, uint32_t fileds)
 {

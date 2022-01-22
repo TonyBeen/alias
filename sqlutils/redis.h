@@ -70,7 +70,6 @@ public:
 
     // list
 
-
     const char *strerror(int no) const;
     void setHost(const String8 &ip) { mRedisHost = ip; }
     void setPort(const uint16_t &port) { mRedisPort = port; }

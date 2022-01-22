@@ -38,4 +38,4 @@ testredis : test_redis.cc redis.cpp
 .PHONY:	all clean testmysql testredis
 
 clean:
-	-rm -rf $(OBJLIST) testmysql
+	-rm -rf $(OBJLIST) testmysql testredis

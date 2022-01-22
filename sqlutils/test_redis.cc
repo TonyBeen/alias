@@ -45,6 +45,9 @@ void test_hash()
         cout << "filed = " << it.first.c_str() << ", value = " << it.second.c_str() << endl;
     }
 
+    const char *filed[] = {"name", "sex"};
+    assert(gRedis.hashDelKeyOrFiled("HashTable", filed, 2) == 0);
+
     gRedis.delKey("HashTable");
 }
 
