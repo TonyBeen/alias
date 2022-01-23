@@ -258,7 +258,7 @@ ConsoleLogWrite::ConsoleLogWrite() :
     mServerSockAddr.sun_family = AF_LOCAL;
     snprintf(mServerSockAddr.sun_path, MAX_SIZE_OF_SUNPATH, LOCAL_SOCKET_SERVER_PATH);
     mLocalServerSockPath = mServerSockAddr.sun_path;
-    
+
     // 捕获信号
     signal(SIGINT, signalHandler);
     signal(SIGQUIT, signalHandler);
@@ -306,7 +306,7 @@ void ConsoleLogWrite::Destroy()
 
 void ConsoleLogWrite::signalHandler(int sig)
 {
-    printf("%s() catch signal %d\n", sig);
+    printf("%s() catch signal %d\n", __func__, sig);
     unlink(gClientSockPath.c_str());
     exit(0);
 }
@@ -320,8 +320,9 @@ ssize_t ConsoleLogWrite::WriteToFile(std::string msg)
         }
     }
     pthread_mutex_lock(mMutex);
-    ssize_t sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
-    if (sendSize < 0) { // 服务端不在线
+    int sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
+    if (sendSize <= 0) { // 服务端不在线
+        perror("send error.");
         Destroy();
     }
     pthread_mutex_unlock(mMutex);

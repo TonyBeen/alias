@@ -20,6 +20,9 @@ testlog : $(obj) $(mainobj)
 liblog.so : $(obj)
 	$(cc) $(obj) -o $@ $(cflags) -shared $(shared_lib)
 
+logcat : logcat.cc
+	g++ logcat.cc -o logcat -std=c++11
+
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cflags) $(soflags)
 
@@ -30,12 +33,13 @@ debug:
 
 .PHONY:clean uninstall install
 
-install : liblog.so
+install : liblog.so logcat
 	-(sudo mv ./liblog.so $(destfile)/lib)
 	-(sudo ldconfig)
 	-(if [ ! -d "$(destfile)/include/log/" ]; then sudo mkdir $(destfile)/include/log/; fi)
 	-(sudo cp $(headerfile) $(destfile)/include/log/)
 	-(sudo make clean)
+	-(sudo mv logcat /usr/bin)
 
 uninstall:
 	-rm -rf $(obj) $(mainobj) testlog
