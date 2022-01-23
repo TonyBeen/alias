@@ -262,7 +262,7 @@ ConsoleLogWrite::ConsoleLogWrite() :
     // 捕获信号
     signal(SIGINT, signalHandler);
     signal(SIGQUIT, signalHandler);
-    signal(SIGPIPE, signalHandler);
+    signal(SIGPIPE, SIG_IGN);
 
     InitParams();
 }
@@ -306,9 +306,7 @@ void ConsoleLogWrite::Destroy()
 
 void ConsoleLogWrite::signalHandler(int sig)
 {
-    if (sig == SIGPIPE) {
-        return;
-    }
+    printf("%s() catch signal %d\n", sig);
     unlink(gClientSockPath.c_str());
     exit(0);
 }
