@@ -42,17 +42,14 @@ LogWrite::~LogWrite()
 
 ssize_t StdoutLogWrite::WriteToFile(std::string msg)
 {
-    if (msg.length() == 0) {
-        return 0;
+    int ret = 0;
+    if (msg.length()) {
+        pthread_mutex_lock(mMutex);
+        ret = write(STDOUT_FILENO, msg.c_str(), msg.length());
+        pthread_mutex_unlock(mMutex);
     }
-    ssize_t ret = 0;
-    pthread_mutex_lock(mMutex);
-    ret = write(STDOUT_FILENO, msg.c_str(), msg.length());
-    pthread_mutex_unlock(mMutex);
-    if (ret > 0) {
-        return ret;
-    }
-    return 0;
+
+    return ret;
 }
 
 std::string StdoutLogWrite::getFileName()
@@ -135,8 +132,8 @@ std::string FileLogWrite::getFileName()
 
 ssize_t FileLogWrite::WriteToFile(std::string msg)
 {
-    pthread_mutex_lock(mMutex);
     ssize_t ret = 0;
+    pthread_mutex_lock(mMutex);
     if (*mFileDesc <= 0 || *mFileSize > MAX_FILE_SIZE) {
         CloseFile();
         CreateNewFile(getFileName());
@@ -144,15 +141,16 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
     if (msg.length()) {
         ret = write(*mFileDesc, msg.c_str(), msg.length());
     }
-    if (ret >= 0) {
+    if (ret > 0) {
         fsync(*mFileDesc);
         *mFileSize += ret;
-    } else {
+    } else if (ret < 0) {
         perror("write error");
     }
     pthread_mutex_unlock(mMutex);
     return ret;
 }
+
 size_t FileLogWrite::getFileSize()
 {
     return *mFileSize;
@@ -222,7 +220,9 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
         return true;
     }
     std::string path = "/home/hsz/log/";
-    bool ret = Mkdir(path);
+    if (!Mkdir(path)) {
+        return false;
+    }
     path += fileName;
 
     *mFileDesc = open(path.c_str(), mFileFlag, mFileMode);
@@ -313,18 +313,19 @@ void ConsoleLogWrite::signalHandler(int sig)
 
 ssize_t ConsoleLogWrite::WriteToFile(std::string msg)
 {
+    pthread_mutex_lock(mMutex);
     if (mClientFd <= 0) {
         InitParams();
-        if (mClientFd <=0 ) {
-            return 0;
+    }
+
+    int sendSize = 0;
+    if (mClientFd > 0) {
+        sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
+        if (sendSize <= 0) { // 服务端不在线
+            Destroy();
         }
     }
-    pthread_mutex_lock(mMutex);
-    int sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
-    if (sendSize <= 0) { // 服务端不在线
-        perror("send error.");
-        Destroy();
-    }
+
     pthread_mutex_unlock(mMutex);
     return sendSize;
 }

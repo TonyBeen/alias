@@ -71,7 +71,7 @@ public:
     StdoutLogWrite() {}
     ~StdoutLogWrite() {}
 
-    virtual ssize_t      WriteToFile(std::string msg);
+    virtual ssize_t      WriteToFile(std::string msg) override;
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -82,6 +82,7 @@ public:
     virtual bool         CreateNewFile(std::string fileName);
     virtual bool         CloseFile();
     virtual uint16_t     type() const { return STDOUT; }
+
 private:
     bool isInterrupt;
 };
@@ -91,7 +92,7 @@ public:
     FileLogWrite(uint32_t fileFlag = O_WRONLY | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
     virtual ~FileLogWrite();
 
-    virtual ssize_t      WriteToFile(std::string msg);
+    virtual ssize_t      WriteToFile(std::string msg) override;
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -117,7 +118,7 @@ public:
     ConsoleLogWrite();
     ~ConsoleLogWrite();
 
-    ssize_t      WriteToFile(std::string msg);
+    ssize_t      WriteToFile(std::string msg) override;
     std::string  getFileName();
     size_t       getFileSize();
     uint32_t     getFileMode();
