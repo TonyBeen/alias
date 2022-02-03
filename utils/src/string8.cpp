@@ -468,6 +468,7 @@ int String8::setTo(const char* other, size_t numChars)
     if (other == nullptr || numChars == 0) {
         return -1;
     }
+    int ret = 0;
     size_t otherLen = strlen(other);
     size_t stringLen = 0;
     numChars = numChars > otherLen ? otherLen : numChars;
@@ -475,14 +476,20 @@ int String8::setTo(const char* other, size_t numChars)
         stringLen = strlen(mString);
     }
 
-    if (stringLen > numChars) {
-        memset(mString, 0, stringLen);
-        memmove(mString, other, numChars);
-    } else {
+    if (mCapacity < numChars) {
         release();
         mString = getBuffer(numChars);
+        if (mString) {
+            memmove(mString, other, numChars);
+            ret = numChars;
+        }
+    } else {
+        clear();
         memmove(mString, other, numChars);
+        ret = numChars;
     }
+
+    return ret;
 }
 
 void String8::findNotChar(int &begin, int &end, char c) const
