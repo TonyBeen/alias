@@ -509,7 +509,6 @@ void String8::findNotChar(int &begin, int &end, char c) const
         end = i;
         break;
     }
-    // (begin == end) 表示全是字符c
 }
 
 int32_t String8::find_last_of(const char *key) const
