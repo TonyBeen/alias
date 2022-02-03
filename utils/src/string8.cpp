@@ -33,6 +33,8 @@ char *String8::getBuffer(size_t numChars)
 
     if (ret) {
         memset(ret, 0, mCapacity);
+    } else {
+        mCapacity = 0;
     }
     return ret;
 }
@@ -424,7 +426,7 @@ char& String8::operator[](size_t index)
 
 int String8::stringcompare(const char *other) const
 {
-    if (!(mString || other)) {
+    if (!mString || !other) {
         return -0xFFFF;         // means param error
     }
     return strcmp(mString, other);
