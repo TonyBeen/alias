@@ -270,17 +270,26 @@ int String8::append(const char* other, size_t numChars)
         return 0;
     }
 
-    size_t totalSize = size + length();
-    char *buf = getBuffer(totalSize);
-    if (buf) {
+    size_t oldLen = length();
+    size_t totalSize = size + oldLen;
+    if (totalSize < mCapacity) {
         if (mString) {
-            memcpy(buf, mString, length());
+            memmove(mString + length(), other, size);
+            return size;
         }
-        memcpy(buf + length(), other, size);
-        this->release();
-        mString = buf;
-        return size;
+    } else {
+        char *buf = getBuffer(totalSize);
+        if (buf) {
+            if (mString) {
+                memcpy(buf, mString, length());
+            }
+            memcpy(buf + length(), other, size);
+            this->release();
+            mString = buf;
+            return size;
+        }
     }
+    
     return 0;
 }
 
