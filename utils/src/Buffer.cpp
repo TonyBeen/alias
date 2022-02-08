@@ -74,7 +74,7 @@ ByteBuffer::~ByteBuffer()
 ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 {
     if (&other == this) {
-        return;
+        return *this;
     }
 
     LOG("%s(const ByteBuffer& other)\n", __func__);
@@ -85,7 +85,7 @@ ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 {
     if (&other == this) {
-        return;
+        return *this;
     }
 
     LOG("%s(ByteBuffer& other)\n", __func__);
@@ -96,7 +96,7 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
     if (&other == this) {
-        return;
+        return *this;
     }
 
     LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p, this: %s, other: %s\n",
