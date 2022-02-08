@@ -82,10 +82,13 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
-    LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p\n", __func__, mBuffer);
+    LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p, this: %s, other: %s\n",
+        __func__, mBuffer, mBuffer, other.mBuffer);
     uint8_t *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
+    this->mDataSize = other.mDataSize;
+    this->mCapacity = other.mCapacity;
     return *this;
 }
 
@@ -226,10 +229,9 @@ size_t ByteBuffer::getBuffer(size_t size = DEFAULT_BUFFER_SIZE)
 
 void  ByteBuffer::freeBuffer()
 {
-    LOG("free() %p\n", mBuffer);
+    LOG("freeBuffer() %p\n", mBuffer);
     if (mBuffer) {
         free(mBuffer);
-        LOG("free %p\n", mBuffer);
     }
     mBuffer = nullptr;
 }
