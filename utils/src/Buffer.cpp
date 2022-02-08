@@ -45,7 +45,7 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
 
 ByteBuffer::ByteBuffer(const ByteBuffer& other)
 {
-    if (&other == this) {   // is that possible?
+    if (&other == this) {
         return;
     }
     
@@ -55,10 +55,15 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other)
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
     mBuffer(nullptr)
 {
+    if (&other == this) {
+        return;
+    }
     LOG("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
     uint8_t *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
+    this->mDataSize = other.mDataSize;
+    this->mCapacity = other.mCapacity;
 }
 
 ByteBuffer::~ByteBuffer()
@@ -68,6 +73,10 @@ ByteBuffer::~ByteBuffer()
 
 ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 {
+    if (&other == this) {
+        return;
+    }
+
     LOG("%s(const ByteBuffer& other)\n", __func__);
     set(other.mBuffer, other.mDataSize);
     return *this;
@@ -75,6 +84,10 @@ ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 {
+    if (&other == this) {
+        return;
+    }
+
     LOG("%s(ByteBuffer& other)\n", __func__);
     set(other.mBuffer, other.mDataSize);
     return *this;
@@ -82,6 +95,10 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
+    if (&other == this) {
+        return;
+    }
+
     LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p, this: %s, other: %s\n",
         __func__, mBuffer, mBuffer, other.mBuffer);
     uint8_t *tmp = this->mBuffer;
