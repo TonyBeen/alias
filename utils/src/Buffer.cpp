@@ -218,6 +218,18 @@ void ByteBuffer::clear()
     }
 }
 
+std::string ByteBuffer::dump() const
+{
+    std::string ret;
+    char buf[16] = {0};
+    for (int i = 0; i < mDataSize; ++i) {
+        snprintf(buf, sizeof(buf), "0x%02x ", mBuffer[i]);
+        ret.append(buf);
+    }
+
+    return ret;
+}
+
 size_t ByteBuffer::calculate(size_t dataSize)
 {
     if (dataSize >= DEFAULT_BUFFER_SIZE) {

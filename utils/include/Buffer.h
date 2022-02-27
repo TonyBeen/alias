@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 
 namespace eular {
 class ByteBuffer final
@@ -44,6 +45,8 @@ public:
     size_t      size() const { return mDataSize; }
     void        clear();
     void        setDataSize(size_t sz) { mDataSize = sz; }
+
+    std::string dump()  const;
 
 private:
     size_t      calculate(size_t);
