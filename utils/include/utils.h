@@ -29,11 +29,15 @@
     ClassName(const ClassName&) = delete; \
     ClassName& operator=(const ClassName&) = delete;
 
-#define alias_atomic_or(P, V)     __sync_or_and_fetch((P), (V))       // p: 地址 V: 值，P指向的内容与V相或
-#define alias_atomic_and(P, V)    __sync_and_and_fetch((P), (V))
-#define alias_atomic_add(P, V)    __sync_add_and_fetch((P), (V))      // 前置++
-#define alias_atomic_load(P)      __sync_add_and_fetch((P), (0))
-#define alias_atomic_xadd(P, V)   __sync_fetch_and_add((P), (V))      // 后置++
+
+#define eular_likely(cond)        __builtin_expect(!!(cond), 1)       // 编译器优化，条件大概率成立
+#define eular_unlikely(cond)      __builtin_expect(!!(cond), 0)       // 编译器优化，条件大概率不成立
+
+#define eular_atomic_or(P, V)     __sync_or_and_fetch((P), (V))       // p: 地址 V: 值，P指向的内容与V相或
+#define eular_atomic_and(P, V)    __sync_and_and_fetch((P), (V))
+#define eular_atomic_add(P, V)    __sync_add_and_fetch((P), (V))      // 前置++
+#define eular_atomic_load(P)      __sync_add_and_fetch((P), (0))
+#define eular_atomic_xadd(P, V)   __sync_fetch_and_add((P), (V))      // 后置++
 
 // P: 地址 O: 旧值 N: 新值; if (O == *P) { *p = N; return O} else { return *P }
 #define cmpxchg(P, O, N)    __sync_val_compare_and_swap((P), (O), (N))
