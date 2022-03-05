@@ -539,6 +539,17 @@ int32_t String8::find_last_of(const String8 &str) const
     return find_last_of(str.c_str());
 }
 
+String8 String8::substr(size_t start, size_t end)
+{
+    String8 ret;
+    if (start >= length() || end >= length() || start >= end) {
+        return ret;
+    }
+
+    ret = String8(mString + start, end);
+    return ret;
+}
+
 bool String8::contains(const char* other) const
 {
     return nullptr != strstr(mString, other);

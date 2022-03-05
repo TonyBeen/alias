@@ -94,6 +94,14 @@ public:
     int32_t             find_last_of(const char *str) const;
     int32_t             find_last_of(const String8 &str) const;
 
+    /**
+     * @brief 复制从start到end的字符串
+     * 
+     * @param start 字符起始位置
+     * @param end 字符结束位置
+     * @return String8 
+     */
+    String8             substr(size_t start, size_t end);
     // return true if this string contains the specified substring
     bool                contains(const char* other) const;
     bool                removeAll(const char* other);
