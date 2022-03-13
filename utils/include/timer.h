@@ -43,7 +43,7 @@ public:
 
     void cancel();
     void refresh();
-    void setArg(std::shared_ptr<void *> arg) { mArg = arg; }
+    void setArg(std::shared_ptr<void> arg) { mArg = arg; }
 
     /**
      * @param ms        下一次执行时间(相对时间：当前时间戳 + ms为下一次执行时间)
@@ -82,7 +82,7 @@ private:
     uint64_t    mTime;          // (绝对时间)下一次执行时间(ms)
     uint64_t    mRecycleTime;   // 循环时间ms
     CallBack    mCb;            // 回调函数
-    std::shared_ptr<void *> mArg;   // 函数参数
+    std::shared_ptr<void> mArg;   // 函数参数
     uint64_t    mUniqueId;      // 定时器唯一ID
 };
 
@@ -97,7 +97,7 @@ public:
 
     const Timer *getNearTimer() { return *(mTimers.begin()); }
     uint64_t addTimer(uint64_t ms, Timer::CallBack cb,
-        std::shared_ptr<void *> arg = nullptr, uint32_t recycle = 0);
+        std::shared_ptr<void> arg = nullptr, uint32_t recycle = 0);
     bool delTimer(uint64_t uniqueId);
 
 protected:

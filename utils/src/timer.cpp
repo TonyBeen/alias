@@ -5,7 +5,7 @@
     > Created Time: Thu 16 Sep 2021 02:33:01 PM CST
  ************************************************************************/
 
-#define _DEBUG
+// #define _DEBUG
 
 #include "timer.h"
 #include "exception.h"
@@ -27,6 +27,8 @@ Timer::Timer(uint64_t ms, CallBack cb, uint32_t recycle) :
 {
     mUniqueId = ++gTimerCount;
     mTime = getCurrentTime() + ms;
+
+    LOG("%s(uint64_t ms, CallBack cb, uint32_t recycle)\n", __func__);
 }
 
 Timer::Timer(const Timer& timer) :
@@ -36,12 +38,12 @@ Timer::Timer(const Timer& timer) :
     mCb(timer.mCb),
     mArg(timer.mArg)
 {
-
+    LOG("%s(const Timer& timer)\n", __func__);
 }
 
 Timer::~Timer()
 {
-
+    LOG("%s()\n", __func__);
 }
 
 Timer &Timer::operator=(const Timer& timer)
@@ -146,7 +148,7 @@ int TimerManager::StartTimer(bool useCallerThread)
  * @return 返回定时器唯一ID，方便删除
  */
 uint64_t TimerManager::addTimer(
-    uint64_t ms, Timer::CallBack cb, std::shared_ptr<void *> arg, uint32_t recycle)
+    uint64_t ms, Timer::CallBack cb, std::shared_ptr<void> arg, uint32_t recycle)
 {
     WRAutoLock<RWMutex> wrLock(mRWMutex);
     Timer *timer = new Timer(ms, cb, recycle);
@@ -227,9 +229,7 @@ int TimerManager::threadWorkFunction(void *arg)
             }
             it = mTimers.begin();
         }
-        if (it == mTimers.end()) {
-            continue;
-        }
+        assert(it != mTimers.end());
 
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
         LOG("nextTime = %d\n", nextTime);
@@ -246,10 +246,10 @@ int TimerManager::threadWorkFunction(void *arg)
                     } catch (const Exception &e) {
                         LOG("%s\n", e.what());
                     } catch (...) {
-
+                        LOG("timer callback execute error\n");
                     }
                 }
-                if (vecIt->mRecycleTime > 0) {
+                if (vecIt->mRecycleTime > 0 && vecIt->mCb) {
                     vecIt->mTime += vecIt->mRecycleTime;
                     addTimer(vecIt);
                 } else {
