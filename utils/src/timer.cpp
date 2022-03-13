@@ -147,15 +147,14 @@ int TimerManager::StartTimer(bool useCallerThread)
  * @param recycle 循环调用的时间，第一次调用为ms时，下一次为recycle毫秒后，循环
  * @return 返回定时器唯一ID，方便删除
  */
-uint64_t TimerManager::addTimer(
-    uint64_t ms, Timer::CallBack cb, std::shared_ptr<void> arg, uint32_t recycle)
+uint64_t TimerManager::addTimer(uint64_t ms, Timer::CallBack cb, uint32_t recycle)
 {
     WRAutoLock<RWMutex> wrLock(mRWMutex);
     Timer *timer = new Timer(ms, cb, recycle);
     if (timer == nullptr) {
         return 0;
     }
-    timer->setArg(arg);
+
     auto pair = mTimers.insert(timer);
     if (pair.second) {
         if (mTimers.size() == 1) {
@@ -242,7 +241,7 @@ int TimerManager::threadWorkFunction(void *arg)
             for (auto &vecIt : mExpireTimerVec) {
                 if (vecIt->mCb != nullptr) {
                     try {
-                        vecIt->mCb(vecIt->mArg.get());
+                        vecIt->mCb();
                     } catch (const Exception &e) {
                         LOG("%s\n", e.what());
                     } catch (...) {

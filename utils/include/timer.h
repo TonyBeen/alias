@@ -32,7 +32,7 @@ class Timer : public std::enable_shared_from_this<Timer>
 {
 public:
     typedef std::shared_ptr<Timer> sp;
-    typedef std::function<void(void *)> CallBack;
+    typedef std::function<void(void)> CallBack;
     ~Timer();
 
     Timer &operator=(const Timer& timer);
@@ -43,7 +43,7 @@ public:
 
     void cancel();
     void refresh();
-    void setArg(std::shared_ptr<void> arg) { mArg = arg; }
+    //void setArg(std::shared_ptr<void> arg) { mArg = arg; }
 
     /**
      * @param ms        下一次执行时间(相对时间：当前时间戳 + ms为下一次执行时间)
@@ -96,8 +96,7 @@ public:
     int StartTimer(bool useCallerThread = false);
 
     const Timer *getNearTimer() { return *(mTimers.begin()); }
-    uint64_t addTimer(uint64_t ms, Timer::CallBack cb,
-        std::shared_ptr<void> arg = nullptr, uint32_t recycle = 0);
+    uint64_t addTimer(uint64_t ms, Timer::CallBack cb, uint32_t recycle = 0);
     bool delTimer(uint64_t uniqueId);
 
 protected:
