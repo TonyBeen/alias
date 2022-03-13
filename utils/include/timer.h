@@ -51,7 +51,7 @@ public:
      */
     void reset(uint64_t ms, CallBack cb, uint32_t recycle);
 
-    static uint64_t getCurrentTime();
+    static uint64_t getCurrentTime(clockid_t type = CLOCK_MONOTONIC);
 
 private:
     Timer();

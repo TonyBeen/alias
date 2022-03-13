@@ -87,7 +87,7 @@ void Timer::reset(uint64_t ms, CallBack cb, uint32_t recycle)
  * @brief 获取当前系统的绝对时间
  * @return CLOCK_MONOTONIC 获取到的绝对时间，单位毫秒
  */
-uint64_t Timer::getCurrentTime()
+uint64_t Timer::getCurrentTime(clockid_t type)
 {
     timespec curTime;
     clock_gettime(CLOCK_MONOTONIC, &curTime);   // 获取系统运行时间，如果使用realtime，可能存在修改系统时间的进程，导致定时器出问题
