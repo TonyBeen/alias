@@ -32,7 +32,7 @@ class Timer : public std::enable_shared_from_this<Timer>
 {
 public:
     typedef std::shared_ptr<Timer> sp;
-    typedef std::function<int(void *)> CallBack;
+    typedef std::function<void(void *)> CallBack;
     ~Timer();
 
     Timer &operator=(const Timer& timer);
