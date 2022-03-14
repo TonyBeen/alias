@@ -9,11 +9,13 @@
 #include "Errors.h"
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <netinet/in.h> // for inet_ntoa
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>    // for getifaddrs
+#include <chrono>
 
 nsec_t seconds(uint16_t sec)
 {
@@ -300,3 +302,86 @@ double  TypeUtil::Atof(const char* str)
     }
     return atof(str);
 }
+
+namespace Time {
+uint64_t SystemTime()
+{
+    std::chrono::system_clock::time_point tm = std::chrono::system_clock::now();
+    std::chrono::milliseconds mills = 
+        std::chrono::duration_cast<std::chrono::milliseconds>(tm.time_since_epoch());
+    return mills.count();
+}
+
+static unsigned long long __one_msec;
+static unsigned long long __one_sec;
+static unsigned long long __metric_diff = 0;
+static pthread_once_t __once_control2 = PTHREAD_ONCE_INIT;
+
+static inline unsigned long long rte_rdtsc(void)
+{
+	union {
+		unsigned long long tsc_64;
+        #if BYTE_ORDER == LITTLE_ENDIAN
+        struct {
+			unsigned lo_32;
+			unsigned hi_32;
+		};
+        #elif BYTE_ORDER == BIG_ENDIAN
+        struct {
+			unsigned hi_32;
+			unsigned lo_32;
+		};
+        #endif
+	} tsc;
+
+	asm volatile("rdtsc" :
+			"=a" (tsc.lo_32),
+			"=d" (tsc.hi_32));
+	return tsc.tsc_64;
+}
+
+void set_time_metric()
+{
+	unsigned long long now, startup, end;
+	unsigned long long begin = rte_rdtsc();
+	usleep(1000);
+	end        = rte_rdtsc();
+	__one_msec = end - begin;
+	__one_sec  = __one_msec * 1000;     // 获取CPU频率
+
+	startup    = rte_rdtsc();           // 获取当前cpu时间戳
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+	now        = tp.tv_sec * __one_sec; // 获取系统绝对时间
+    // now = time(NULL) * __one_sec;    // 获取系统实时时间
+	if (now > startup) {
+		__metric_diff = now - startup;
+	} else {
+		__metric_diff = 0;
+	}
+}
+
+uint64_t asm_gettimeofday()
+{
+	if (__metric_diff == 0) {
+		if (pthread_once(&__once_control2, set_time_metric) != 0) {
+			abort();
+		}
+	}
+
+	uint64_t now = rte_rdtsc() + __metric_diff;
+	return now / __one_sec + (now % __one_sec) / __one_msec;
+}
+
+uint64_t Abstime(bool useAsm)
+{
+    if (useAsm) {
+        return asm_gettimeofday();
+    }
+
+    std::chrono::steady_clock::time_point tm = std::chrono::steady_clock::now();
+    std::chrono::milliseconds mills = 
+        std::chrono::duration_cast<std::chrono::milliseconds>(tm.time_since_epoch());
+    return mills.count();
+}
+} // namespace time

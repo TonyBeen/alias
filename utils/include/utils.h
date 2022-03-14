@@ -55,7 +55,7 @@ std::string         getNameByPid(pid_t pid);
 std::vector<std::string> getLocalAddress();
 std::vector<std::string> getdir(const std::string &path);
 
-bool isPicture(const std::string &fileName);
+bool isPicture(const std::string &fileName); 
 
 std::string Time2Str(time_t ts, const std::string& format = "%Y-%m-%d %H:%M:%S");
 time_t Str2Time(const char* str, const char* format = "%Y-%m-%d %H:%M:%S");
@@ -69,5 +69,22 @@ public:
     static int64_t  Atoi(const char* str);
     static double   Atof(const char* str);
 };
+
+namespace Time {
+/**
+ * @brief 获取系统时间(等价于clock_gettime->CLOCK_REALTIME)
+ * 
+ * @return uint64_t 返回毫秒
+ */
+uint64_t SystemTime();
+/**
+ * @brief 获取绝对时间(等价于clock_gettime->CLOCK_MONOTONIC)
+ * 
+ * @return uint64_t 返回毫秒
+ */
+uint64_t Abstime(bool useAsm = false);
+
+} // namespace time
+
 
 #endif // __UTILS_FUNCTION_H__
