@@ -165,8 +165,9 @@ std::vector<std::string> getLocalAddress()
 {
     static std::vector<std::string> ips;
     struct ifaddrs *lo = nullptr;
+    struct ifaddrs *ifaddr = nullptr;
+
     if (ips.size() == 0) {
-        struct ifaddrs *ifaddr = nullptr;
         getifaddrs(&ifaddr);
         struct ifaddrs *root = ifaddr;  // need to free
         while (ifaddr != nullptr) {
