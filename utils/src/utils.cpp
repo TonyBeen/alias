@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <assert.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <netinet/in.h> // for inet_ntoa
@@ -307,6 +308,7 @@ double  TypeUtil::Atof(const char* str)
 
 std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, const char *opt)
 {
+    assert(argc > 0);
     std::unordered_map<std::string, std::string> result;
     char c = '\0';
     if (!opt || !argv) {
@@ -314,6 +316,10 @@ std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, co
     }
 
     std::string temp(opt);
+    if (temp.length() == 0) {
+        return result;
+    }
+
     std::vector<uint8_t> characterVec;
     char charMap[256] = {0};
     for (auto it : temp) {
