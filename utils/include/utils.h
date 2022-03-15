@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #ifndef gettid
 #define gettid() syscall(__NR_gettid)
@@ -70,6 +71,8 @@ public:
     static double   Atof(const char* str);
 };
 
+std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, const char *opt);
+
 namespace Time {
 /**
  * @brief 获取系统时间(等价于clock_gettime->CLOCK_REALTIME)
@@ -85,6 +88,5 @@ uint64_t SystemTime();
 uint64_t Abstime(bool useAsm = false);
 
 } // namespace time
-
 
 #endif // __UTILS_FUNCTION_H__

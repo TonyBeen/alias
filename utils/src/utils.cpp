@@ -9,6 +9,7 @@
 #include "Errors.h"
 #include <string.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <pthread.h>
 #include <sys/types.h>
 #include <netinet/in.h> // for inet_ntoa
@@ -302,6 +303,32 @@ double  TypeUtil::Atof(const char* str)
         return 0;
     }
     return atof(str);
+}
+
+std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, const char *opt)
+{
+    std::unordered_map<std::string, std::string> result;
+    char c = '\0';
+    if (!opt || !argv) {
+        return result;
+    }
+
+    std::string temp(opt);
+    std::vector<uint8_t> characterVec;
+    char charMap[256] = {0};
+    for (auto it : temp) {
+        if ( ('a' <= it && it <= 'z') || ('A' <= it || it <= 'Z')) {
+            charMap[it] = 1;
+        }
+    }
+
+    while ((c = ::getopt(argc, argv, opt)) != -1) {
+        if (charMap[c]) {
+            result.insert(std::make_pair(eular::String8::format("-%c", c).c_str(), optarg ? optarg : "null"));
+        }
+    }
+
+    return result;
 }
 
 namespace Time {
