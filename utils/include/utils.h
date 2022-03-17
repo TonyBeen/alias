@@ -80,12 +80,24 @@ namespace Time {
  * @return uint64_t 返回毫秒
  */
 uint64_t SystemTime();
+
 /**
  * @brief 获取绝对时间(等价于clock_gettime->CLOCK_MONOTONIC)
  * 
  * @return uint64_t 返回毫秒
  */
 uint64_t Abstime(bool useAsm = false);
+
+/**
+ * @brief 格式化为格林尼治时间 如: Thu, 17 Mar 2022 01:53:47 GMT，与北京时间差8个小时
+ * 
+ * @param buf 输出位置
+ * @param buflen 缓存大小
+ * @param tim 如果不为null则使用tim格式化，否则获取当前时间在格式化
+ * @return true 
+ * @return false 
+ */
+bool gmttime(char *buf, size_t buflen, const time_t *tim = nullptr);
 
 } // namespace time
 

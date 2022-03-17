@@ -418,4 +418,14 @@ uint64_t Abstime(bool useAsm)
         std::chrono::duration_cast<std::chrono::milliseconds>(tm.time_since_epoch());
     return mills.count();
 }
+
+bool gmttime(char *buf, size_t buflen, const time_t *tim)
+{
+    time_t t = time(nullptr);
+    if (tim != nullptr) {
+        t = *tim;
+    }
+    tm *stm = gmtime(&t);
+    return strftime(buf, buflen, "%a, %d %b %Y %H:%M:%S GMT", stm) > 0;
+}
 } // namespace time
