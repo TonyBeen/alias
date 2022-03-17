@@ -425,7 +425,9 @@ bool gmttime(char *buf, size_t buflen, const time_t *tim)
     if (tim != nullptr) {
         t = *tim;
     }
-    tm *stm = gmtime(&t);
-    return strftime(buf, buflen, "%a, %d %b %Y %H:%M:%S GMT", stm) > 0;
+    tm stm;
+    memset(&stm, 0, sizeof(stm));
+    gmtime_r(&t, &stm);
+    return strftime(buf, buflen, "%a, %d %b %Y %H:%M:%S GMT", &stm) > 0;
 }
 } // namespace time
