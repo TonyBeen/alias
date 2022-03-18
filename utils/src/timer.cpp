@@ -22,7 +22,6 @@ static const uint32_t gMaxEpollEvents = 2;
 
 Timer::Timer(uint64_t ms, CallBack cb, uint32_t recycle) :
     mCb(cb),
-    mArg(nullptr),
     mRecycleTime(recycle)
 {
     mUniqueId = ++gTimerCount;
@@ -35,8 +34,7 @@ Timer::Timer(const Timer& timer) :
     mUniqueId(timer.mUniqueId),
     mTime(timer.mTime),
     mRecycleTime(timer.mRecycleTime),
-    mCb(timer.mCb),
-    mArg(timer.mArg)
+    mCb(timer.mCb)
 {
     LOG("%s(const Timer& timer)\n", __func__);
 }
@@ -52,7 +50,6 @@ Timer &Timer::operator=(const Timer& timer)
     mTime = timer.mTime;
     mRecycleTime = timer.mRecycleTime;
     mCb = timer.mCb;
-    mArg = timer.mArg;
 }
 
 /**
