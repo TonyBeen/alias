@@ -88,6 +88,7 @@ private:
 
 class TimerManager : public ThreadBase
 {
+    DISALLOW_COPY_AND_ASSIGN(TimerManager);
 public:
     typedef std::set<Timer *, Timer::Comparator>::iterator TimerIterator;
     TimerManager();
