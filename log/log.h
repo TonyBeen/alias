@@ -31,6 +31,11 @@
     (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
 #endif
 
+#ifndef LOG_ASSERT2
+#define LOG_ASSERT2(cond)   \
+    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::FATAL, #cond, LOG_TAG, "")) : (void)0)
+#endif
+
 namespace eular {
 
 /**
