@@ -15,6 +15,7 @@
 #include <string.h>
 
 namespace eular {
+
 Mutex::Mutex(int type) :
     mName("NONE")
 {
@@ -69,17 +70,17 @@ RWMutex::~RWMutex()
     pthread_rwlock_destroy(&mRWMutex);
 }
 
-void RWMutex::rlock() const
+void RWMutex::rlock()
 {
     pthread_rwlock_rdlock(&mRWMutex);
 }
 
-void RWMutex::wlock() const
+void RWMutex::wlock()
 {
     pthread_rwlock_wrlock(&mRWMutex);
 }
 
-void RWMutex::unlock() const
+void RWMutex::unlock()
 {
     pthread_rwlock_unlock(&mRWMutex);
 }

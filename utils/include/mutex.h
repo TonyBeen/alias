@@ -17,7 +17,8 @@
 #include <sys/sem.h>
 
 namespace eular {
-class NonCopyAble {
+class NonCopyAble
+{
 public:
     NonCopyAble() = default;
     ~NonCopyAble() = default;
@@ -26,7 +27,8 @@ public:
 };
 
 template<typename MutexType>
-class AutoLock : public NonCopyAble{
+class AutoLock : public NonCopyAble
+{
 public:
     AutoLock(MutexType& mutex) : mMutex(mutex)
     {
@@ -41,7 +43,8 @@ private:
 };
 
 class Condition;
-class Mutex : public NonCopyAble {
+class Mutex : public NonCopyAble
+{
 public:
     enum {
         PRIVATE = 0,
@@ -67,9 +70,10 @@ private:
 
 // 局部写锁
 template<typename WRMutexType>
-class WRAutoLock {
+class WRAutoLock 
+{
 public:
-    WRAutoLock(const WRMutexType& mtx) : mutex(mtx)
+    WRAutoLock(WRMutexType& mtx) : mutex(mtx)
     {
         mutex.wlock();
     }
@@ -79,14 +83,15 @@ public:
     }
 
 private:
-    const WRMutexType &mutex;
+    WRMutexType &mutex;
 };
 
 // 局部读锁
 template<typename RDMutexType>
-class RDAutoLock {
+class RDAutoLock
+{
 public:
-    RDAutoLock(const RDMutexType& mtx) : mutex(mtx)
+    RDAutoLock(RDMutexType& mtx) : mutex(mtx)
     {
         mutex.rlock();
     }
@@ -96,7 +101,7 @@ public:
     }
 
 private:
-    const RDMutexType &mutex;
+    RDMutexType &mutex;
 };
 
 // 读写锁，读共享，写独享，读上锁无法写，写上锁无法读写
@@ -107,9 +112,9 @@ public:
 
     RWMutex();
     ~RWMutex();
-    void rlock() const;
-    void wlock() const;
-    void unlock() const;
+    void rlock();
+    void wlock();
+    void unlock();
 
 private:
     mutable pthread_rwlock_t mRWMutex;
