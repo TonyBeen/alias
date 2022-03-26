@@ -151,7 +151,7 @@ void log_write_assertv(const LogEvent *ev)
     CallStack cs;
     cs.update(2, 2);
     cs.log("Stack", LogLevel::ERROR);
-    exit(0);
+    abort();
 }
 
 } // namespace eular
