@@ -17,7 +17,7 @@ using namespace eular;
 
 void test_select()
 {
-    MySqlConn sql("mysql", "627096590", "userdb");
+    MySqlConn sql("mysql", "123456", "userdb");
     if (sql.isSqlValid() == false) {
         LOGE("sql init error");
         return;
