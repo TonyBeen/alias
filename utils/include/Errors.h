@@ -14,7 +14,8 @@ typedef enum Status {
     INVALID_OPERATION   = -ENOSYS,      /* Illegal operation */
     INVALID_PARAM       = -EINVAL,      /* Invalid argument */
     NOT_FOUND           = -ENOENT,      /* No such file or directory */
-    PERMISSION_DENIED   = -EPERM,       /* Operation not permitted */
+    OPT_NOT_PERMITTED   = -EPERM,       /* Operation not permitted */
+    PERMISSION_DENIED   = -EACCES,      /* Permission denied */
     NO_INIT             = -ENODEV,      /* Uninitialized */
     ALREADY_EXISTS      = -EEXIST,      /* File exists */
     DEAD_OBJECT         = -EPIPE,       /* Object invalid */
