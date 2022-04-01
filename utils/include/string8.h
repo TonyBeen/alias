@@ -20,6 +20,7 @@ namespace eular {
 class String8 {
 public:
                         String8();
+    explicit            String8(uint32_t size);
                         String8(const String8& other);
                         String8(const char* other);
                         String8(const char* other, const size_t numChars);
@@ -35,6 +36,7 @@ public:
     void                trimLeft(char c = ' ');         // 去掉字符串左侧空格
     void                trimRight(char c = ' ');        // 去掉字符串右侧空格
     void                reverse();                      // 翻转字符串
+    void                resize(size_t size);
     std::string         toStdString() const;            // String8 -> std::string
 
     bool                isEmpty() const;

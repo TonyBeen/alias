@@ -54,6 +54,14 @@ String8::String8()
     mString = getBuffer();
 }
 
+String8::String8(uint32_t size) :
+    mString(nullptr)
+{
+    mString = (char *)malloc(size);
+    memset(mString, 0, size);
+    mCapacity = size;
+}
+
 String8::String8(const String8& other)
 {
     if (other.length() == 0) {
@@ -106,6 +114,7 @@ String8::String8(String8 &&other)
     }
     mString = other.mString;
     other.mString = nullptr;
+    mCapacity = other.mCapacity;
 }
 
 String8::~String8()
@@ -221,6 +230,17 @@ void String8::reverse()
     mString = buf;
 }
 
+void String8::resize(size_t size)
+{
+    if (length() >= size) {
+        return;
+    }
+    String8 temp(size);
+    temp = mString;
+    release();
+    std::move(temp);
+}
+
 std::string String8::toStdString() const
 {
     return std::string(mString);
@@ -309,6 +329,8 @@ String8& String8::operator=(String8&& other)
     char *tmp = this->mString;
     this->mString = other.mString;
     other.mString = tmp;
+    mCapacity = other.mCapacity;
+    other.mCapacity = 0;
     return *this;
 }
 
