@@ -939,7 +939,7 @@ int RedisInterface::listPopFront(const String8 &key, String8 &value)
     if (mRedisCtx == nullptr) {
         return REDIS_STATUS_NOT_CONNECTED;
     }
-    String8 sql = String8::format("lpop %s", key.c_str());
+    String8 sql = String8::format("lpop %s 1", key.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "%s", sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
         if (reply) {
@@ -974,7 +974,7 @@ int RedisInterface::listGetAll(const String8 &key, std::vector<String8> &vec)
         return REDIS_STATUS_QUERY_ERROR;
     }
 
-    String8 sql = String8::format("lrange %s 0 %zd", key.c_str(), count);
+    String8 sql = String8::format("LRANGE %s 0 %zd", key.c_str(), count);
     LOGD("%s() sql: \"%s\"", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "%s", sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
@@ -986,6 +986,7 @@ int RedisInterface::listGetAll(const String8 &key, std::vector<String8> &vec)
         return REDIS_STATUS_QUERY_ERROR;
     }
 
+    LOG_ASSERT(reply->element != nullptr, "fatal error occur");
     std::shared_ptr<redisReply> temp(reply, freeReplyObject);
     redisReply *curr = nullptr;
     for (int i = 0; i < reply->elements; ++i) {
