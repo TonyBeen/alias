@@ -51,11 +51,28 @@ void test_hash()
     gRedis.delKey("HashTable");
 }
 
+void test_list()
+{
+    cout << "测试list\n";
+    String8 key = "eular_test_list";
+    gRedis.delKey(key);
+    std::vector<String8> valueVec;
+    for (int i = 0; i < 6; ++i) {
+        valueVec.push_back(String8::format("test--%d", i));
+    }
+    assert(gRedis.listInsertBack(key, valueVec) == 0);
+    assert(gRedis.listDeleteFront(key, valueVec[0]) == 0);
+    // assert(gRedis.listGetAll(key, valueVec) == 0); // 不支持
+
+    String8 value;
+    assert(gRedis.listPopFront(key, value) == 0);
+}
+
 int main(int argc, char **argv)
 {
-    assert(gRedis.connect("127.0.0.1", 6379, "eular123") == 0);
+    assert(gRedis.connect("127.0.0.1", 6379, "123456") == 0);
 
-    test_hash();
+    test_list();
 
     gRedis.disconnect();
     return 0;

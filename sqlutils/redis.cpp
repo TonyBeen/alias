@@ -159,7 +159,7 @@ end:
 }
 
 
-RedisReply *RedisInterface::SqlCommand(const String8 &sql)
+RedisReply::SP RedisInterface::command(const String8 &sql)
 {
     if (mRedisCtx == nullptr) {
         return nullptr;
@@ -174,8 +174,7 @@ RedisReply *RedisInterface::SqlCommand(const String8 &sql)
         return nullptr;
     }
 
-    RedisReply *ret = new RedisReply(reply);
-    freeReplyObject(reply);
+    RedisReply::SP ret(new RedisReply(reply));
     return ret;
 }
 
@@ -292,7 +291,7 @@ int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<
     for (const auto &it : keyVec) {
         sql.appendFormat("%s ", it.c_str());
     }
-    LOG("%s() sql \"%s\"\n", __func__, sql.c_str());
+    LOGD("%s() sql \"%s\"\n", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
         if (reply) {
@@ -302,6 +301,7 @@ int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<
         return REDIS_STATUS_QUERY_ERROR;
     }
 
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
     redisReply *curr = nullptr;
     for (int i = 0; i < reply->elements; ++i) {
         curr = reply->element[i];
@@ -309,6 +309,8 @@ int RedisInterface::getKeyValue(const std::vector<String8> &keyVec, std::vector<
             valVec.push_back(curr->str);
         }
     }
+
+    return REDIS_STATUS_OK;
 }
 
 /**
@@ -385,7 +387,7 @@ bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t milliseconds, 
     } else { // 生存时间
         sql.appendFormat("pexpire %s %lu", key.c_str(), milliseconds);
     }
-    LOG("%s() %s\n", __func__, sql.c_str());
+    LOGD("%s() %s\n", __func__, sql.c_str());
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
@@ -475,12 +477,12 @@ int RedisInterface::hashCreateOrReplace(const String8 &key,
     String8 filedAndVal;
     for (const auto &it : filedValue) {
         filedAndVal.appendFormat("%s %s ", it.first.c_str(), it.second.c_str());
-        LOG("%s() [%s]\n", __func__, filedAndVal.c_str());
+        LOGD("%s() [%s]\n", __func__, filedAndVal.c_str());
     }
 
     const String8 &sql = String8::format("hmset %s %s", key.c_str(), filedAndVal.c_str());
-    LOG("[%s] [%s]\n", key.c_str(), filedAndVal.c_str());
-    LOG("%s() sql [%s]\n", __func__, sql.c_str());
+    LOGD("[%s] [%s]\n", key.c_str(), filedAndVal.c_str());
+    LOGD("%s() sql [%s]\n", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_STATUS) {
         goto error;
@@ -617,7 +619,7 @@ int RedisInterface::hashDelKeyOrFiled(const String8 &key, const char **filed, ui
     for (uint32_t i = 0; i < fileds; ++i) {
         sql.appendFormat("%s ", filed[i]);
     }
-    LOG("%s() query sql: [%s]\n", __func__, sql.c_str());
+    LOGD("%s() query sql: [%s]\n", __func__, sql.c_str());
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
@@ -650,7 +652,7 @@ int RedisInterface::hashDelKeyOrFiled(const String8 &key, const std::vector<Stri
         sql.appendFormat("%s ", it.c_str());
     }
 
-    LOG("%s() query sql: [%s]\n", __func__, sql.c_str());
+    LOGD("%s() query sql: [%s]\n", __func__, sql.c_str());
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
@@ -670,6 +672,351 @@ int RedisInterface::hashDelKeyOrFiled(const String8 &key, const std::vector<Stri
     LOG_ASSERT(false, "sql: [%s], reply: %lld", sql.c_str(), reply->integer);
     freeReplyObject(reply);
     return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 将value插入到链表头部
+ * 
+ * @param key 
+ * @param value 
+ * @return 失败返回负值，成功返回0
+ */
+int RedisInterface::listInsertFront(const String8 &key, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+    String8 sql = String8::format("lpush %s %s", key.c_str(), value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer != 1) {
+        LOGE("%s() insert failed. %lld", reply->integer);
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 将数组中的数据依次插入链表头部，故数组最后一个元素在头
+ * 
+ * @param key 键
+ * @param valueVec 值数组
+ * @return 失败返回负值，成功返回0
+ */
+int RedisInterface::listInsertFront(const String8 &key, const std::vector<String8> &valueVec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    if (valueVec.size() == 0) {
+        return REDIS_STATUS_OK;
+    }
+
+    String8 sql = String8::format("lpush %s ", key.c_str());
+    for (size_t i = 0; i < valueVec.size(); ++i) {
+        sql.appendFormat(" %s", valueVec[i].c_str());
+    }
+    LOGD("%s() sql: \"%s\"", __func__, sql.c_str());
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer > 0 && reply->integer <= valueVec.size()) {
+        return REDIS_STATUS_OK;
+    }
+    
+    LOGE("%s() insert failed. %lld", reply->integer);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 将value插入到链表尾部
+ * 
+ * @param key 
+ * @param value 
+ * @return 失败返回负值，成功返回0
+ */
+int RedisInterface::listInsertBack(const String8 &key, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 sql = String8::format("rpush %s %s", key.c_str(), value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer != 1) {
+        LOGE("%s() insert failed. %lld", reply->integer);
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 将值数组依次插入到链表尾部
+ * 
+ * @param key 
+ * @param valueVec 
+ * @return 失败返回负值，成功返回0
+ */
+int RedisInterface::listInsertBack(const String8 &key, const std::vector<String8> &valueVec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    if (valueVec.size() == 0) {
+        return REDIS_STATUS_OK;
+    }
+
+    String8 sql = String8::format("rpush %s ", key.c_str());
+    for (size_t i = 0; i < valueVec.size(); ++i) {
+        sql.appendFormat(" %s", valueVec[i].c_str());
+    }
+    LOGD("%s() sql: \"%s\"", __func__, sql.c_str());
+
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer > 0 && reply->integer <= valueVec.size()) {
+        return REDIS_STATUS_OK;
+    }
+    
+    LOGE("%s() insert failed. %lld", reply->integer);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 从链表头部开始，删除第一个与value相等的元素
+ * 
+ * @param key 键
+ * @param value 值
+ * @return 成功返回0，失败返回负值 
+ */
+int RedisInterface::listDeleteFront(const String8 &key, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 sql = String8::format("lrem %s 1 %s", key.c_str(), value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer >= 0 && reply->integer <= 1) {  // 可能删除不存在的值
+        return REDIS_STATUS_OK;
+    }
+
+    LOGE("%s() delete failed. %lld", reply->integer);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 从链表尾部开始，删除第一个与value相等的元素
+ * 
+ * @param key 
+ * @param value 
+ * @return int 
+ */
+int RedisInterface::listDeleteBack(const String8 &key, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 sql = String8::format("lrem %s -1 %s", key.c_str(), value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer >= 0 && reply->integer <= 1) {  // 可能删除不存在的值
+        return REDIS_STATUS_OK;
+    }
+
+    LOGE("%s() delete failed. %lld", reply->integer);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 从链表头部开始，删除所有与value相等的元素
+ * 
+ * @param key 
+ * @param value 
+ * @return 成功返回删除的个数，失败返回负值
+ */
+int RedisInterface::listDeleteAll(const String8 &key, const String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    ssize_t count = listLength(key);
+    if (count <= 0) {
+        return REDIS_STATUS_OK;
+    }
+
+    String8 sql = String8::format("lrem %s %zd %s", key.c_str(), count, value.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    if (reply->integer >= 0 && reply->integer <= count) {  // 可能删除不存在的值
+        return reply->integer;
+    }
+
+    LOGE("%s() delete failed. %lld", reply->integer);
+    return REDIS_STATUS_QUERY_ERROR;
+}
+
+/**
+ * @brief 从链表key中弹出头节点
+ * 
+ * @param key 
+ * @param value 
+ * @return 成功返回0，失败返回负值
+ */
+int RedisInterface::listPopFront(const String8 &key, String8 &value)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+    String8 sql = String8::format("lpop %s", key.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "%s", sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_STRING) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    value = String8(reply->str, reply->len);
+    return REDIS_STATUS_OK;
+}
+
+/**
+ * @brief 获取链表key所有的值
+ * 
+ * @param key 
+ * @param vec 
+ * @return 失败返回负值，成功返回0
+ */
+int RedisInterface::listGetAll(const String8 &key, std::vector<String8> &vec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    ssize_t count = listLength(key);
+    if (count <= 0) {
+        LOGE("%s() redis query error or list is empty");
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    String8 sql = String8::format("lrange %s 0 %zd", key.c_str(), count);
+    LOGD("%s() sql: \"%s\"", __func__, sql.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "%s", sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [type %d] [%s,%s]", __func__, sql.c_str(), reply->type, reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    redisReply *curr = nullptr;
+    for (int i = 0; i < reply->elements; ++i) {
+        curr = reply->element[i];
+        if (curr != nullptr) {
+            vec.push_back(curr->str);
+        }
+    }
+
+    return REDIS_STATUS_OK;
+}
+
+ssize_t RedisInterface::listLength(const String8 &key)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    String8 sql = String8::format("llen %s", key.c_str());
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
+    if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        if (reply) {
+            LOGE("%s() query sql \"%s\" error. [%s,%s]", __func__, sql.c_str(), reply->str, mRedisCtx->errstr);
+            freeReplyObject(reply);
+        }
+
+        return REDIS_STATUS_QUERY_ERROR;
+    }
+
+    std::shared_ptr<redisReply> temp(reply, freeReplyObject);
+    return reply->integer;
 }
 
 const char *RedisInterface::strerror(int no) const
