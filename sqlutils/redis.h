@@ -63,6 +63,7 @@ public:
     bool setKeyLifeCycle(const String8 &key, uint64_t milliseconds, bool isTimeStamp = false);
     bool delKeyLifeCycle(const String8 &key);
     int64_t getKeyTTLMS(const String8 &key);
+    int getAllKeys(std::vector<String8> &keyVec);
 
     // hash
     int hashCreateOrReplace(const String8 &key,

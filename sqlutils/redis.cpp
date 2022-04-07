@@ -5,9 +5,7 @@
     > Created Time: Mon 10 Jan 2022 03:12:48 PM CST
  ************************************************************************/
 
-#define _DEBUG
 #include "redis.h"
-#include <utils/debug.h>
 #include <utils/Errors.h>
 #include <log/log.h>
 
@@ -444,6 +442,7 @@ bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t milliseconds, 
 
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        LOGE("%s() failed to set expire time. %s", __func__, reply->str);
         goto error;
     }
     if (reply->integer) {
@@ -453,7 +452,6 @@ bool RedisInterface::setKeyLifeCycle(const String8 &key, uint64_t milliseconds, 
 
 error:
     if (reply) {
-        LOGE("%s() failed to set expire time. %s", __func__, reply->str);
         freeReplyObject(reply);
     }
     return false;
@@ -468,6 +466,7 @@ bool RedisInterface::delKeyLifeCycle(const String8 &key)
     const String8 &sql = String8::format("persist %s", key.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        LOGE("%s() failed to delete expire time. %s", __func__, reply->str);
         goto error;
     }
 
@@ -476,7 +475,6 @@ bool RedisInterface::delKeyLifeCycle(const String8 &key)
 
 error:
     if (reply) {
-        LOGE("%s() failed to delete expire time. %s", __func__, reply->str);
         freeReplyObject(reply);
     }
     return false;
@@ -494,23 +492,51 @@ int64_t RedisInterface::getKeyTTLMS(const String8 &key)
         return REDIS_STATUS_NOT_CONNECTED;
     }
 
-    int64_t ret = 0;
+    int64_t ret = UNKNOWN_ERROR;
     String8 sql = String8::format("pttl %s", key.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_INTEGER) {
+        LOGE("%s() failed to get expire time. %s", __func__, reply->str);
         goto error;
     }
-
     ret = reply->integer;
-    freeReplyObject(reply);
-    return ret;
 
 error:
     if (reply) {
-        LOGE("%s() failed to get expire time. %s", __func__, reply->str);
         freeReplyObject(reply);
     }
-    return UNKNOWN_ERROR;
+    return ret;
+}
+
+int RedisInterface::getAllKeys(std::vector<String8> &keyVec)
+{
+    if (mRedisCtx == nullptr) {
+        return REDIS_STATUS_NOT_CONNECTED;
+    }
+
+    int ret = REDIS_STATUS_OK;
+    int i = 0;
+    redisReply *reply = (redisReply *)redisCommand(mRedisCtx, "keys *");
+    if (reply == nullptr || reply->type != REDIS_REPLY_ARRAY) {
+        LOGE("%s() failed to get expire time. %s", __func__, reply->str);
+        ret = REDIS_STATUS_QUERY_ERROR;
+        goto error;
+    }
+
+    if (reply->element == nullptr) {
+        LOGE("%s() redis reply element is null", __func__);
+        goto error;
+    }
+
+    for (i = 0; i < reply->elements; ++i) {
+        keyVec.push_back(reply->element[i]->str);
+    }
+
+error:
+    if (reply) {
+        freeReplyObject(reply);
+    }
+    return ret;
 }
 
 /**
