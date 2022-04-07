@@ -22,6 +22,59 @@
 #define REDIS_STATUS_NOT_EXISTED        -6  // 键不存在
 
 namespace eular {
+
+RedisReply::RedisReply(redisReply *reply)
+{
+    if (reply) {
+        mReply.reset(reply, freeReplyObject);
+    }
+}
+
+RedisReply::~RedisReply()
+{
+
+}
+
+String8 RedisReply::string()
+{
+    if (mReply && mReply->type == REDIS_REPLY_STRING) {
+        return mReply->str;
+    }
+
+    return String8();
+}
+
+int RedisReply::int32()
+{
+    if (mReply && mReply->type == REDIS_REPLY_INTEGER) {
+        return mReply->integer;
+    }
+
+    return -1;
+}
+
+double RedisReply::double64()
+{
+    if (mReply && mReply->type == REDIS_REPLY_DOUBLE) {
+        return mReply->dval;
+    }
+
+    return -1.0;
+}
+
+std::vector<String8> RedisReply::array()
+{
+    std::vector<String8> ret;
+    if (mReply && mReply->type == REDIS_REPLY_ARRAY && mReply->element != nullptr) {
+        for (size_t i = 0; i < mReply->elements; ++i) {
+            redisReply *ptr = mReply->element[i];
+            ret.push_back(ptr->str);
+        }
+    }
+
+    return ret;
+}
+
 RedisInterface::RedisInterface() :
     mRedisCtx(nullptr)
 {
@@ -1041,21 +1094,6 @@ const char *RedisInterface::strerror(int no) const
     }
 
     return ret;
-}
-
-RedisReply::RedisReply(redisReply *reply) :
-    isVaild(false)
-{
-    if (reply == nullptr) {
-        return;
-    }
-    mReply.reset(reply, freeReplyObject);
-    isVaild = true;
-}
-
-RedisReply::~RedisReply()
-{
-
 }
 
 }

@@ -20,18 +20,20 @@ namespace eular {
 
 class RedisReply {
 public:
+    DISALLOW_COPY_AND_ASSIGN(RedisReply);
     typedef std::shared_ptr<RedisReply> SP;
 
     RedisReply(redisReply *reply);
-    RedisReply(const RedisReply&) = delete;
-    RedisReply &operator=(const RedisReply&) = delete;
     virtual ~RedisReply();
 
-    String8 getString();
+    int type() const { return mReply ? mReply->type : -1; }
+    String8 string();
+    int     int32();
+    double  double64();
+    std::vector<String8> array();
 
 private:
     std::shared_ptr<redisReply> mReply;
-    bool isVaild;
     friend class RedisInterface;
 };
 
