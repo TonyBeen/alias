@@ -35,6 +35,7 @@ void test_hash()
     filedVal.push_back(std::make_pair("name", "eular"));
     filedVal.push_back(std::make_pair("sex", "male"));
     filedVal.push_back(std::make_pair("ip", "127.0.0.1"));
+
     assert(gRedis.hashCreateOrReplace("HashTable", filedVal) == 0);
     String8 hash_name_value;
     assert(gRedis.hashGetKeyFiled("HashTable", "name", hash_name_value) == 0);
@@ -45,10 +46,15 @@ void test_hash()
         cout << "filed = " << it.first.c_str() << ", value = " << it.second.c_str() << endl;
     }
 
-    const char *filed[] = {"name", "sex"};
-    assert(gRedis.hashDelKeyOrFiled("HashTable", filed, 2) == 0);
-
+    const char *filed[] = {"ip"};
+    assert(gRedis.hashDelKeyOrFiled("HashTable", filed, 1) == 0);
+    filedVal.clear();
+    assert(gRedis.hashGetKeyAll("HashTable", filedVal) > 0);
+    for (auto &it : filedVal) {
+        cout << it.first << "\t" << it.second << endl;
+    }
     gRedis.delKey("HashTable");
+    cout << "测试HashTable OK" << endl;
 }
 
 void test_list()
@@ -72,7 +78,8 @@ int main(int argc, char **argv)
 {
     assert(gRedis.connect("127.0.0.1", 6379, "123456") == 0);
 
-    test_list();
+    test_hash();
+    // test_list();
 
     gRedis.disconnect();
     return 0;

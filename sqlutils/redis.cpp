@@ -477,11 +477,10 @@ int RedisInterface::hashCreateOrReplace(const String8 &key,
     String8 filedAndVal;
     for (const auto &it : filedValue) {
         filedAndVal.appendFormat("%s %s ", it.first.c_str(), it.second.c_str());
-        LOGD("%s() [%s]\n", __func__, filedAndVal.c_str());
     }
 
     const String8 &sql = String8::format("hmset %s %s", key.c_str(), filedAndVal.c_str());
-    LOGD("[%s] [%s]\n", key.c_str(), filedAndVal.c_str());
+    LOGD("key: [%s] value: [%s]\n", key.c_str(), filedAndVal.c_str());
     LOGD("%s() sql [%s]\n", __func__, sql.c_str());
     redisReply *reply = (redisReply *)redisCommand(mRedisCtx, sql.c_str());
     if (reply == nullptr || reply->type != REDIS_REPLY_STATUS) {
