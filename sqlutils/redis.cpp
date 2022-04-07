@@ -604,7 +604,7 @@ int RedisInterface::hashGetKeyAll(const String8 &key, std::vector<std::pair<Stri
  * @param fileds 字段的个数
  * @return 成功返回0，失败返回负值
  */
-int RedisInterface::hashDelKeyOrFiled(const String8 &key, const char **filed, uint32_t fileds)
+int RedisInterface::hashDelFileds(const String8 &key, const char **filed, uint32_t fileds)
 {
     if (mRedisCtx == nullptr) {
         return REDIS_STATUS_NOT_CONNECTED;
@@ -640,7 +640,7 @@ int RedisInterface::hashDelKeyOrFiled(const String8 &key, const char **filed, ui
     return REDIS_STATUS_QUERY_ERROR;
 }
 
-int RedisInterface::hashDelKeyOrFiled(const String8 &key, const std::vector<String8> &filedVec)
+int RedisInterface::hashDelFileds(const String8 &key, const std::vector<String8> &filedVec)
 {
     if (mRedisCtx == nullptr) {
         return REDIS_STATUS_NOT_CONNECTED;

@@ -47,7 +47,7 @@ void test_hash()
     }
 
     const char *filed[] = {"ip"};
-    assert(gRedis.hashDelKeyOrFiled("HashTable", filed, 1) == 0);
+    assert(gRedis.hashDelFileds("HashTable", filed, 1) == 0);
     filedVal.clear();
     assert(gRedis.hashGetKeyAll("HashTable", filedVal) > 0);
     for (auto &it : filedVal) {
