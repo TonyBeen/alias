@@ -59,7 +59,7 @@ public:
         UNKNOW = -1,
         STDOUT = 0,
         FILEOUT = 1,
-        CONSLOEOUT = 2
+        CONSOLEOUT = 2
     };
 
 protected:
@@ -128,7 +128,7 @@ public:
 
     bool         CreateNewFile(std::string fileName);
     bool         CloseFile();
-    uint16_t     type() const { return CONSLOEOUT; }
+    uint16_t     type() const { return CONSOLEOUT; }
 
 protected:
     void         InitParams();

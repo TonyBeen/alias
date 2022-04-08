@@ -525,6 +525,7 @@ int RedisInterface::getAllKeys(std::vector<String8> &keyVec)
 
     if (reply->element == nullptr) {
         LOGE("%s() redis reply element is null", __func__);
+        ret = REDIS_STATUS_QUERY_ERROR;
         goto error;
     }
 

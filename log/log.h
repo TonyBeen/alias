@@ -50,11 +50,11 @@ void InitLog(LogLevel::Level lev = LogLevel::DEBUG, bool sync = true);
 void SetLevel(LogLevel::Level lev);
 
 /**
- * @param type  输出节点类型；STDOUT，FILEOUT，CONSLOEOUT.
+ * @param type  输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
 void addOutputNode(int type);
 /**
- * @param type  输出节点类型；STDOUT，FILEOUT，CONSLOEOUT.
+ * @param type  输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
 void delOutputNode(int type);
 

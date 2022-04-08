@@ -146,7 +146,7 @@ void LogManager::addLogWriteToList(int type)
     case LogWrite::FILEOUT:
         logWrite = new FileLogWrite();
         break;
-    case LogWrite::CONSLOEOUT:
+    case LogWrite::CONSOLEOUT:
         logWrite = new ConsoleLogWrite();
         break;
     default:
