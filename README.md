@@ -24,11 +24,8 @@
         ├── thread.cpp
         └── utils.cpp
     
-    utils包含线程、互斥锁、条件变量、字符串、缓存、函数堆栈。
-    dependence：
-    linunwind libaliaslog libpthread
-    linunwind: github下载;
-    libaliaslog: 下面的log库; 
+    utils包含线程、互斥锁、条件变量、信号量、字符串、缓存、函数堆栈、单例、定时器、异常、红黑树(未完善)。
+    依赖：libpthread
 
 **log:**
 
@@ -49,11 +46,11 @@
     日志类
     只需包含log.h即可使用
     用法：定义一个字符串宏LOG_TAG; LOGI(const char *fmt,...); 与printf用法一致
-    dependecce:
-    libpthread
+    依赖: libpthread
     样式：
-    07-11 15:01:26.751  9040  9040 [I] Test: main-0
-    07-11 15:01:26.751  9040  9041 [I] Test: thread-00000
+    日志输出时间(到毫秒) 父进程 当前线程 日志级别 日志tag: 具体日志信息
+    07-11 15:01:26.751  9040  9040 [I] Test: xxxxxxxxxxxxxxx
+    07-11 15:01:26.751  9040  9041 [I] Test: xxxxxxxxxxxxxxx
     log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下
 
 **crypto:**
