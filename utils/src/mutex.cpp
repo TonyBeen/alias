@@ -4,9 +4,11 @@
     > Desc: 
     > Created Time: 2021年04月25日 星期日 21时25分03秒
  ************************************************************************/
-
+//#define _DEBUG
+#include "debug.h"
 #include "mutex.h"
 #include "exception.h"
+#include "utils.h"
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -47,16 +49,26 @@ Mutex::~Mutex()
 
 int Mutex::lock()
 {
+    if (mName == "udpserver") {
+        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
+    }
+    
     return pthread_mutex_lock(&mMutex);
 }
 
 void Mutex::unlock()
 {
-    pthread_mutex_unlock(&mMutex);
+    if (mName == "udpserver") {
+        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
+    }
+    assert(pthread_mutex_unlock(&mMutex) == 0);
 }
 
 int Mutex::trylock()
 {
+    if (mName == "udpserver") {
+        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
+    }
     return pthread_mutex_trylock(&mMutex);
 }
 
