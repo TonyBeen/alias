@@ -18,8 +18,7 @@
 
 namespace eular {
 
-Mutex::Mutex(int type) :
-    mName("NONE")
+Mutex::Mutex(int type)
 {
     int ret = 0;
     if (type == SHARED) {
@@ -47,28 +46,23 @@ Mutex::~Mutex()
     assert(ret == 0);
 }
 
+void Mutex::setMutexName(const String8 &name)
+{
+    mName = name;
+}
+
 int Mutex::lock()
 {
-    if (mName == "udpserver") {
-        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
-    }
-    
     return pthread_mutex_lock(&mMutex);
 }
 
 void Mutex::unlock()
 {
-    if (mName == "udpserver") {
-        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
-    }
     assert(pthread_mutex_unlock(&mMutex) == 0);
 }
 
 int Mutex::trylock()
 {
-    if (mName == "udpserver") {
-        LOG("%s() tid %ld name %s\n", __func__, gettid(), mName.c_str());
-    }
     return pthread_mutex_trylock(&mMutex);
 }
 

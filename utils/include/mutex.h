@@ -52,7 +52,7 @@ public:
         SHARED = 1
     };
 
-    void setMutexName(const String8 &name) { mName = name; }
+    void setMutexName(const String8 &name);
     const String8 &getMutexName() const { return mName; }
     Mutex(int type = PRIVATE);
     ~Mutex();

@@ -17,26 +17,26 @@
 namespace eular {
 char *String8::getBuffer(size_t numChars)
 {
-    char *ret = nullptr;
+    char *buf = nullptr;
     if (numChars < DEFAULT_STRING_SIZE) {   // 小于默认字符串长度
-        ret = (char *)malloc(DEFAULT_STRING_SIZE);
+        buf = (char *)malloc(DEFAULT_STRING_SIZE);
         mCapacity = DEFAULT_STRING_SIZE;
     } else if (numChars < MAXSIZE / 2) {    // 小于最大长度的二分之一就申请1.5倍
-        ret = (char *)malloc(numChars / 2 * 3);
+        buf = (char *)malloc(numChars / 2 * 3);
         mCapacity = numChars / 2 * 3;
     } else if (numChars < MAXSIZE) {        // 大于最大长度二分之一小于最大长度，就申请最大长度
-        ret = (char *)malloc(MAXSIZE);
+        buf = (char *)malloc(MAXSIZE);
         mCapacity = MAXSIZE;
     } else {                                // 大于最大长度，抛出异常
         throw Exception("Too many characters");
     }
 
-    if (ret) {
-        memset(ret, 0, mCapacity);
+    if (buf) {
+        memset(buf, 0, mCapacity);
     } else {
         mCapacity = 0;
     }
-    return ret;
+    return buf;
 }
 
 void String8::release()
@@ -508,11 +508,6 @@ int String8::setTo(const char* other, size_t numChars)
         return -1;
     }
     int ret = 0;
-    bool log_flag = false;
-    if (strcmp(other, "udpserver") == 0) {
-        LOG("%s() need log\n", __func__);
-        log_flag = true;
-    }
 
     size_t otherLen = strlen(other);
     size_t stringLen = 0;
