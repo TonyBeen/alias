@@ -41,12 +41,11 @@ char *String8::getBuffer(size_t numChars)
 
 void String8::release()
 {
-    if (mString == nullptr) {
-        return;
+    if (mString) {
+        free(mString);
+        mString = nullptr;
+        mCapacity = 0;
     }
-    free(mString);
-    mString = nullptr;
-    mCapacity = 0;
 }
 
 String8::String8()
@@ -58,8 +57,10 @@ String8::String8(uint32_t size) :
     mString(nullptr)
 {
     mString = (char *)malloc(size);
-    memset(mString, 0, size);
-    mCapacity = size;
+    if (mString) {
+        memset(mString, 0, size);
+        mCapacity = size;
+    }
 }
 
 String8::String8(const String8& other)
@@ -69,7 +70,9 @@ String8::String8(const String8& other)
         return;
     }
     mString = getBuffer(other.length());
-    memcpy(mString, other.mString, other.length());
+    if (mString) {
+        memcpy(mString, other.mString, other.length());
+    }
 }
 
 String8::String8(const char* other)
@@ -80,7 +83,9 @@ String8::String8(const char* other)
     }
     size_t length = strlen(other);
     mString = getBuffer(length);
-    memcpy(mString, other, length);
+    if (mString) {
+        memcpy(mString, other, length);
+    }
 }
 
 String8::String8(const char* other, const size_t numChars)
@@ -94,7 +99,9 @@ String8::String8(const char* other, const size_t numChars)
         length = numChars;
     }
     mString = getBuffer(length);
-    memcpy(mString, other, length);
+    if (mString) {
+        memcpy(mString, other, length);
+    }
 }
 
 String8::String8(const std::string& other)
@@ -315,9 +322,10 @@ int String8::append(const char* other, size_t numChars)
 
 String8& String8::operator=(const String8& other)
 {
-    setTo(other);
+    setTo(other.c_str(), other.length());
     return *this;
 }
+
 String8& String8::operator=(const char* other)
 {
     setTo(other);
@@ -500,6 +508,12 @@ int String8::setTo(const char* other, size_t numChars)
         return -1;
     }
     int ret = 0;
+    bool log_flag = false;
+    if (strcmp(other, "udpserver") == 0) {
+        LOG("%s() need log\n", __func__);
+        log_flag = true;
+    }
+
     size_t otherLen = strlen(other);
     size_t stringLen = 0;
     numChars = numChars > otherLen ? otherLen : numChars;
