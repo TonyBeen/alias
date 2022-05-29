@@ -13,6 +13,7 @@ all :
 	make testsingleton
 	make testrbtree
 	make testutils
+	make testbitmap
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -48,6 +49,9 @@ testyaml : testyaml.cc
 	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
 
 testutils : test_utils.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
+testbitmap : test_bitmap.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
