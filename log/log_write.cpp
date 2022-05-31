@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <time.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
 
@@ -193,7 +195,16 @@ bool Mkdir(const std::string &path)
     if(__lstat(path.c_str()) == 0) {
         return true;
     }
-    char* filePath = strdup(path.c_str());
+    std::string realPath = path;
+    if (path[0] == '~') {
+        uid_t uid = getuid();
+        struct passwd *p = getpwuid(uid);
+        if (p != nullptr) {
+            realPath = p->pw_dir;
+            realPath.append(path.c_str() + 1);
+        }
+    }
+    char* filePath = strdup(realPath.c_str());
     char* ptr = strchr(filePath + 1, '/');
     do {
         for(; ptr; *ptr = '/', ptr = strchr(ptr + 1, '/')) {
@@ -219,15 +230,24 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
     if (*mFileDesc > 0 && *mFileSize < MAX_FILE_SIZE) {
         return true;
     }
-    std::string path = "/home/hsz/log/";
+    std::string path = "~/log/";
+    std::string realPath = path;
+    if (path[0] == '~') {
+        uid_t uid = getuid();
+        struct passwd *p = getpwuid(uid);
+        if (p != nullptr) {
+            realPath = p->pw_dir;
+            realPath.append(path.c_str() + 1);
+        }
+    }
     if (!Mkdir(path)) {
         return false;
     }
-    path += fileName;
+    realPath += fileName;
 
-    *mFileDesc = open(path.c_str(), mFileFlag, mFileMode);
+    *mFileDesc = open(realPath.c_str(), mFileFlag, mFileMode);
     if (*mFileDesc < 0) {
-        perror("open file error");
+        printf("open file (%s) error: %s\n", realPath.c_str(), strerror(errno));
         return false;
     }
     *mFileSize = 0;

@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <netinet/in.h> // for inet_ntoa
 #include <sys/socket.h>
+#include <pwd.h>
 #include <arpa/inet.h>
 #include <ifaddrs.h>    // for getifaddrs
 #include <chrono>
@@ -49,7 +50,16 @@ bool Mkdir(const std::string &path)
     if(__lstat(path.c_str()) == 0) {
         return true;
     }
-    char* filePath = strdup(path.c_str());
+    std::string realPath = path;
+    if (path[0] == '~') {
+        uid_t uid = getuid();
+        struct passwd *p = getpwuid(uid);
+        if (p != nullptr) {
+            realPath = p->pw_dir;
+            realPath.append(path.c_str() + 1);
+        }
+    }
+    char* filePath = strdup(realPath.c_str());
     char* ptr = strchr(filePath + 1, '/');
     do {
         for(; ptr; *ptr = '/', ptr = strchr(ptr + 1, '/')) {
