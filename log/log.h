@@ -39,9 +39,8 @@
 namespace eular {
 
 /**
- * @brief 假如在InitLog之前调用过LOGX，则此函数只对日志级别有影响
+ * @brief 修改输出日志级别
  * @param lev   最小输出级别
- * @param sync  日志输出方式采用同步还是异步，异步采用线程处理
  */
 void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
 /**
@@ -49,6 +48,11 @@ void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
  */
 void SetLevel(LogLevel::Level lev);
 
+/**
+ * @brief 使能stdout上色
+ * 
+ * @param flag 
+ */
 void EnableLogColor(bool flag);
 
 /**
