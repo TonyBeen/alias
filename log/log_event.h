@@ -13,15 +13,32 @@
 #include <sys/time.h> 
 #include <sys/types.h>
 
+#define LOG_TAG_SIZE (64)
+
 namespace eular {
 struct LogEvent {
     struct timeval  time;       // 时间
     int             pid;        // 进程ID
     pthread_t       tid;        // 线程ID
     LogLevel::Level level;      // 日志级别
-    const char *    tag;        // 类名
-    const char *    msg;        // 日志消息
+    char            tag[LOG_TAG_SIZE];  // 类名
+    char *          msg;        // 日志消息
+    bool            enableColor;// 是否启用颜色
 };
+
+static inline LogEvent LogEventDump(const LogEvent *ev)
+{
+    LogEvent ret;
+    memcpy(&ret, ev, sizeof(LogEvent));
+    ret.msg = (char *)malloc(strlen(ev->msg) + 1);
+    if (ret.msg == nullptr) {
+        ret.msg = nullptr;
+        return ret;
+    }
+
+    memcpy((void *)ret.msg, ev->msg, strlen(ev->msg));
+    return ret;
+}
 
 } // namespace eular
 #endif // __LOG_EVENT_H__

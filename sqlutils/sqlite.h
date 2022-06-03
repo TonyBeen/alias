@@ -8,7 +8,7 @@
 #ifndef __EULAR_SQLITE_H__
 #define __EULAR_SQLITE_H__
 
-#include <sqlite3.h>
+#include <sqlite/sqlite3.h>
 
 namespace eular {
 

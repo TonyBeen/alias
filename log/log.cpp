@@ -1,6 +1,7 @@
 #include "log.h"
 #include "callstack.h"
 #include <sys/syscall.h>
+#include <assert.h>
 
 #ifndef gettid
 #define gettid() syscall(__NR_gettid)
@@ -10,23 +11,22 @@
 
 namespace eular {
 static LogManager *gLogManager = nullptr;
-static bool gSync = true;
 static LogLevel::Level gLevel = LogLevel::DEBUG;
+static volatile bool gEnableLogoutColor = true;
 
 void getLogManager()
 {
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, gSync);
+        gLogManager = LogManager::getInstance();
     }
 }
 
-void InitLog(LogLevel::Level lev, bool sync)
+void InitLog(LogLevel::Level lev)
 {
     gLevel = lev;
-    gSync = sync;
 
     if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance(true, sync);
+        gLogManager = LogManager::getInstance();
     }
     LogFormat::SetLevel(gLevel);
 }
@@ -35,6 +35,11 @@ void SetLeval(LogLevel::Level lev)
 {
     gLevel = lev;
     LogFormat::SetLevel(gLevel);
+}
+
+void EnableLogColor(bool flag)
+{
+    gEnableLogoutColor = flag;
 }
 
 void addOutputNode(int type)
@@ -60,8 +65,10 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     struct timeval tv;
     gettimeofday(&tv, nullptr);
 
+    ev.enableColor = gEnableLogoutColor;
     ev.level = (LogLevel::Level)level;
-    ev.tag = tag;
+    assert(strlen(tag) < LOG_TAG_SIZE);
+    strcpy(ev.tag, tag);
     ev.time = tv;
     ev.pid = getpid();
     ev.tid = gettid();
@@ -92,20 +99,12 @@ void log_write(int level, const char *tag, const char *fmt, ...)
         out[len] = '\n';
     }
     ev.msg = out;
-    log_writev(&ev);
-    if (needFree) {
-        free(out);
-    }
-}
-
-static void log_writev(const LogEvent *ev)
-{
     getLogManager();
     if (gLogManager) {
-        std::string msgString = LogFormat::Format(ev);
-        if (msgString.size() > 0) {
-            gLogManager->WriteLog(msgString);
-        }
+        gLogManager->WriteLog(&ev);
+    }
+    if (needFree) {
+        free(out);
     }
 }
 
@@ -117,7 +116,8 @@ void log_write_assert(int level, const char *expr, const char *tag, const char *
     gettimeofday(&tv, nullptr);
 
     ev.level = (LogLevel::Level)level;
-    ev.tag = tag;
+    assert(strlen(tag) < LOG_TAG_SIZE);
+    strcpy(ev.tag, tag);
     ev.time = tv;
     ev.pid = getpid();
     ev.tid = gettid();
