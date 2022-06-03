@@ -3,32 +3,13 @@
 static eular::LogManager *lm = nullptr;
 
 namespace eular {
-LogManager::LogManager(bool isDetach, bool sync)
+LogManager::LogManager()
 {
-    pthread_mutex_init(&mListMutex, nullptr);
-    mIsDetach = isDetach;
-    mIsInterrupt = false;
-    mIsSync = sync;
-    if (sync == false) {
-        pthread_mutex_init(&mExitMutex, nullptr);
-        CreateThread(isDetach);
-    }
-
     mLogWriteList.push_back(new StdoutLogWrite());
 }
 
 LogManager::~LogManager()
 {
-    if (mIsSync == false) {
-        Interrupt();
-        if (!mIsDetach) {
-            pthread_join(mLogTid, nullptr);
-        }
-        pthread_mutex_destroy(&mExitMutex);
-        usleep(10000);  // 等待线程退出
-    }
-
-    pthread_mutex_destroy(&mListMutex);
     if (mLogWriteList.size() > 0) {
         for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end();) {
             if (*it != nullptr) {
@@ -41,79 +22,16 @@ LogManager::~LogManager()
     }
 }
 
-void *LogManager::thread(void *arg)
+void LogManager::WriteLog(LogEvent *event)
 {
-    // The thread can be canceled at any time
-    // pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr); 
-    LogManager *logManager = (LogManager *)arg;
-    while (logManager->ExitThread() == false) {
-        std::string msg;
-        {
-            pthread_mutex_lock(&logManager->mMutex);
-            while (logManager->mQueue.size() == 0) {
-                pthread_cond_wait(&logManager->mCond, &logManager->mMutex);
+    for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
+        if (*it != nullptr) {
+            if ((*it)->type() != LogWrite::STDOUT) {
+                event->enableColor = false;
             }
-            msg = logManager->mQueue.front();
-            logManager->mQueue.pop();
-            pthread_mutex_unlock(&logManager->mMutex);
+            std::string log = LogFormat::Format(event);
+            (*it)->WriteToFile(log);
         }
-        for (LogWriteIt it = logManager->mLogWriteList.begin(); it != logManager->mLogWriteList.end(); ++it) {
-            if (*it != nullptr) {
-                (*it)->WriteToFile(msg);
-            }
-        }
-    }
-}
-
-void LogManager::CreateThread(int detached)
-{
-    if (detached) {
-        pthread_attr_t detach;
-        pthread_attr_init(&detach);
-        pthread_attr_setdetachstate(&detach, PTHREAD_CREATE_DETACHED);
-        pthread_create(&mLogTid, &detach, thread, this);
-        pthread_attr_destroy(&detach);
-    } else {
-        pthread_create(&mLogTid, nullptr, thread, this);
-    }
-}
-
-void LogManager::Interrupt()
-{
-    pthread_mutex_lock(&mExitMutex);
-    mIsInterrupt = true;
-    pthread_mutex_unlock(&mExitMutex);
-}
-
-bool LogManager::ExitThread()
-{
-    pthread_mutex_lock(&mExitMutex);
-    return mIsInterrupt;
-    pthread_mutex_unlock(&mExitMutex);
-}
-
-void LogManager::WriteLog(const std::string& msg)
-{
-    if (mIsSync) {
-        for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
-            if (*it != nullptr) {
-                (*it)->WriteToFile(msg);
-            }
-        }
-    }
-    if (mIsSync == false) {
-        if (ExitThread()) {
-            return;
-        }
-        pthread_mutex_lock(&mMutex);
-        if (mQueue.size() >= MAX_QUEUE_SIZE) {
-            return;
-        }
-        mQueue.push(msg);
-        if (mQueue.size() == 2) {
-            pthread_cond_broadcast(&mCond);
-        }
-        pthread_mutex_unlock(&mMutex);
     }
 }
 
@@ -138,19 +56,18 @@ void LogManager::addLogWriteToList(int type)
         ++it;
     }
 
-    switch (type)
-    {
-    case LogWrite::STDOUT:
-        logWrite = new StdoutLogWrite();
-        break;
-    case LogWrite::FILEOUT:
-        logWrite = new FileLogWrite();
-        break;
-    case LogWrite::CONSOLEOUT:
-        logWrite = new ConsoleLogWrite();
-        break;
-    default:
-        goto unlock;
+    switch (type) {
+        case LogWrite::STDOUT:
+            logWrite = new StdoutLogWrite();
+            break;
+        case LogWrite::FILEOUT:
+            logWrite = new FileLogWrite();
+            break;
+        case LogWrite::CONSOLEOUT:
+            logWrite = new ConsoleLogWrite();
+            break;
+        default:
+            goto unlock;
     }
 
     mLogWriteList.push_back(logWrite);
@@ -177,10 +94,10 @@ void LogManager::delLogWriteFromList(int type)
     pthread_mutex_unlock(&mListMutex);
 }
 
-LogManager *LogManager::getInstance(bool isDetach, bool sync)
+LogManager *LogManager::getInstance()
 {
     if (lm == nullptr) {
-        lm = new LogManager(isDetach, sync);
+        lm = new LogManager();
     }
     return lm;
 }

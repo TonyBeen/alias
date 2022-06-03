@@ -8,6 +8,7 @@
 #ifndef __LOG_MAIN_H__
 #define __LOG_MAIN_H__
 
+#include "log_event.h"
 #include "log_level.h"
 #include "log_write.h"
 #include "log_format.h"
@@ -26,32 +27,20 @@ public:
     LogManager(const LogManager&) = delete;
     LogManager& operator=(const LogManager&) = delete;
 
-    void WriteLog(const std::string& msg);
-    static LogManager *getInstance(bool isDetach = true, bool sync = true);
+    void WriteLog(LogEvent *event);
+    static LogManager *getInstance();
     static void deleteInstance();
-    void Interrupt();
+
     const std::list<LogWrite *> &GetLogWrite() const;
     void addLogWriteToList(int type);
     void delLogWriteFromList(int type);
 
 private:
-    LogManager(bool, bool);
-    void CreateThread(int detached);
-    static void *thread(void *arg);
-    bool ExitThread();
+    LogManager();
 
 private:
     std::list<LogWrite *>   mLogWriteList;
     pthread_mutex_t         mListMutex;
-
-    std::queue<std::string> mQueue;
-    pthread_mutex_t         mMutex;
-    pthread_cond_t          mCond;
-    pthread_mutex_t         mExitMutex;
-    pthread_t mLogTid;
-    bool mIsDetach;
-    bool mIsSync;
-    volatile bool mIsInterrupt;
 };
 } // namespace eular
 #endif // __LOG_MAIN_H__

@@ -17,7 +17,7 @@
 #include <atomic>
 
 #define PERFIX_SIZE (128)
-#define LOG_BUF_SIZE (2048 + PERFIX_SIZE)
+#define LOG_BUF_SIZE (2048)
 
 // 05-24 10:10:10.100 12345 12345 I TAG: msg(\n)
 namespace eular {

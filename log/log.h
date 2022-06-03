@@ -43,11 +43,13 @@ namespace eular {
  * @param lev   最小输出级别
  * @param sync  日志输出方式采用同步还是异步，异步采用线程处理
  */
-void InitLog(LogLevel::Level lev = LogLevel::DEBUG, bool sync = true);
+void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
 /**
  * @param lev   设置最小输出级别
  */
 void SetLevel(LogLevel::Level lev);
+
+void EnableLogColor(bool flag);
 
 /**
  * @param type  输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
