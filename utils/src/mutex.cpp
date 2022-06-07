@@ -159,7 +159,7 @@ bool Sem::timedwait(uint32_t ms)
     struct timespec expire;
     clock_gettime(CLOCK_MONOTONIC, &expire);
     expire.tv_sec += ms / 1000;
-    expire.tv_nsec += ms % 1000;
+    expire.tv_nsec += (ms % 1000 * 1000 * 1000);
     if (expire.tv_nsec > 1000 * 1000 * 1000) {
         ++expire.tv_sec;
         expire.tv_nsec -= 1000 * 1000 * 1000;
