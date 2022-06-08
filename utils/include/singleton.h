@@ -9,6 +9,7 @@
 #define __SINGLETON_H__
 
 #include <bits/move.h>
+#include <stdlib.h>
 
 namespace eular {
 
@@ -18,8 +19,12 @@ public:
     template<typename... Args>
     static T *get(Args... args)
     {
+        // 编译期间检测类型完整性，不完整编译不过
+        typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
+        T_must_be_complete_type dummy; (void) dummy;
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
+            ::atexit(free); // 在mian结束后调用free函数
         }
         return mInstance;
     }
@@ -43,6 +48,7 @@ public:
             mInstance = nullptr;
         }
     }
+
 private:
     static T *mInstance;
 
