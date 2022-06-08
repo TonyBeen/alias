@@ -7,6 +7,7 @@
 
 #ifndef __EULAR_BUFFER_H__
 #define __EULAR_BUFFER_H__
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

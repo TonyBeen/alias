@@ -18,8 +18,9 @@ ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 }
 
 ByteBuffer::ByteBuffer(size_t size) :
-    mDataSize(0),
-    mBuffer(nullptr)
+    mBuffer(nullptr),
+    mCapacity(0),
+    mDataSize(0)
 {
     mCapacity = getBuffer(size);
     LOG("%s(size_t size) mCapacity = %zu\n", __func__, mCapacity);
@@ -129,7 +130,7 @@ size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
         return 0;
     }
 
-    size_t real_offset = size() > offset ? offset : 0;
+    size_t real_offset = mDataSize >= offset ? offset : 0;
     uint8_t *temp = nullptr;
 
     if (mCapacity < (dataSize + real_offset)) {
@@ -144,7 +145,7 @@ size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
         freeBuffer();
         mCapacity = getBuffer(calculate(dataSize + real_offset));
     }
-    LOG("ByteBuffer::%s() data(%s), dataSize(%zu), real_offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
+    LOG("%s() data(%p), dataSize(%zu), real_offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
             __func__, data, dataSize, real_offset, mBuffer, mCapacity, mDataSize);
 
     if (mCapacity > 0) {
@@ -212,12 +213,14 @@ void ByteBuffer::resize(size_t newSize)
     if (newSize == 0) {
         return;
     }
-    mCapacity = newSize;
+
     ByteBuffer tmp(mBuffer, mDataSize);
     freeBuffer();
-    size_t realCap = getBuffer(newSize);
-    if (realCap > 0) {
-        *this = tmp;
+    mCapacity = getBuffer(newSize);
+    if (mCapacity > 0) {
+        size_t size = tmp.mDataSize >= mCapacity ? mCapacity : tmp.mDataSize;
+        memcpy(mBuffer, tmp.mBuffer, size);
+        mDataSize = size;
     }
 }
 
@@ -244,7 +247,7 @@ std::string ByteBuffer::dump() const
 size_t ByteBuffer::calculate(size_t dataSize)
 {
     if (dataSize >= DEFAULT_BUFFER_SIZE) {
-        dataSize *= 2;
+        dataSize *= 1.5;
     } else {
         dataSize = DEFAULT_BUFFER_SIZE;
     }
@@ -256,6 +259,7 @@ size_t ByteBuffer::getBuffer(size_t size = DEFAULT_BUFFER_SIZE)
     if (size == 0) {
         size = DEFAULT_BUFFER_SIZE;
     }
+
     if (mBuffer == nullptr) {
         mBuffer = (uint8_t *)malloc(size);
         LOG("new buffer %p\n", mBuffer);
@@ -267,13 +271,15 @@ size_t ByteBuffer::getBuffer(size_t size = DEFAULT_BUFFER_SIZE)
     return 0;
 }
 
-void  ByteBuffer::freeBuffer()
+void ByteBuffer::freeBuffer()
 {
-    LOG("freeBuffer() %p\n", mBuffer);
+    LOG("%s() %p\n", __func__, mBuffer);
     if (mBuffer) {
         free(mBuffer);
     }
     mBuffer = nullptr;
+    mDataSize = 0;
+    mCapacity = 0;
 }
 
 } // namespace eular
