@@ -24,7 +24,7 @@ public:
         T_must_be_complete_type dummy; (void) dummy;
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
-            ::atexit(free); // 在mian结束后调用free函数
+            ::atexit(Singleton::free); // 在mian结束后调用free函数
         }
         return mInstance;
     }
