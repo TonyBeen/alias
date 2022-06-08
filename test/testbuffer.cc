@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <bits/move.h>
+#include <assert.h>
 
 using namespace eular;
 
@@ -17,17 +18,17 @@ int main()
 
     printf("2 测试移动赋值函数-----------------\n");
     ByteBuffer tmp("Hello World", 11);
+    printf("data = %p; capacity = %zu; data size = %zu\n", tmp.data(), tmp.capacity(), tmp.size());
+
     buf = std::move(tmp);
-    printf("capacity = %zu\n", buf.capacity());
-    printf("data size = %zu\n", buf.size());
-    printf("data = %p\n", buf.data());
+    printf("data = %p; capacity = %zu; data size = %zu\n", buf.data(), buf.capacity(), buf.size());
 
     printf("3 测试append函数-----------------\n");
     buf.append((const uint8_t *)"-----", 5);
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
-    printf("data begin = %p(%s) end = %p\n", buf.begin(), buf.begin(), buf.end());
+    printf("data should be \"Hello World-----\", real \"%s\"\n", buf.begin());
 
     printf("4 测试resize函数-----------------\n");
     buf.resize(1024);
@@ -35,7 +36,7 @@ int main()
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
     printf("data begin = %p(%s) end = %p index = 0->%c\n", buf.begin(), buf.begin(), buf.end(), buf[0]);
-    buf[6] = 'w';
+    buf[6] = '*';
     printf("data begin = %p(%s) end = %p index = 6->%c\n", buf.begin(), buf.begin(), buf.end(), buf[6]);
 
     printf("5 测试clear及赋值函数-----------------\n");
@@ -48,8 +49,7 @@ int main()
     printf("6 测试移动构造函数--------------------\n");
     ByteBuffer tmp2("Hello World", 11);
     ByteBuffer con = std::move(tmp2);
-    printf("-------------\n");
+    printf("data begin = %p(%s) end = %p\n", con.begin(), con.begin(), con.end());
 
-    sleep(1);
     return 0;
 }
