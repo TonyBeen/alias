@@ -5,8 +5,8 @@
     > Created Time: Mon Jul  5 13:08:56 2021
  ************************************************************************/
 
-#ifndef __ALIAS_BUFFER_H__
-#define __ALIAS_BUFFER_H__
+#ifndef __EULAR_BUFFER_H__
+#define __EULAR_BUFFER_H__
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -61,4 +61,4 @@ private:
 
 } // namespace eular
 
-#endif // __ALIAS_BUFFER_H__
+#endif // __EULAR_BUFFER_H__

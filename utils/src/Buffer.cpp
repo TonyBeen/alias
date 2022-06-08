@@ -10,7 +10,7 @@
 #include "debug.h"
 #include <assert.h>
 
-#define DEFAULT_BUFFER_SIZE (4096)
+#define DEFAULT_BUFFER_SIZE (256)
 
 namespace eular {
 ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
@@ -30,6 +30,7 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
+    mCapacity = getBuffer(dataLength * 1.5);
     set((const uint8_t *)data, dataLength);
     LOG("%s(const uint8_t *data, size_t dataLength) mDataSize = %zu, mCapacity = %zu\n",
         __func__, mDataSize, mCapacity);
@@ -40,25 +41,32 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
+    mCapacity = getBuffer(dataLength * 1.5);
     set((const uint8_t *)data, dataLength);
 }
 
-ByteBuffer::ByteBuffer(const ByteBuffer& other)
+ByteBuffer::ByteBuffer(const ByteBuffer& other) :
+    mBuffer(nullptr),
+    mCapacity(0),
+    mDataSize(0)
 {
     if (&other == this) {
         return;
     }
-    
+
+    mCapacity = getBuffer(other.size() * 1.5);
     set(other.mBuffer, other.mDataSize);
 }
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
-    mBuffer(nullptr)
+    mBuffer(nullptr),
+    mCapacity(0),
+    mDataSize(0)
 {
     if (&other == this) {
         return;
     }
-    LOG("移动构造 ByteBuffer::ByteBuffer(ByteBuffer&& other)\n");
+
     uint8_t *tmp = this->mBuffer;
     this->mBuffer = other.mBuffer;
     other.mBuffer = tmp;
@@ -117,34 +125,37 @@ uint8_t& ByteBuffer::operator[](size_t index)
 
 size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
 {
-    if (data == nullptr) {
+    if (data == nullptr || dataSize == 0) {
         return 0;
     }
+
+    size_t real_offset = size() > offset ? offset : 0;
     uint8_t *temp = nullptr;
-    if (mCapacity < (dataSize + offset)) {
-        if (offset > 0) {
-            temp = (uint8_t *)malloc(offset);
+
+    if (mCapacity < (dataSize + real_offset)) {
+        if (real_offset > 0 && mBuffer) {
+            temp = (uint8_t *)malloc(real_offset);
             if (temp == nullptr) {
                 return 0;
             }
-            memcpy(temp, mBuffer, offset);
+            memcpy(temp, mBuffer, real_offset);
         }
 
         freeBuffer();
-        mCapacity = getBuffer(calculate(dataSize + offset));
+        mCapacity = getBuffer(calculate(dataSize + real_offset));
     }
-    LOG("ByteBuffer::%s() data(%s), dataSize(%zu), offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
-            __func__, data, dataSize, offset, mBuffer, mCapacity, mDataSize);
+    LOG("ByteBuffer::%s() data(%s), dataSize(%zu), real_offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
+            __func__, data, dataSize, real_offset, mBuffer, mCapacity, mDataSize);
 
     if (mCapacity > 0) {
         if (temp) {
-            memcpy(mBuffer, temp, offset);
+            memcpy(mBuffer, temp, real_offset);
             free(temp);
             temp = nullptr;
         }
-        memset(mBuffer + offset, 0, mCapacity - offset); // 清空offset之后的数据
-        memcpy(mBuffer + offset, data, dataSize);
-        mDataSize = offset + dataSize;
+        memset(mBuffer + real_offset, 0, mCapacity - real_offset); // 清空real_offset之后的数据
+        memcpy(mBuffer + real_offset, data, dataSize);
+        mDataSize = real_offset + dataSize;
         return dataSize;
     }
     if (temp) {
