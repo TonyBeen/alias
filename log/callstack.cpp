@@ -40,6 +40,7 @@ void CallStack::update(uint32_t ignoreDepth, uint32_t ignoreEnd)
     mStackFrame.clear();
     unw_getcontext(&context);
     unw_init_local(&cursor, &context);
+    char buf[1024] = {0};
 
     while (unw_step(&cursor) > 0)
     {
@@ -58,15 +59,13 @@ void CallStack::update(uint32_t ignoreDepth, uint32_t ignoreEnd)
                 nameptr = demangled;
             }
 
-            // char buf[256] = {0};
-            // sprintf(buf, "-0x%012lx: (%s + 0x%lx)", funcPointer, nameptr, offset);
-            String8 str = String8::format("-0x%016lx: (%s + 0x%lx)", funcPointer, nameptr, offset);
-            mStackFrame.push_back(str);
+            snprintf(buf, sizeof(buf), "-0x%012lx: (%s + 0x%lx)", funcPointer, nameptr, offset);
+            mStackFrame.push_back(std::string(buf));
             if (demangled) {
                 free(demangled);
             }
         } else {
-            mStackFrame.push_back(String8::format("(unable to obtain symbol name for this frame)"));
+            mStackFrame.push_back(std::string("(unable to obtain symbol name for this frame)"));
         }
     }
 }
@@ -78,9 +77,9 @@ void CallStack::log(const char* logtag, LogLevel::Level level) const
     }
 }
 
-String8 CallStack::toString() const
+std::string CallStack::toString() const
 {
-    String8 str;
+    std::string str;
     for (size_t i = 0; i < mStackFrame.size(); ++i) {
         str += mStackFrame[i];
         str += "\n";

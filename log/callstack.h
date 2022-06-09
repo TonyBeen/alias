@@ -8,9 +8,9 @@
 #ifndef __ALIAS_CALLSTACK_H__
 #define __ALIAS_CALLSTACK_H__
 
-#include <utils/string8.h>
 #include "log.h"
 #include <stdio.h>
+#include <string>
 #include <vector>
 
 namespace eular {
@@ -31,15 +31,15 @@ public:
              LogLevel::Level level = LogLevel::DEBUG) const;
 
     // Return a string (possibly very long) containing the complete stack trace.
-    String8 toString() const;
+    std::string toString() const;
 
     // Get the count of stack frames that are in this call stack.
     size_t size() const { return mStackFrame.size(); }
 
 private:
-    std::vector<String8>    mStackFrame;
-    uint32_t                mSkip;
-    uint32_t                mSkipEnd;
+    std::vector<std::string> mStackFrame;
+    uint32_t                 mSkip;
+    uint32_t                 mSkipEnd;
 };
 } // namespace eular
 

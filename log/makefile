@@ -1,6 +1,6 @@
 cflags := -std=c++11
 soflags := -fPIC
-shared_lib := -lunwind -lutils -lpthread
+shared_lib := -lunwind -lpthread
 cc := g++
 destfile := /usr/local
 
