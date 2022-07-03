@@ -222,6 +222,10 @@ int main(int argc, char **argv)
                 static char buf[64];
                 memset(buf, 0, sizeof(buf));
                 int size = ::recvfrom(netSocket, buf, sizeof(buf), 0, (sockaddr *)&client, &len);
+                if (size < 0) {
+                    perror("recvfrom error");
+                    continue;
+                }
                 if (size > 0 && strcasecmp("connect", buf) == 0) {      // udp accept
                     gNetClientMap[++clientCount] = UdpClient(&client);
                     int n = sprintf(buf, "client id = %d\r\n", clientCount);
@@ -236,7 +240,6 @@ int main(int argc, char **argv)
                         gNetClientMap.erase(clientID);
                     }
                 }
-                continue;
             }
 
             if (ev.events & EPOLLIN) {  // 读事件
