@@ -22,9 +22,9 @@
 #define CLR_MAX_SIZE    (10)
 
 #define COLOR_MAP(XXX)                      \
-    XXX(LogLevel::UNKNOW,   CLR_WHITE)      \
+    XXX(LogLevel::UNKNOW,   CLR_CLR)        \
     XXX(LogLevel::DEBUG,    CLR_BLUE)       \
-    XXX(LogLevel::INFO,     CLR_GREEN)      \
+    XXX(LogLevel::INFO,     CLR_WHITE)      \
     XXX(LogLevel::WARN,     CLR_YELLOW)     \
     XXX(LogLevel::ERROR,    CLR_RED)        \
     XXX(LogLevel::FATAL,    CLR_PURPLE)     \
@@ -79,6 +79,12 @@ std::string LogFormat::Format(const LogEvent *ev)
     ret += ev->msg;
     if (ev->msg[msglen - 1] != '\n') {
         ret += "\n";
+    }
+
+    // 清空颜色
+    if (ev->enableColor) {
+        snprintf(output, PERFIX_SIZE, "%s", CLR_CLR);
+        ret += output;
     }
 
     return ret;
