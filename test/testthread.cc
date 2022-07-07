@@ -9,9 +9,22 @@
 #include <utils/thread.h>
 #include <utils/string8.h>
 
+using namespace eular;
+
 struct Data {
     int num;
     eular::String8 str;
+};
+
+class ThreadExt : public ThreadBase {
+public:
+    ThreadExt() : ThreadBase("test-drived-thread") {}
+
+protected:
+    virtual int threadWorkFunction(void *arg) override
+    {
+        printf("ThreadExt::threadWorkFunction()\n");
+    }
 };
 
 int function(void *arg)
@@ -29,7 +42,7 @@ int function(void *arg)
 
 int main(int argc, char **argv)
 {
-    eular::Thread thread("test", function);
+    
     Data *data = new Data;
     if (data == nullptr) {
         perror("malloc");
@@ -37,36 +50,18 @@ int main(int argc, char **argv)
     }
     data->num = 100;
     data->str = "Hello world!";
-    printf("%s: %s() thread run\n", __FILE__, __func__);
-    thread.setArg(data);
-    thread.run();
-    printf("%s: %s() thread status %d\n", __FILE__, __func__, thread.ThreadStatus());
-    sleep(2);
-    printf("func return %d\n", thread.getFunctionReturn());
-    printf("func name -> %s\n", thread.GetThreadName().c_str());
 
-    printf("\n*************************\n");
-    thread.StartWork();
+    eular::Thread thread(std::bind(function, data), "test-thread");
+    thread.join();
 
-    usleep(1);
-    thread.Interrupt();
+    ThreadExt ext;
+    ext.run();
+
+    printf("ext tid %d\n", ext.getKernalTid());
+    printf("thread name: %s\n", ext.threadName().c_str());
     sleep(1);
-
-    {
-        printf("\n------------------\n    测试delete\n------------------\n");
-        eular::Thread *thread2 = new eular::Thread("test", function);
-        Data *data = new Data;
-        if (data == nullptr) {
-            perror("malloc");
-            return -1;
-        }
-        data->num = 100;
-        data->str = "Hello world!";
-        thread2->setArg(data);
-        thread2->run();
-        msleep(10);
-        delete thread2;
-    }
-
+    ext.stop();
+    printf("\033[32mWhen you see the assertion failure, it means success\033[0m\n");
+    assert(false);
     return 0;
 }

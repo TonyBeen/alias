@@ -94,7 +94,7 @@ uint64_t Timer::getCurrentTime(clockid_t type)
 
 TimerManager::TimerManager() :
     mEpollFd(-1),
-    ThreadBase("timer thread", true),
+    ThreadBase("timer thread"),
     mSignal(0),
     mShouldExit(0)
 {
@@ -260,7 +260,7 @@ int TimerManager::threadWorkFunction(void *arg)
         }
     }
 
-    return ThreadBase::THREAD_WAITING;
+    return THREAD_WAITING;
 }
 
 } // namespace eular

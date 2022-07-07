@@ -9,36 +9,32 @@
 #define __THREAD_H__
 
 #include "utils.h"
-#include "threaddef.h"
 #include "mutex.h"
 #include "condition.h"
 #include "string8.h"
 #include <stdint.h>
 #include <atomic>
+#include <functional>
+#include <memory>
 
-#define THREAD_FUNC_RETURN 0xFFF
+#define THREAD_EXIT     0
+#define THREAD_RUNNING  1
+#define THREAD_WAITING  2
 
 namespace eular {
 class ThreadBase
 {
-public:
-    typedef enum {
-        THREAD_EXIT = 0,
-        THREAD_RUNNING = 1,
-        THREAD_WAITING = 2
-    } thread_status_t;
-
-    typedef void *(*ThreadFunc)(void *);
-    ThreadBase(const char *threadName, uint8_t isThreadDetach = true);
-    virtual ~ThreadBase();
     DISALLOW_COPY_AND_ASSIGN(ThreadBase);
+public:
+    ThreadBase(const String8 &threadName);
+    virtual ~ThreadBase();
 
-    uint32_t        ThreadStatus() const;
-    void            Interrupt();
-    bool            ForceExit();
+    uint32_t        threadStatus() const;
     int             run(size_t stackSize = 0);
-    void            StartWork();
-    const String8&  GetThreadName() const { return mThreadName; }
+    void            start();
+    void            stop();
+    bool            forceExit();
+    const String8&  threadName() const { return mThreadName; }
     const uint32_t& getKernalTid() const { return mKernalTid; }
     const pthread_t getTid() const { return mTid; }
 
@@ -48,37 +44,46 @@ protected:
             String8 mThreadName;
 
 private:
-    static  int     threadloop(void *user);
+    static  void*   threadloop(void *user);
             bool    ShouldExit();
-private:
-    mutable     Mutex               mMutex;
-                uint32_t            mPid;
-                uint32_t            mKernalTid;
-                pthread_t           mTid;
 
-    std::atomic<uint32_t>           mThreadStatusAtomic;
-    volatile    bool                mExitStatus;
-                bool                mIsThreadDetached;
-                Condition           mCond;
+protected:
+    uint32_t            mPid;
+    uint32_t            mKernalTid;
+    pthread_t           mTid;
+    Sem                 mSem;
+
+    std::atomic<uint32_t>   mThreadStatus;
+    std::atomic<bool>       mExitStatus;
 };
 
-class Thread final : public ThreadBase
+class Thread
 {
 public:
-    Thread();
-    Thread(const char *threadName, user_thread_function func = nullptr, uint8_t isDetach = true);
+    typedef std::shared_ptr<Thread> SP;
+
+    Thread(std::function<void()> callback, const String8 &threadName = "");
     ~Thread();
 
-    void setThreadName(const String8& name) { mThreadName = name; }
-    void setArg(void *arg);
-    void setWorkFunc(user_thread_function func);
-    int  getFunctionReturn();
+    static void         SetName(eular::String8 name);
+    static String8      GetName();
+    static Thread *     GetThis();
+    eular::String8      getName() const { return mThreadName; }
+    pid_t               getTid() const { return mKernalTid; };
+
+    void detach();
+    void join();
+
 protected:
-    virtual int threadWorkFunction(void *arg);
+    static void *entrance(void *arg);
 
 private:
-    user_thread_function function;
-    volatile int  mFuncReturn;
+    pid_t                   mKernalTid;     // 内核tid
+    pthread_t               mTid;           // pthread线程ID
+    eular::String8          mThreadName;    // 线程名字
+    std::function<void()>   mCallback;      // 线程执行函数
+    uint8_t                 mShouldJoin;    // 1为由用户回收线程，0为自动回收
+    eular::Sem              mSemaphore;
 };
 
 } // namespace eular

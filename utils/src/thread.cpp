@@ -14,72 +14,63 @@
 #include <string.h>
 
 namespace eular {
-ThreadBase::ThreadBase(const char *threadName, uint8_t isThreadDetach) :
+ThreadBase::ThreadBase(const String8 &threadName) :
     mExitStatus(false),
     mPid(0),
     mTid(0),
-    mKernalTid(0)
+    mKernalTid(0),
+    mThreadName(threadName),
+    mThreadStatus(THREAD_EXIT),
+    mSem(0)
 {
-    mThreadStatusAtomic = THREAD_EXIT;
-    if (threadName) {
-        mThreadName = threadName;
-    }
-    mIsThreadDetached = isThreadDetach;
 }
 
 ThreadBase::~ThreadBase()
 {
-    if (ThreadStatus() != THREAD_EXIT) { // 等待线程退出，否则在析构完成之后会导致线程段错误问题
-        Interrupt();
+    if (threadStatus() != THREAD_EXIT) { // 等待线程退出，否则在析构完成之后会导致线程段错误问题
+        stop();
     }
 }
 
-uint32_t ThreadBase::ThreadStatus() const
+uint32_t ThreadBase::threadStatus() const
 {
-    return mThreadStatusAtomic.load();
+    return mThreadStatus.load();
 }
 
-void ThreadBase::Interrupt()
+void ThreadBase::stop()
 {
-    {
-        AutoLock<Mutex> _l(mMutex);
-        mExitStatus = true;
-    }
-    if (mThreadStatusAtomic.load() == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
-        mCond.broadcast();
+    mExitStatus = true;
+    if (mThreadStatus.load() == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
+        mSem.post();
     }
 }
 
-bool ThreadBase::ForceExit()
+bool ThreadBase::forceExit()
 {
     return pthread_cancel(mTid) == 0;
 }
 
 bool ThreadBase::ShouldExit()
 {
-    AutoLock<Mutex> _l(mMutex);
-    // LOG("thread %d exit mutex owner %d\n", mKernalTid, mMutex.mutex()->__data.__owner);
-    return mExitStatus;
+    return mExitStatus.load();
 }
 
 int ThreadBase::run(size_t stackSize)
 {
-    AutoLock<Mutex> _lock(mMutex);
-    if (mThreadStatusAtomic.load() != THREAD_EXIT) {
+    if (mThreadStatus.load() != THREAD_EXIT) {
         return INVALID_OPERATION;
     }
+
     pthread_attr_t attr;
     pthread_attr_init(&attr);
     if (stackSize) {
         pthread_attr_setstacksize(&attr, stackSize);
     }
-    if (mIsThreadDetached) {
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    }
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
-    int ret = pthread_create(&mTid, &attr, (ThreadFunc)threadloop, this);
+    int ret = pthread_create(&mTid, &attr, threadloop, this);
     if (ret == 0) {
-        mThreadStatusAtomic = THREAD_RUNNING;
+        mThreadStatus = THREAD_RUNNING;
     } else {
         LOG("pthread_create error %s\n", strerror(ret));
     }
@@ -87,16 +78,11 @@ int ThreadBase::run(size_t stackSize)
     return ret;
 }
 
-
-/**
- * @brief 如果线程运行中，直接返回；如果等待则broadcast；如果退出，则另起线程
- */
-void ThreadBase::StartWork()
+void ThreadBase::start()
 {
-    switch (mThreadStatusAtomic.load())
-    {
+    switch (mThreadStatus.load()) {
     case THREAD_WAITING:
-        mCond.broadcast();
+        mSem.post();
         break;
     case THREAD_RUNNING:
         break;
@@ -107,10 +93,7 @@ void ThreadBase::StartWork()
     }
 }
 
-/**
- * @brief 线程循环，子类执行函数入口
- */
-int ThreadBase::threadloop(void *user)
+void *ThreadBase::threadloop(void *user)
 {
     LOG("%s() start \n", __func__);
     ThreadBase *threadBase = (ThreadBase *)user;
@@ -121,63 +104,106 @@ int ThreadBase::threadloop(void *user)
         LOG("thread is going to run...\n");
         int result = threadBase->threadWorkFunction(threadBase->userData);
         if (result == THREAD_EXIT || threadBase->ShouldExit() == true) {
-            threadBase->mThreadStatusAtomic = THREAD_EXIT;
+            threadBase->mThreadStatus = THREAD_EXIT;
             break;
         }
 
-        threadBase->mThreadStatusAtomic = THREAD_WAITING;
+        threadBase->mThreadStatus = THREAD_WAITING;
 
         LOG("thread wait...\n");
-        AutoLock<Mutex> _l(threadBase->mMutex);
-        threadBase->mCond.wait(threadBase->mMutex);     // 阻塞线程，由用户决定下一次执行任务的时间
-        threadBase->mThreadStatusAtomic = THREAD_RUNNING;
+        threadBase->mSem.wait();     // 阻塞线程，由用户决定下一次执行任务的时间
+        threadBase->mThreadStatus = THREAD_RUNNING;
     }
     LOG("thread exit...\n");
     return 0;
 }
 
-Thread::Thread() : ThreadBase("ThreadBase")
-{
-    userData = nullptr;
-    function = nullptr;
-    mFuncReturn = THREAD_FUNC_RETURN;
-}
+static thread_local Thread *gLocalThread = nullptr;
+static thread_local eular::String8 gThreadName;
 
-Thread::Thread(const char *threadName, user_thread_function func, uint8_t isDetach) :
-    ThreadBase(threadName, isDetach)
+Thread::Thread(std::function<void()> callback, const String8 &threadName) :
+    mThreadName(threadName.length() ? threadName : "Unknow"),
+    mCallback(callback),
+    mShouldJoin(true),
+    mSemaphore(0)
 {
-    userData = nullptr;
-    this->function = func;
-    mFuncReturn = THREAD_FUNC_RETURN;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+
+    int ret = pthread_create(&mTid, &attr, &Thread::entrance, this);
+    pthread_attr_destroy(&attr);
+    if (ret) {
+        LOG("pthread_create error. [%d,%s]", errno, strerror(errno));
+        throw eular::Exception("pthread_create error");
+    }
+    mSemaphore.wait();
 }
 
 Thread::~Thread()
 {
-
-}
-
-int Thread::threadWorkFunction(void *arg)
-{
-    if (function) {
-        mFuncReturn = function(arg);
-        LOG("user functions return %d\n", mFuncReturn);
+    if (mShouldJoin && mTid) {
+        pthread_detach(mTid);
     }
-    return mFuncReturn;
 }
 
-int Thread::getFunctionReturn()
+void Thread::SetName(eular::String8 name)
 {
-    return mFuncReturn;
+    if (name.isEmpty()) {
+        return;
+    }
+    if (gLocalThread) {
+        gLocalThread->mThreadName = name;
+    }
+    gThreadName = name;
 }
 
-void Thread::setArg(void *arg)
+String8 Thread::GetName()
 {
-    this->userData = arg;
+    return gThreadName;
 }
 
-void Thread::setWorkFunc(user_thread_function func)
+Thread *Thread::GetThis()
 {
-    this->function = func;
+    return gLocalThread;
+}
+
+void Thread::detach()
+{
+    if (mTid) {
+        pthread_detach(mTid);
+        mShouldJoin = false;
+    }
+}
+
+void Thread::join()
+{
+    if (mShouldJoin && mTid) {
+        int ret = pthread_join(mTid, nullptr);
+        if (ret) {
+            LOG("pthread_join error. [%d,%s]", errno, strerror(errno));
+            throw eular::Exception("pthread_join error");
+        }
+        mTid = 0;
+    }
+    mShouldJoin = false;
+}
+
+void *Thread::entrance(void *arg)
+{
+    assert(arg && "arg never be null");
+    Thread *th = static_cast<Thread *>(arg);
+    gLocalThread = th;
+    gThreadName = th->mThreadName;
+    gLocalThread->mKernalTid = gettid();
+    gLocalThread->mSemaphore.post();
+
+    pthread_setname_np(pthread_self(), th->mThreadName.substr(0, 15).c_str());
+
+    std::function<void()> cb;
+    cb.swap(th->mCallback);
+
+    cb();
+    return 0;
 }
 
 } // namespace eular
