@@ -139,6 +139,8 @@ Sem::~Sem()
     }
 }
 
+// see https://stackoverflow.com/questions/2013181/gdb-causes-sem-wait-to-fail-with-eintr-error
+
 bool Sem::post()
 {
     int rt = 0;
