@@ -117,7 +117,7 @@ Sem::Sem(const char *semPath, uint8_t val)
 
 Sem::Sem(uint8_t valBase)
 {
-    mSem = new sem_t;
+    mSem = new (std::nothrow)sem_t;
     if (mSem == nullptr) {
         throw Exception("new sem_t error. no more memory");
     }
@@ -141,17 +141,29 @@ Sem::~Sem()
 
 bool Sem::post()
 {
-    return 0 == sem_post(mSem);
+    int rt = 0;
+    do {
+        rt = sem_post(mSem);
+    } while (rt == -1 && errno == EINTR);
+    return 0 == rt;
 }
 
 bool Sem::wait()
 {
-    return 0 == sem_wait(mSem);
+    int rt = 0;
+    do {
+        rt = sem_wait(mSem);
+    } while (rt == -1 && errno == EINTR);
+    return 0 == rt;
 }
 
 bool Sem::trywait()
 {
-    return 0 == sem_trywait(mSem);
+    int rt = 0;
+    do {
+        rt = sem_trywait(mSem);
+    } while (rt == -1 && errno == EINTR);
+    return 0 == rt;
 }
 
 bool Sem::timedwait(uint32_t ms)
@@ -165,7 +177,11 @@ bool Sem::timedwait(uint32_t ms)
         expire.tv_nsec -= 1000 * 1000 * 1000;
     }
 
-    return 0 == sem_timedwait(mSem, &expire);
+    int rt = 0;
+    do {
+        rt = sem_timedwait(mSem, &expire);
+    } while (rt == -1 && errno == EINTR);
+    return 0 == rt;
 }
 
 }
