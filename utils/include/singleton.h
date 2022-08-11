@@ -63,6 +63,9 @@ private:
 template<typename T>
 T *Singleton<T>::mInstance = nullptr;
 
+template<typename T>
+Mutex Singleton<T>::mMutex;
+
 } // namespace eular
 
 #endif  // __SINGLETON_H__
