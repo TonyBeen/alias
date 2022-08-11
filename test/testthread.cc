@@ -24,6 +24,7 @@ protected:
     virtual int threadWorkFunction(void *arg) override
     {
         printf("ThreadExt::threadWorkFunction()\n");
+        return THREAD_WAITING;
     }
 };
 
@@ -42,7 +43,6 @@ int function(void *arg)
 
 int main(int argc, char **argv)
 {
-    
     Data *data = new Data;
     if (data == nullptr) {
         perror("malloc");
@@ -51,17 +51,16 @@ int main(int argc, char **argv)
     data->num = 100;
     data->str = "Hello world!";
 
-    eular::Thread thread(std::bind(function, data), "test-thread");
-    thread.join();
+    // eular::Thread thread(std::bind(function, data), "test-thread");
+    // thread.join();
 
     ThreadExt ext;
     ext.run();
-
+    sleep(1);
     printf("ext tid %d\n", ext.getKernalTid());
     printf("thread name: %s\n", ext.threadName().c_str());
-    sleep(1);
     ext.stop();
-    printf("\033[32mWhen you see the assertion failure, it means success\033[0m\n");
-    assert(false);
+    delete data;
+    printf("\033[32mWhen you see this sentence, the program runs successfully\033[0m\n");
     return 0;
 }

@@ -84,6 +84,7 @@ int main()
 
     {
         // 测试左移运算符
+        std::cout << "测试左移运算符\n";
         eular::String8 str8 = "Hello World!";
         std::cout << "str8 = " << str8 << std::endl;
     }
@@ -129,6 +130,7 @@ int main()
 
     {
         // 测试format
+        std::cout << "测试format\n";
         std::cout << String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110) << std::endl;
         String8 str1 = String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110);
         std::cout << std::endl;
@@ -136,6 +138,7 @@ int main()
 
     {
         // 测试operator+
+        std::cout << "测试operator+\n";
         String8 str1 = "0123456789";
         String8 str2 = str1 + str1;
         std::cout << str2 << std::endl;

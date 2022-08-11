@@ -8,6 +8,7 @@
 #ifndef __SINGLETON_H__
 #define __SINGLETON_H__
 
+#include "mutex.h"
 #include <bits/move.h>
 #include <stdlib.h>
 
@@ -20,8 +21,8 @@ public:
     static T *get(Args... args)
     {
         // 编译期间检测类型完整性，不完整编译不过
-        typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
-        T_must_be_complete_type dummy; (void) dummy;
+        static_assert(sizeof(T), "Incomplete type T");
+        AutoLock<Mutex> lock(mMutex);
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
             ::atexit(Singleton::free); // 在mian结束后调用free函数
@@ -35,14 +36,15 @@ public:
     template<typename... Args>
     static T *reset(Args... args)
     {
+        AutoLock<Mutex> lock(mMutex);
         free();
         mInstance = new T(std::forward<Args>(args)...);
-        // *mInstance = T(std::forward<Args>(args)...);
         return mInstance;
     }
 
     static void free()
     {
+        AutoLock<Mutex> lock(mMutex);
         if (mInstance != nullptr) {
             delete mInstance;
             mInstance = nullptr;
@@ -51,6 +53,7 @@ public:
 
 private:
     static T *mInstance;
+    static Mutex mMutex;
 
     Singleton() {}
     Singleton(const Singleton&) = delete;

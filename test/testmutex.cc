@@ -62,13 +62,13 @@ int unnamed_thread_func(void *)
     printf("%s()\nafter a second will call post()\n", __func__);
     sleep(1);
     gSemaphore.post();
-    return Thread::THREAD_EXIT;
+    return 0;
 }
 
 void unnamed_thread_main()
 {
-    eular::Thread th("test sem", unnamed_thread_func);
-    th.run();
+    eular::Thread th(std::bind(unnamed_thread_func, nullptr), "test sem");
+    th.detach();
     testUnnamedSemaphore();
 }
 
@@ -85,13 +85,13 @@ int named_thread_func(void *)
     printf("%s()\nafter a second will call post()\n", __func__);
     sleep(1);
     gSemNamed.post();
-    return Thread::THREAD_EXIT;
+    return 0;
 }
 
 void named_thread_main()
 {
-    eular::Thread th("test sem", named_thread_func);
-    th.run();
+    eular::Thread th(std::bind(named_thread_func, nullptr), "test sem");
+    th.detach();
     test_named_sem();
 }
 
@@ -104,7 +104,7 @@ int rwmutex_thread(void *arg)
         WRAutoLock<RWMutex> wrlock(rwMutex);
         rwmutex_count++;
         printf("[%ld] ++ count = %d\n", gettid(), rwmutex_count);
-        if (rwmutex_count == 500 * 1000) {
+        if (rwmutex_count == 10) {
             break;
         }
     }
@@ -112,18 +112,21 @@ int rwmutex_thread(void *arg)
 
 void test_rwmutex()
 {
-    Thread th("test rwmutex", rwmutex_thread);
-    th.run();
+    Thread th(std::bind(rwmutex_thread, nullptr), "test rwmutex");
+    th.detach();
     while (1) {
         RDAutoLock<RWMutex> rdlock(rwMutex);
         printf("[%ld] count = %d\n", gettid(), rwmutex_count);
+        if (rwmutex_count == 10) {
+            break;
+        }
         msleep(100);
     }
 }
 
 int main()
 {
-    // named_thread_main();
+    named_thread_main();
     test_rwmutex();
     return 0;
 }

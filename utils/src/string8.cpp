@@ -43,9 +43,9 @@ void String8::release()
 {
     if (mString) {
         free(mString);
-        mString = nullptr;
-        mCapacity = 0;
     }
+    mString = nullptr;
+    mCapacity = 0;
 }
 
 String8::String8()
@@ -113,7 +113,9 @@ String8::String8(const std::string& other)
     }
 }
 
-String8::String8(String8 &&other)
+String8::String8(String8 &&other) :
+    mString(nullptr),
+    mCapacity(0)
 {
     if (other.mString == nullptr) {
         mString = getBuffer();
@@ -510,13 +512,9 @@ int String8::setTo(const char* other, size_t numChars)
     int ret = 0;
 
     size_t otherLen = strlen(other);
-    size_t stringLen = 0;
     numChars = numChars > otherLen ? otherLen : numChars;
-    if (mString) {
-        stringLen = strlen(mString);
-    }
 
-    if (mCapacity < numChars) {
+    if (mString && mCapacity < numChars) {
         release();
         mString = getBuffer(numChars);
         if (mString) {
@@ -524,6 +522,9 @@ int String8::setTo(const char* other, size_t numChars)
             ret = numChars;
         }
     } else {
+        if (!mString) {
+            mString = getBuffer(numChars);
+        }
         clear();
         memmove(mString, other, numChars);
         ret = numChars;

@@ -21,7 +21,8 @@ ThreadBase::ThreadBase(const String8 &threadName) :
     mKernalTid(0),
     mThreadName(threadName),
     mThreadStatus(THREAD_EXIT),
-    mSem(0)
+    mSem(0),
+    userData(nullptr)
 {
 }
 
@@ -34,30 +35,42 @@ ThreadBase::~ThreadBase()
 
 uint32_t ThreadBase::threadStatus() const
 {
-    return mThreadStatus.load();
+    return mThreadStatus;
 }
 
 void ThreadBase::stop()
 {
+    if (mThreadStatus == THREAD_EXIT) {
+        return;
+    }
+
     mExitStatus = true;
-    if (mThreadStatus.load() == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
+    if (mThreadStatus == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
         mSem.post();
     }
+    pthread_join(mTid, nullptr);
 }
 
 bool ThreadBase::forceExit()
 {
-    return pthread_cancel(mTid) == 0;
+    if (mThreadStatus == THREAD_EXIT) {
+        return;
+    }
+
+    bool flag = pthread_cancel(mTid) == 0;
+    pthread_join(mTid, nullptr);
+    mExitStatus = THREAD_EXIT;
+    return flag;
 }
 
 bool ThreadBase::ShouldExit()
 {
-    return mExitStatus.load();
+    return mExitStatus;
 }
 
 int ThreadBase::run(size_t stackSize)
 {
-    if (mThreadStatus.load() != THREAD_EXIT) {
+    if (mThreadStatus != THREAD_EXIT) {
         return INVALID_OPERATION;
     }
 
@@ -80,7 +93,7 @@ int ThreadBase::run(size_t stackSize)
 
 void ThreadBase::start()
 {
-    switch (mThreadStatus.load()) {
+    switch (mThreadStatus) {
     case THREAD_WAITING:
         mSem.post();
         break;
@@ -103,8 +116,7 @@ void *ThreadBase::threadloop(void *user)
     while (threadBase->ShouldExit() == false) {
         LOG("thread is going to run...\n");
         int result = threadBase->threadWorkFunction(threadBase->userData);
-        if (result == THREAD_EXIT || threadBase->ShouldExit() == true) {
-            threadBase->mThreadStatus = THREAD_EXIT;
+        if (result == THREAD_EXIT || threadBase->ShouldExit()) {
             break;
         }
 
@@ -115,6 +127,7 @@ void *ThreadBase::threadloop(void *user)
         threadBase->mThreadStatus = THREAD_RUNNING;
     }
     LOG("thread exit...\n");
+    threadBase->mExitStatus = THREAD_EXIT;
     return 0;
 }
 
@@ -129,7 +142,6 @@ Thread::Thread(std::function<void()> callback, const String8 &threadName) :
 {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-
     int ret = pthread_create(&mTid, &attr, &Thread::entrance, this);
     pthread_attr_destroy(&attr);
     if (ret) {
