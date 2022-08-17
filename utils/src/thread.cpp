@@ -54,7 +54,7 @@ void ThreadBase::stop()
 bool ThreadBase::forceExit()
 {
     if (mThreadStatus == THREAD_EXIT) {
-        return;
+        return true;
     }
 
     bool flag = pthread_cancel(mTid) == 0;

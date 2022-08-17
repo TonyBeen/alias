@@ -9,23 +9,33 @@
 #include <utils/string8.h>
 #include <string>
 #include <iostream>
+#include <assert.h>
 
 using namespace eular;
 using namespace std;
 
 void test_singleton()
 {
-    std::string *str = Singleton<std::string>::get("12345");
-    cout << *str << endl;
-    printf("str addr = %p\n", str);
+    {
+        Singleton<std::string>::SObject obj = Singleton<std::string>::get("12345");
+        cout << *obj << endl;
+        printf("str addr = %p\n", (std::string *)obj);
+    }
 
-    eular::String8 *str8 = Singleton<eular::String8>::get("67890", 4);
-    cout << *str8 << endl;
-    printf("str8 addr = %p\n", str8);
+    {
+        Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::get("67890", 4);
+        cout << *obj << endl;
+        printf("str addr = %p\n", (eular::String8 *)obj);
 
-    eular::String8 *str8_t = Singleton<eular::String8>::reset("-------");
-    cout << *str8_t << endl;
-    printf("str8 addr = %p\n", str8_t);
+        Singleton<eular::String8>::SObject obj2 = Singleton<eular::String8>::reset("-------");
+        cout << *obj2 << endl;
+        printf("str addr = %p\n", (eular::String8 *)obj2);
+
+        assert(*obj == *obj2);
+    }
+
+    Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::reset("-------");
+    assert(*obj == "-------");
 
     Singleton<std::string>::free();
     Singleton<eular::String8>::free();
