@@ -107,6 +107,7 @@ public:
     // return true if this string contains the specified substring
     bool                contains(const char* other) const;
     bool                removeAll(const char* other);
+    ssize_t             replaceAll(char o, char n);
 
     void                toLower();
     void                toLower(size_t start, size_t numChars);

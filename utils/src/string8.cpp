@@ -611,6 +611,30 @@ bool String8::removeAll(const char* other)
     return false;
 }
 
+/**
+ * @brief 将所有的o字符替换为n字符
+ * 
+ * @param o old char
+ * @param n new char
+ * @return ssize_t 
+ */
+ssize_t String8::replaceAll(char o, char n)
+{
+    if (n == o) {
+        return 0;
+    }
+
+    ssize_t count = 0;
+    for (size_t i = 0; i < length(); ++i) {
+        if (mString[i] == o) {
+            mString[i] = n;
+            ++count;
+        }
+    }
+
+    return count;
+}
+
 void String8::toLower()
 {
     toLower(0, length());
