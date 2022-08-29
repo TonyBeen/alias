@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "string8.h"
+#include "sharedbuffer.h"
 #include "debug.h"
 #include "Errors.h"
 #include "exception.h"
@@ -19,14 +20,16 @@ char *String8::getBuffer(size_t numChars)
 {
     char *buf = nullptr;
     if (numChars < DEFAULT_STRING_SIZE) {   // 小于默认字符串长度
-        buf = (char *)malloc(DEFAULT_STRING_SIZE);
         mCapacity = DEFAULT_STRING_SIZE;
+        SharedBuffer *psb = SharedBuffer::alloc(mCapacity);
+        buf = static_cast<char *>(psb->data());
     } else if (numChars < MAXSIZE / 2) {    // 小于最大长度的二分之一就申请1.5倍
-        buf = (char *)malloc(numChars / 2 * 3);
         mCapacity = numChars / 2 * 3;
+        SharedBuffer *psb = SharedBuffer::alloc(mCapacity);
+        buf = static_cast<char *>(psb->data());
     } else if (numChars < MAXSIZE) {        // 大于最大长度二分之一小于最大长度，就申请最大长度
-        buf = (char *)malloc(MAXSIZE);
         mCapacity = MAXSIZE;
+        buf = (char *)malloc(mCapacity);
     } else {                                // 大于最大长度，抛出异常
         throw Exception("Too many characters");
     }
@@ -42,13 +45,14 @@ char *String8::getBuffer(size_t numChars)
 void String8::release()
 {
     if (mString) {
-        free(mString);
+        SharedBuffer::bufferFromData(mString)->release();
     }
     mString = nullptr;
     mCapacity = 0;
 }
 
-String8::String8()
+String8::String8() :
+    mString(nullptr)
 {
     mString = getBuffer();
 }
@@ -63,7 +67,8 @@ String8::String8(uint32_t size) :
     }
 }
 
-String8::String8(const String8& other)
+String8::String8(const String8& other) :
+    mString(nullptr)
 {
     if (other.length() == 0) {
         mString = getBuffer();
@@ -75,7 +80,8 @@ String8::String8(const String8& other)
     }
 }
 
-String8::String8(const char* other)
+String8::String8(const char* other) :
+    mString(nullptr)
 {
     if (other == nullptr) {
         mString = getBuffer();
@@ -88,7 +94,8 @@ String8::String8(const char* other)
     }
 }
 
-String8::String8(const char* other, const size_t numChars)
+String8::String8(const char* other, const size_t numChars) :
+    mString(nullptr)
 {
     if (other == nullptr) {
         mString = getBuffer();
@@ -104,7 +111,8 @@ String8::String8(const char* other, const size_t numChars)
     }
 }
 
-String8::String8(const std::string& other)
+String8::String8(const std::string& other) :
+    mString(nullptr)
 {
     size_t length = other.length();
     mString = getBuffer(length);
@@ -235,7 +243,7 @@ void String8::reverse()
     for (size_t i = 0; i < length(); ++i) {
         buf[i] = mString[length() - 1 - i];
     }
-    free(mString);
+    SharedBuffer::bufferFromData(mString)->release();
     mString = buf;
 }
 
@@ -603,7 +611,7 @@ bool String8::removeAll(const char* other)
             }
             memcpy(newString, mString, start);
             memcpy(newString + start, mString + end, length() - end);
-            free(mString);
+            SharedBuffer::bufferFromData(mString)->release();
             mString = newString;
             return true;
         }

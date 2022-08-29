@@ -27,7 +27,7 @@ SharedBuffer* SharedBuffer::alloc(size_t size)
 {
     // Don't overflow if the combined size of the buffer / header is larger than
     // size_max.
-    assert((size >= (SIZE_MAX - sizeof(SharedBuffer))));
+    assert((size < (SIZE_MAX - sizeof(SharedBuffer))));
 
     SharedBuffer* sb = static_cast<SharedBuffer *>(malloc(sizeof(SharedBuffer) + size));
     if (sb) {
@@ -67,7 +67,7 @@ SharedBuffer* SharedBuffer::editResize(size_t newSize) const
         if (buf->mSize == newSize) return buf;
         // Don't overflow if the combined size of the new buffer / header is larger than
         // size_max.
-        assert((newSize >= (SIZE_MAX - sizeof(SharedBuffer))) && "Invalid buffer size");
+        assert((newSize < (SIZE_MAX - sizeof(SharedBuffer))) && "Invalid buffer size");
 
         buf = (SharedBuffer*)realloc(buf, sizeof(SharedBuffer) + newSize);
         if (buf != nullptr) {

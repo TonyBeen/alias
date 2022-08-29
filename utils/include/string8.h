@@ -130,7 +130,7 @@ private:
     static int          getNext(String8 key, int n);
 
 private:
-    char *mString = nullptr;
+    char *      mString;
     uint32_t    mCapacity;
 };
 
