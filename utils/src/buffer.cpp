@@ -6,7 +6,7 @@
  ************************************************************************/
 
 // #define _DEBUG
-#include "Buffer.h"
+#include "buffer.h"
 #include "debug.h"
 #include <assert.h>
 
