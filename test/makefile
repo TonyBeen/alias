@@ -1,5 +1,6 @@
 cppflags := -std=c++11 -g
 shared_lib := -lunwind -llog -lutils -lpthread
+static_lib := /usr/local/lib/libgtest.a
 cc := g++
 
 all : 
@@ -63,11 +64,11 @@ testutils : test_utils.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 testbitmap : test_bitmap.cc
-	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
 	testtimer testrwmutex testsingleton testrbtree clean all
 
 clean :
 	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testutils \
-		testcallstack testtimer testrwmutex testsingleton testrbtree
+		testcallstack testtimer testrwmutex testsingleton testrbtree testbitmap
