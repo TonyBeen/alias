@@ -1,4 +1,4 @@
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <utils/utils.h>
 #include <stdio.h>
 #include <string.h>
@@ -28,28 +28,33 @@ int main()
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
-    printf("data should be \"Hello World-----\", real \"%s\"\n", buf.begin());
+    printf("data should be \"Hello World-----\", real \"%.*s\"\n", buf.size(), buf.begin());
 
     printf("4 测试resize函数-----------------\n");
     buf.resize(1024);
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
-    printf("data begin = %p(%s) end = %p index = 0->%c\n", buf.begin(), buf.begin(), buf.end(), buf[0]);
+    printf("data begin = %p(%.*s) end = %p index = 0->%c\n", buf.begin(), buf.size(), buf.begin(), buf.end(), buf[0]);
     buf[6] = '*';
-    printf("data begin = %p(%s) end = %p index = 6->%c\n", buf.begin(), buf.begin(), buf.end(), buf[6]);
+    printf("data begin = %p(%.*s) end = %p index = 6->%c\n", buf.begin(), buf.size(), buf.begin(), buf.end(), buf[6]);
 
     printf("5 测试clear及赋值函数-----------------\n");
     buf.clear();
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
     printf("data = %p\n", buf.data());
-    printf("data begin = %p(%s) end = %p\n", buf.begin(), buf.begin(), buf.end());
+    printf("data begin = %p(%.*s) end = %p\n", buf.begin(), buf.size(), buf.begin(), buf.end());
 
     printf("6 测试移动构造函数--------------------\n");
     ByteBuffer tmp2("Hello World", 11);
     ByteBuffer con = std::move(tmp2);
-    printf("data begin = %p(%s) end = %p\n", con.begin(), con.begin(), con.end());
+    printf("data begin = %p(%.*s) end = %p\n", con.begin(), buf.size(), con.begin(), con.end());
+
+    printf("7 测试insert函数--------------------\n");
+    buf.append((const uint8_t *)"Hello", 5);
+    buf.insert((const uint8_t *)"***", 3, 1);
+    printf("data should be \"H***ello\", real data: %.*s\n", buf.size(), buf.data());
 
     return 0;
 }

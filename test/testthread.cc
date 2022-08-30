@@ -23,7 +23,7 @@ public:
 protected:
     virtual int threadWorkFunction(void *arg) override
     {
-        printf("ThreadExt::threadWorkFunction()\n");
+        printf("ThreadExt::threadWorkFunction() and thread will wait...\n");
         return THREAD_WAITING;
     }
 };
@@ -62,5 +62,7 @@ int main(int argc, char **argv)
     ext.stop();
     delete data;
     printf("\033[32mWhen you see this sentence, the program runs successfully\033[0m\n");
+    sleep(1);
+    // 由于线程是detach状态，由系统回收线程资源，故此处需要sleep一段时间来保证系统回收到了，不然会被检测到内存泄漏
     return 0;
 }

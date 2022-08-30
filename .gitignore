@@ -4,7 +4,7 @@ testbuffer
 testmutex
 testrwmutex
 teststring8
-testthrea
+testthread
 teststring8_2
 testtimer
 testsingleton

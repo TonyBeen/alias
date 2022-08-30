@@ -7,13 +7,24 @@ all :
 	make testmutex
 	make testrwmutex
 	make teststring8
-	make testthrea
+	make testthread
 	make teststring8_2
 	make testtimer
 	make testsingleton
-	make testrbtree
 	make testutils
 	make testbitmap
+
+memcheck:testbuffer testmutex testrwmutex teststring8 \
+	testthread teststring8_2 testtimer testsingleton testutils testbitmap
+	valgrind --xml=yes --xml-file=./testbuffer_mem_check.xml  --leak-check=full ./testbuffer
+	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./testmutex
+	valgrind --xml=yes --xml-file=./testrwmutex_mem_check.xml  --leak-check=full ./testrwmutex
+	valgrind --xml=yes --xml-file=./testteststring8_mem_check.xml  --leak-check=full ./teststring8
+	valgrind --xml=yes --xml-file=./testthread_mem_check.xml  --leak-check=full ./testthread
+	valgrind --xml=yes --xml-file=./testtimer_mem_check.xml  --leak-check=full ./testtimer
+	valgrind --xml=yes --xml-file=./testsingleton_mem_check.xml  --leak-check=full ./testsingleton
+	valgrind --xml=yes --xml-file=./testutils_mem_check.xml  --leak-check=full ./testutils
+	valgrind --xml=yes --xml-file=./testbitmap_mem_check.xml  --leak-check=full ./testbitmap
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)

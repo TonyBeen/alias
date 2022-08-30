@@ -27,7 +27,6 @@ public:
 
     ByteBuffer(const ByteBuffer& other);
     ByteBuffer& operator=(const ByteBuffer& other);
-    ByteBuffer& operator=(ByteBuffer& other);
     ByteBuffer& operator=(ByteBuffer&& other);
     uint8_t&    operator[](size_t index);
 

@@ -48,7 +48,6 @@ void ThreadBase::stop()
     if (mThreadStatus == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
         mSem.post();
     }
-    pthread_join(mTid, nullptr);
 }
 
 bool ThreadBase::forceExit()
@@ -58,7 +57,6 @@ bool ThreadBase::forceExit()
     }
 
     bool flag = pthread_cancel(mTid) == 0;
-    pthread_join(mTid, nullptr);
     mExitStatus = THREAD_EXIT;
     return flag;
 }
@@ -79,7 +77,7 @@ int ThreadBase::run(size_t stackSize)
     if (stackSize) {
         pthread_attr_setstacksize(&attr, stackSize);
     }
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    // pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     int ret = pthread_create(&mTid, &attr, threadloop, this);
     if (ret == 0) {
@@ -87,6 +85,8 @@ int ThreadBase::run(size_t stackSize)
     } else {
         LOG("pthread_create error %s\n", strerror(ret));
     }
+
+    pthread_detach(mTid);
     pthread_attr_destroy(&attr);
     return ret;
 }
@@ -101,6 +101,7 @@ void ThreadBase::start()
         break;
     case THREAD_EXIT:
         run();
+        break;
     default:
         break;
     }

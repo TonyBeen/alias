@@ -1,5 +1,6 @@
 #include <utils/timer.h>
 #include <log/log.h>
+#include <log/callstack.h>
 
 #define LOG_TAG "test_timer"
 
@@ -14,9 +15,7 @@ void func(void *arg)
 
 void func2(void *arg)
 {
-    int *num = static_cast<int *>(arg);
-    ++*num;
-    LOGI("func2() %p, %d", num, *num);
+    LOGI("func2()");
 }
 
 void test_main_loop()
@@ -25,24 +24,35 @@ void test_main_loop()
     gTimerManager.addTimer(2000, std::bind(func2, ptr.get()), 1000);
     uint64_t uniqueId = gTimerManager.addTimer(6000, std::bind(func, nullptr), 2000);
     LOGI("timer start");
-    gTimerManager.StartTimer(true);
+    gTimerManager.startTimer(true);
 }
 
 void test_thread_loop()
 {
     LOGI("timer start");
-    gTimerManager.StartTimer(false);
+    gTimerManager.startTimer();
     gTimerManager.addTimer(2000, std::bind(func2, nullptr), 1000);
     uint64_t uniqueId = gTimerManager.addTimer(6000, std::bind(func, nullptr), 2000);
 
-    while (1) {
-        /* code */
+    sleep(5);
+    gTimerManager.stopTimer();
+}
+
+void catchSignal(int sig)
+{
+    if (sig == SIGSEGV) {
+        CallStack stack;
+        stack.update();
+        stack.log(LOG_TAG, LogLevel::FATAL);
     }
+    exit(0);
 }
 
 int main()
 {
-    test_main_loop();
-    printf(".....\n");
+    signal(SIGSEGV, catchSignal);
+    test_thread_loop();
+
+    sleep(1);
     return 0;
 }

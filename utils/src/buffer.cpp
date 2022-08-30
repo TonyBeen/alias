@@ -7,7 +7,9 @@
 
 // #define _DEBUG
 #include "buffer.h"
+#include "sharedbuffer.h"
 #include "debug.h"
+#include "exception.h"
 #include <assert.h>
 
 #define DEFAULT_BUFFER_SIZE (256)
@@ -31,7 +33,7 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
-    mCapacity = getBuffer(dataLength * 1.5);
+    mCapacity = getBuffer(dataLength + 1);
     set((const uint8_t *)data, dataLength);
     LOG("%s(const uint8_t *data, size_t dataLength) mDataSize = %zu, mCapacity = %zu\n",
         __func__, mDataSize, mCapacity);
@@ -42,21 +44,19 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mCapacity(0),
     mDataSize(0)
 {
-    mCapacity = getBuffer(dataLength * 1.5);
+    mCapacity = getBuffer(dataLength);
     set((const uint8_t *)data, dataLength);
 }
 
 ByteBuffer::ByteBuffer(const ByteBuffer& other) :
-    mBuffer(nullptr),
-    mCapacity(0),
-    mDataSize(0)
+    mBuffer(other.mBuffer),
+    mCapacity(other.mCapacity),
+    mDataSize(other.mDataSize)
 {
-    if (&other == this) {
-        return;
-    }
+    SharedBuffer::bufferFromData(mBuffer)->acquire();
 
-    mCapacity = getBuffer(other.size() * 1.5);
-    set(other.mBuffer, other.mDataSize);
+    // mCapacity = getBuffer(other.size());
+    // set(other.mBuffer, other.mDataSize);
 }
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
@@ -87,18 +87,10 @@ ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
     }
 
     LOG("%s(const ByteBuffer& other)\n", __func__);
-    set(other.mBuffer, other.mDataSize);
-    return *this;
-}
-
-ByteBuffer& ByteBuffer::operator=(ByteBuffer& other)
-{
-    if (&other == this) {
-        return *this;
-    }
-
-    LOG("%s(ByteBuffer& other)\n", __func__);
-    set(other.mBuffer, other.mDataSize);
+    mBuffer = other.mBuffer;
+    mCapacity = other.mCapacity;
+    mDataSize = other.mDataSize;
+    SharedBuffer::bufferFromData(mBuffer)->acquire();
     return *this;
 }
 
@@ -121,6 +113,13 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 uint8_t& ByteBuffer::operator[](size_t index)
 {
     assert(index < mCapacity);
+    if (mBuffer == nullptr) {
+        mCapacity = getBuffer(DEFAULT_BUFFER_SIZE);
+        if (mBuffer == nullptr) {
+            throw Exception("no memory");
+        }
+    }
+
     return mBuffer[index];
 }
 
@@ -132,38 +131,31 @@ size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
 
     size_t real_offset = mDataSize >= offset ? offset : 0;
     uint8_t *temp = nullptr;
+    size_t newSize = 0;
 
-    if (mCapacity < (dataSize + real_offset)) {
-        if (real_offset > 0 && mBuffer) {
-            temp = (uint8_t *)malloc(real_offset);
-            if (temp == nullptr) {
-                return 0;
-            }
-            memcpy(temp, mBuffer, real_offset);
-        }
-
-        freeBuffer();
-        mCapacity = getBuffer(calculate(dataSize + real_offset));
+    if (__builtin_add_overflow(dataSize, real_offset, &newSize)) {
+        return 0;
     }
+
+    SharedBuffer *buf = nullptr;
+    if (mCapacity < newSize) { // capacity exceeded
+        buf = SharedBuffer::bufferFromData(mBuffer)->editResize(calculate(newSize));
+    } else {
+        buf = SharedBuffer::bufferFromData(mBuffer)->edit();
+    }
+    if (buf == nullptr) {
+        return 0;
+    }
+
+    mBuffer = static_cast<uint8_t *>(buf->data());
+    mCapacity = buf->size();
+    mDataSize = newSize;
+    memmove(mBuffer + real_offset, data, dataSize);
+
     LOG("%s() data(%p), dataSize(%zu), real_offset(%zu), mBuffer = %p, mCapacity = %zu mDataSize = %zu\n",
             __func__, data, dataSize, real_offset, mBuffer, mCapacity, mDataSize);
 
-    if (mCapacity > 0) {
-        if (temp) {
-            memcpy(mBuffer, temp, real_offset);
-            free(temp);
-            temp = nullptr;
-        }
-        memset(mBuffer + real_offset, 0, mCapacity - real_offset); // 清空real_offset之后的数据
-        memcpy(mBuffer + real_offset, data, dataSize);
-        mDataSize = real_offset + dataSize;
-        return dataSize;
-    }
-    if (temp) {
-        free(temp);
-        temp = nullptr;
-    }
-    return 0;
+    return dataSize;
 }
 
 void ByteBuffer::append(const uint8_t *data, size_t dataSize)
@@ -176,36 +168,43 @@ size_t ByteBuffer::insert(const uint8_t *data, size_t dataSize, size_t offset)
     if (data == nullptr || offset > mDataSize) { // offset范围必须在0-mDataSize，等于mDataSize相当于尾插，offset=0相当于头插
         return 0;
     }
-    uint8_t *temp = nullptr;
-    if (mCapacity < (dataSize + mDataSize)) {
-        temp = (uint8_t *)malloc(mDataSize);
+
+    size_t newSize = 0;
+    size_t copySize = mDataSize - offset;
+    size_t oldDataSize = mDataSize;
+    if (__builtin_add_overflow(dataSize, mDataSize, &newSize)) {
+        return 0;
+    }
+
+    SharedBuffer *buf = nullptr;
+    if (mCapacity < newSize) {
+        buf = SharedBuffer::bufferFromData(mBuffer)->editResize(calculate(newSize));
+    } else {
+        buf = SharedBuffer::bufferFromData(mBuffer)->edit();
+    }
+
+    if (buf == nullptr) {
+        return 0;
+    }
+
+    mBuffer = static_cast<uint8_t *>(buf->data());
+    mCapacity = buf->size();
+    mDataSize = newSize;
+
+    if (copySize == 0) {
+        memmove(mBuffer + oldDataSize, data, dataSize);
+    } else {
+        uint8_t *temp = (uint8_t *)malloc(copySize);
         if (temp == nullptr) {
             return 0;
         }
-        memcpy(temp, mBuffer, mDataSize);
-
-        freeBuffer();
-        mCapacity = getBuffer(calculate(dataSize + offset));
-    }
-
-    if (mCapacity > 0) {
-        if (temp) {
-            memcpy(mBuffer, temp, offset);
-            memcpy(mBuffer + offset + dataSize, temp + offset, mDataSize - offset);
-            free(temp);
-        } else {
-            memmove(mBuffer + offset + dataSize, mBuffer + offset, mDataSize - offset);
-        }
-        memcpy(mBuffer + offset, data, dataSize);
-        mDataSize += dataSize;
-        return dataSize;
-    }
-    // 说明getBuffer失败了
-    if (temp) {
+        memmove(temp, mBuffer + offset, copySize);
+        memmove(mBuffer + offset, data, dataSize);
+        memmove(mBuffer + offset + dataSize, temp, copySize);
         free(temp);
     }
 
-    return 0;
+    return dataSize;
 }
 
 void ByteBuffer::resize(size_t newSize)
@@ -214,13 +213,10 @@ void ByteBuffer::resize(size_t newSize)
         return;
     }
 
-    ByteBuffer tmp(mBuffer, mDataSize);
-    freeBuffer();
-    mCapacity = getBuffer(newSize);
-    if (mCapacity > 0) {
-        size_t size = tmp.mDataSize >= mCapacity ? mCapacity : tmp.mDataSize;
-        memcpy(mBuffer, tmp.mBuffer, size);
-        mDataSize = size;
+    SharedBuffer *buf = SharedBuffer::bufferFromData(mBuffer)->editResize(newSize);
+    if (buf) {
+        mBuffer = static_cast<uint8_t *>(buf->data());
+        mCapacity = buf->size();
     }
 }
 
@@ -235,8 +231,16 @@ void ByteBuffer::clear()
 std::string ByteBuffer::dump() const
 {
     std::string ret;
-    char buf[16] = {0};
-    for (int i = 0; i < mDataSize; ++i) {
+    char buf[64] = {0};
+    int cycle = mDataSize / 4;
+    for (int i = 0; i < cycle; ++i) {
+        snprintf(buf, sizeof(buf), "0x%02x 0x%02x 0x%02x 0x%02x ",
+            mBuffer[i * 4], mBuffer[i * 4 + 1], mBuffer[i * 4 + 2], mBuffer[i * 4 + 3]);
+        ret.append(buf);
+    }
+
+    cycle = mDataSize % 4;
+    for (int i = 0; i < cycle; ++i) {
         snprintf(buf, sizeof(buf), "0x%02x ", mBuffer[i]);
         ret.append(buf);
     }
@@ -254,20 +258,21 @@ size_t ByteBuffer::calculate(size_t dataSize)
     return dataSize;
 }
 
-size_t ByteBuffer::getBuffer(size_t size = DEFAULT_BUFFER_SIZE)
+size_t ByteBuffer::getBuffer(size_t size)
 {
     if (size == 0) {
         size = DEFAULT_BUFFER_SIZE;
     }
 
     if (mBuffer == nullptr) {
-        mBuffer = (uint8_t *)malloc(size);
+        mBuffer = static_cast<uint8_t *>(SharedBuffer::alloc(size)->data());
         LOG("new buffer %p\n", mBuffer);
         if (mBuffer) {
             memset(mBuffer, 0, size);
             return size;
         }
     }
+
     return 0;
 }
 
@@ -275,7 +280,7 @@ void ByteBuffer::freeBuffer()
 {
     LOG("%s() %p\n", __func__, mBuffer);
     if (mBuffer) {
-        free(mBuffer);
+        SharedBuffer::bufferFromData(mBuffer)->release();
     }
     mBuffer = nullptr;
     mDataSize = 0;
