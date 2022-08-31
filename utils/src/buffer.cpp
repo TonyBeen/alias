@@ -54,9 +54,6 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other) :
     mDataSize(other.mDataSize)
 {
     SharedBuffer::bufferFromData(mBuffer)->acquire();
-
-    // mCapacity = getBuffer(other.size());
-    // set(other.mBuffer, other.mDataSize);
 }
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
@@ -64,15 +61,11 @@ ByteBuffer::ByteBuffer(ByteBuffer&& other) :
     mCapacity(0),
     mDataSize(0)
 {
-    if (&other == this) {
+    if (std::addressof(other) == this) {
         return;
     }
 
-    uint8_t *tmp = this->mBuffer;
-    this->mBuffer = other.mBuffer;
-    other.mBuffer = tmp;
-    this->mDataSize = other.mDataSize;
-    this->mCapacity = other.mCapacity;
+    moveAssign(other);
 }
 
 ByteBuffer::~ByteBuffer()
@@ -82,31 +75,24 @@ ByteBuffer::~ByteBuffer()
 
 ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
 {
-    if (&other == this) {
-        return *this;
+    if (std::addressof(other) != this) {
+        mBuffer = other.mBuffer;
+        mCapacity = other.mCapacity;
+        mDataSize = other.mDataSize;
+        SharedBuffer::bufferFromData(mBuffer)->acquire();
     }
 
     LOG("%s(const ByteBuffer& other)\n", __func__);
-    mBuffer = other.mBuffer;
-    mCapacity = other.mCapacity;
-    mDataSize = other.mDataSize;
-    SharedBuffer::bufferFromData(mBuffer)->acquire();
     return *this;
 }
 
 ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 {
-    if (&other == this) {
-        return *this;
+    if (std::addressof(other) != this) {
+        moveAssign(other);
     }
 
-    LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p, this: %s, other: %s\n",
-        __func__, mBuffer, mBuffer, other.mBuffer);
-    uint8_t *tmp = this->mBuffer;
-    this->mBuffer = other.mBuffer;
-    other.mBuffer = tmp;
-    this->mDataSize = other.mDataSize;
-    this->mCapacity = other.mCapacity;
+    LOG("%s(ByteBuffer&& other) 移动赋值 mBuffer = %p, this: %s, other: %s\n", __func__, mBuffer, mBuffer, other.mBuffer);
     return *this;
 }
 
@@ -285,6 +271,21 @@ void ByteBuffer::freeBuffer()
     mBuffer = nullptr;
     mDataSize = 0;
     mCapacity = 0;
+}
+
+void ByteBuffer::moveAssign(ByteBuffer &other)
+{
+    uint8_t *tmp = this->mBuffer;
+    this->mBuffer = other.mBuffer;
+    other.mBuffer = tmp;
+
+    size_t dataSize = this->mDataSize;
+    this->mDataSize = other.mDataSize;
+    other.mDataSize = dataSize;
+
+    size_t cap = this->mCapacity;
+    this->mCapacity = other.mCapacity;
+    other.mCapacity = cap;
 }
 
 } // namespace eular

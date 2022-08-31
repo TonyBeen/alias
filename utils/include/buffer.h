@@ -52,6 +52,7 @@ private:
     size_t      calculate(size_t);
     size_t      getBuffer(size_t size);
     void        freeBuffer();
+    void        moveAssign(ByteBuffer &other);
 
 private:
     uint8_t*    mBuffer;

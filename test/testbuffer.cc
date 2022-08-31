@@ -10,7 +10,7 @@ using namespace eular;
 
 int main()
 {
-    ByteBuffer buf;
+    ByteBuffer buf("Hello", 5);
     printf("1 测试创建对象，调用函数-----------------\n");
     printf("capacity = %zu\n", buf.capacity());
     printf("data size = %zu\n", buf.size());
@@ -20,8 +20,13 @@ int main()
     ByteBuffer tmp("Hello World", 11);
     printf("data = %p; capacity = %zu; data size = %zu\n", tmp.data(), tmp.capacity(), tmp.size());
 
+    size_t cap = buf.capacity();
+    size_t size = buf.size();
+    void *ptr = buf.data();
+
     buf = std::move(tmp);
     printf("data = %p; capacity = %zu; data size = %zu\n", buf.data(), buf.capacity(), buf.size());
+    assert(cap == tmp.capacity() && size == tmp.size() && ptr == tmp.data());
 
     printf("3 测试append函数-----------------\n");
     buf.append((const uint8_t *)"-----", 5);
