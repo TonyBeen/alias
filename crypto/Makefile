@@ -39,6 +39,7 @@ testall:
 	make test/testrsa
 	make test/testaes
 	make test/testmd5
+	make test/testbase64
 
 test/testrsa : test/test_rsa.cc rsa.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
