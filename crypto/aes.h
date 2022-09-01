@@ -9,7 +9,7 @@
 #define __CRYPTO_AES_H__
 
 #include "crypto.h"
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <openssl/aes.h>
 #include <memory>
 
