@@ -19,16 +19,19 @@ void test_singleton()
     {
         Singleton<std::string>::SObject obj = Singleton<std::string>::get("12345");
         cout << *obj << endl;
+        assert(*obj == std::string("12345"));
         printf("str addr = %p\n", (std::string *)obj);
     }
 
     {
         Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::get("67890", 4);
         cout << *obj << endl;
+        assert(*obj == eular::String8("6789"));
         printf("str addr = %p\n", (eular::String8 *)obj);
 
         Singleton<eular::String8>::SObject obj2 = Singleton<eular::String8>::reset("-------");
         cout << *obj2 << endl;
+        assert(*obj == eular::String8("6789"));
         printf("str addr = %p\n", (eular::String8 *)obj2);
 
         assert(*obj == *obj2);
@@ -36,9 +39,6 @@ void test_singleton()
 
     Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::reset("-------");
     assert(*obj == "-------");
-
-    Singleton<std::string>::free();
-    Singleton<eular::String8>::free();
 }
 
 int main(int argc, char **argv)

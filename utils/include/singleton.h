@@ -99,17 +99,11 @@ public:
 
         operator T*()
         {
-            if (mObj == nullptr) {
-                throw Exception("nullptr object");
-            }
             return mObj;
         }
 
         operator const T*() const
         {
-            if (mObj == nullptr) {
-                throw Exception("nullptr object");
-            }
             return mObj;
         }
     private:
