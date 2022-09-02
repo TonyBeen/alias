@@ -467,8 +467,14 @@ bool String8::operator>(const char* other) const
 // 如果index超过范围则返回最后一个位置'\0'
 char& String8::operator[](size_t index)
 {
-    if (index >= length()) {    // 如果mString为null则返回0，故无需再判断mString
-        return mString[length()];
+    if (mString == nullptr) {
+        mString = getBuffer(index);
+        if (mString == nullptr) {
+            throw Exception("no memory");
+        }
+    }
+    if (index >= mCapacity) {
+        return mString[mCapacity - 1];
     }
     return mString[index];
 }
@@ -534,8 +540,10 @@ int String8::setTo(const char* other, size_t numChars)
             mString = getBuffer(numChars);
         }
         clear();
-        memmove(mString, other, numChars);
-        ret = numChars;
+        if (mString) {
+            memmove(mString, other, numChars);
+            ret = numChars;
+        }
     }
 
     return ret;
