@@ -8,6 +8,8 @@
 #ifndef __SYSDEF_H__
 #define __SYSDEF_H__
 
+#include <stdint.h>
+
 #if defined(WIN64) || defined(_WIN64)
     #define OS_WIN64
     #define OS_WIN32

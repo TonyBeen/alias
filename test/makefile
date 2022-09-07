@@ -14,6 +14,7 @@ all :
 	make testsingleton
 	make testutils
 	make testbitmap
+	make testtypes
 
 memcheck:testbuffer testmutex testrwmutex teststring8 \
 	testthread teststring8_2 testtimer testsingleton testutils testbitmap
@@ -64,6 +65,8 @@ testutils : test_utils.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 testbitmap : test_bitmap.cc
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
+testtypes : test_types.cc
 	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
