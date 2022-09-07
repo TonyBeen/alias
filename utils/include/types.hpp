@@ -108,6 +108,13 @@ typedef little_endian<uint32_t> uint32s;
 typedef little_endian<int64_t>  int64s;
 typedef little_endian<uint64_t> uint64s;
 
+// static_assert(sizeof(int16s)  == 2);
+// static_assert(sizeof(int32s)  == 4);
+// static_assert(sizeof(uint16s) == 2);
+// static_assert(sizeof(uint32s) == 4);
+// static_assert(sizeof(int64s)  == 8);
+// static_assert(sizeof(uint64s) == 8);
+
 } // namespace eular
 
 #endif // __EULAR_TYPES_H__
