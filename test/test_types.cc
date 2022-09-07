@@ -19,12 +19,16 @@ int main(int argc, char **argv)
         uint16s temp(0xff);
         uint16_t temp2(0xff);
         EXPECT_TRUE(temp == temp2);
-        uint32_t temp32_t = 0x12345678;
+        uint32s temp32_t = 0x12345678;
         temp2 = temp32_t;
-        temp = temp32_t; // operator T => uinr16_t;
+        temp = temp32_t; // operator T => uint16_t;
         // printf("0x%x, 0x%x\n", (uint16_t)temp, temp2);
         EXPECT_TRUE(temp == temp2);
+        #if BYTE_ORDER == LITTLE_ENDIAN
         EXPECT_TRUE(temp == 0x5678);
+        #else
+        EXPECT_TRUE(temp == 0x1234);
+        #endif
     }
     
     {
