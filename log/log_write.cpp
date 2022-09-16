@@ -226,7 +226,7 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
     if (*mFileDesc > 0 && *mFileSize < MAX_FILE_SIZE) {
         return true;
     }
-    std::string path = "~/log/";
+    std::string path = "/var/log/liblog/";
     std::string realPath = path;
     if (path[0] == '~') {
         uid_t uid = getuid();
