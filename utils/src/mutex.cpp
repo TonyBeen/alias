@@ -62,7 +62,7 @@ int Mutex::lock()
 
 void Mutex::unlock()
 {
-    assert(pthread_mutex_unlock(&mMutex) == 0);
+    pthread_mutex_unlock(&mMutex);
 }
 
 int Mutex::trylock()
