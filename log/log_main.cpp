@@ -5,6 +5,7 @@ static eular::LogManager *lm = nullptr;
 namespace eular {
 LogManager::LogManager()
 {
+    pthread_mutex_init(&mListMutex, nullptr);
     mLogWriteList.push_back(new StdoutLogWrite());
 }
 

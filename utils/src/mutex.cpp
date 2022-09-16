@@ -20,17 +20,13 @@ namespace eular {
 
 Mutex::Mutex(int type)
 {
-    int ret = 0;
     if (type == SHARED) {
         pthread_mutexattr_t attr;
         pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
         pthread_mutex_init(&mMutex, &attr);
         pthread_mutexattr_destroy(&attr);
     } else {
-        do {
-            ret = pthread_mutex_init(&mMutex, nullptr);
-        } while (ret == EAGAIN);
-        assert(ret == 0);
+        pthread_mutex_init(&mMutex, nullptr);
     }
 }
 
@@ -56,7 +52,7 @@ int Mutex::lock()
     int ret = 0;
     do {
         ret = pthread_mutex_lock(&mMutex);
-        if (ret < 0 && errno == EDEADLK) {
+        if (ret == EDEADLK) { // already locked
             ret = 0;
         }
     } while (0);
