@@ -13,7 +13,7 @@
 #include <error.h>
 
 #define DEFAULT_STRING_SIZE 128
-#define MAXSIZE (1024 * 8)
+#define MAXSIZE (1024 * 128)
 
 namespace eular {
 char *String8::getBuffer(size_t numChars)
@@ -332,7 +332,10 @@ int String8::append(const char* other, size_t numChars)
 
 String8& String8::operator=(const String8& other)
 {
-    setTo(other.c_str(), other.length());
+    if (&other != this) {
+        setTo(other.c_str(), other.length());
+    }
+
     return *this;
 }
 

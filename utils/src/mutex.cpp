@@ -53,7 +53,15 @@ void Mutex::setMutexName(const String8 &name)
 
 int Mutex::lock()
 {
-    return pthread_mutex_lock(&mMutex);
+    int ret = 0;
+    do {
+        ret = pthread_mutex_lock(&mMutex);
+        if (ret < 0 && errno == EDEADLK) {
+            ret = 0;
+        }
+    } while (0);
+
+    return ret;
 }
 
 void Mutex::unlock()

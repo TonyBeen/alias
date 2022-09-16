@@ -115,7 +115,7 @@ public:
     static SObject get(Args... args)
     {
         // 编译期间检测类型完整性，不完整编译不过
-        static_assert(sizeof(T), "Incomplete type T");
+        static_assert(sizeof(T), "incomplete type");
         AutoLock<Mutex> lock(mMutex);
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
