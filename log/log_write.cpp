@@ -10,7 +10,6 @@
 namespace eular {
 LogWrite::LogWrite()
 {
-    int ret = 0;
     pthread_mutexattr_t mutexAttr;
     pthread_mutexattr_init(&mutexAttr);
 #if defined(_POSIX_THREAD_PROCESS_SHARED)
@@ -21,10 +20,7 @@ LogWrite::LogWrite()
     mMutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
 #endif
     assert(mMutex);
-    do {
-        ret = pthread_mutex_init(mMutex, &mutexAttr);
-    } while (ret == EAGAIN);
-    assert(ret == 0);
+    pthread_mutex_init(mMutex, &mutexAttr);
     pthread_mutexattr_destroy(&mutexAttr);
 }
 
