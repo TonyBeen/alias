@@ -48,6 +48,9 @@ void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
  */
 void SetLevel(LogLevel::Level lev);
 
+/**
+ * @brief 设置日志输出路径，必须以'/'结尾
+ */
 void SetPath(const char *path);
 
 /**

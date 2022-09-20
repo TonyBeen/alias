@@ -37,12 +37,12 @@ public:
 };
 
 namespace eular {
-class LogWrite : public NonCopyAndAssign{
+class LogWrite : public NonCopyAndAssign {
 public:
     LogWrite();
     virtual ~LogWrite();
 
-    virtual void         setBasePath(const std::string &path) { mBasePath = path; }
+    void setBasePath(const std::string &path) { mBasePath = path; }
     virtual ssize_t      WriteToFile(std::string msg) = 0;
     virtual std::string  getFileName() = 0;
     virtual size_t       getFileSize() = 0;

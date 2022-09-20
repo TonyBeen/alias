@@ -99,10 +99,6 @@ FileLogWrite::FileLogWrite(uint32_t fileFlag, uint32_t fileMode) :
     mFileSize = (uint64_t *)mmap(nullptr, sizeof(uint64_t), 
         PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     assert(mFileDesc && mFileSize);
-    pthread_mutex_lock(mMutex);
-    std::string fileName = getFileName();
-    CreateNewFile(fileName);
-    pthread_mutex_unlock(mMutex);
 }
 
 FileLogWrite::~FileLogWrite()

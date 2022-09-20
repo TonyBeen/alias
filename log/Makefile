@@ -1,13 +1,15 @@
-cflags := -std=c++11
+cflags := -std=c++11 -O2
 soflags := -fPIC
 shared_lib := -lunwind -lpthread
 cc := g++
 destfile := /usr/local
 
-src := $(wildcard log*.cpp)
+src = $(wildcard log*.cpp)
 src += callstack.cpp
-headerfile := $(wildcard log*.h)
+
+headerfile = $(wildcard log*.h)
 headerfile += callstack.h
+
 obj := $(patsubst %.cpp, %.o, $(src))
 
 mainsrc := testlog.cc
@@ -25,6 +27,9 @@ logcat : logcat.cc
 
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cflags) $(soflags)
+
+%.o : %.cc
+	$(cc) $^ -c -o $@ $(cflags)
 
 debug:
 	@echo $(src)

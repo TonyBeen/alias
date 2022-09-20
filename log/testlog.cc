@@ -16,6 +16,7 @@ void *thread(void *)
 int main()
 {
     eular::InitLog(eular::LogLevel::DEBUG);
+    eular::SetPath("/home/eular/log/");
     eular::EnableLogColor(true);
     eular::addOutputNode(eular::LogWrite::FILEOUT);
 
