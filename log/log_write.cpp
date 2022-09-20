@@ -134,7 +134,9 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
     pthread_mutex_lock(mMutex);
     if (*mFileDesc <= 0 || *mFileSize > MAX_FILE_SIZE) {
         CloseFile();
-        CreateNewFile(getFileName());
+        if (false == CreateNewFile(getFileName())) {
+            return -1;
+        }
     }
     if (msg.length()) {
         ret = write(*mFileDesc, msg.c_str(), msg.length());
@@ -226,7 +228,12 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
     if (*mFileDesc > 0 && *mFileSize < MAX_FILE_SIZE) {
         return true;
     }
-    std::string path = "/var/log/liblog/";
+
+    std::string path = "~/log/";
+    if (mBasePath.length()) {
+        path = mBasePath;
+    }
+
     std::string realPath = path;
     if (path[0] == '~') {
         uid_t uid = getuid();

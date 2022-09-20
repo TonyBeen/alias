@@ -48,6 +48,8 @@ void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
  */
 void SetLevel(LogLevel::Level lev);
 
+void SetPath(const char *path);
+
 /**
  * @brief 使能stdout上色
  * 

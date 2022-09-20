@@ -24,10 +24,7 @@ void getLogManager()
 void InitLog(LogLevel::Level lev)
 {
     gLevel = lev;
-
-    if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance();
-    }
+    getLogManager();
     LogFormat::SetLevel(gLevel);
 }
 
@@ -35,6 +32,12 @@ void SetLeval(LogLevel::Level lev)
 {
     gLevel = lev;
     LogFormat::SetLevel(gLevel);
+}
+
+void SetPath(const char *path)
+{
+    getLogManager();
+    gLogManager->setPath(path);
 }
 
 void EnableLogColor(bool flag)

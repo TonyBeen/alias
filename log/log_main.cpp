@@ -23,6 +23,11 @@ LogManager::~LogManager()
     }
 }
 
+void LogManager::setPath(const std::string &path)
+{
+    mBasePath = path;
+}
+
 void LogManager::WriteLog(LogEvent *event)
 {
     for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
@@ -71,7 +76,9 @@ void LogManager::addLogWriteToList(int type)
             goto unlock;
     }
 
+    logWrite->setBasePath(mBasePath);
     mLogWriteList.push_back(logWrite);
+
 unlock:
     pthread_mutex_unlock(&mListMutex);
 }
