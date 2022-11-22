@@ -139,7 +139,8 @@ Thread::Thread(std::function<void()> callback, const String8 &threadName) :
     mThreadName(threadName.length() ? threadName : "Unknow"),
     mCallback(callback),
     mShouldJoin(true),
-    mSemaphore(0)
+    mSemaphore(0),
+    mTid(0)
 {
     pthread_attr_t attr;
     pthread_attr_init(&attr);
