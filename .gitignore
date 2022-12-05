@@ -1,15 +1,4 @@
 *.o
 
-testbuffer
-testmutex
-testrwmutex
-teststring8
-testthread
-teststring8_2
-testtimer
-testsingleton
-testrbtree
-testutils
-testbitmap
-testtypes
-testlog
+!test/makefile
+!test/*.cc
