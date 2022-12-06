@@ -1,4 +1,17 @@
 *.o
 
-!test/makefile
-!test/*.cc
+testbuffer
+testmutex
+teststring8
+testthread
+teststring8_2
+testutils
+testcallstack
+testtimer
+testrwmutex
+testsingleton
+testrbtree
+testbitmap
+testrbtreeapi
+testmapnode
+testmap

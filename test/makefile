@@ -88,6 +88,7 @@ testmap : test_map.cc
 
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
 		testtimer testrwmutex testsingleton testrbtree testrbtreeapi testmapnode testmap \
+		testmutex_2 \
 		clean all
 
 clean :
