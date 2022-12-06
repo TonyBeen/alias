@@ -6,6 +6,7 @@ cc := g++
 all : 
 	make testbuffer
 	make testmutex
+	make testmutex_2
 	make testrwmutex
 	make teststring8
 	make testthread
@@ -15,11 +16,15 @@ all :
 	make testutils
 	make testbitmap
 	make testtypes
+	make testrbtreeapi
+	make testmapnode
 
-memcheck:testbuffer testmutex testrwmutex teststring8 \
-	testthread teststring8_2 testtimer testsingleton testutils testbitmap
+memcheck:testbuffer testmutex testmutex_2 testrwmutex teststring8 \
+	testthread teststring8_2 testtimer testsingleton testutils testbitmap \
+	testmapnode testmap
 	valgrind --xml=yes --xml-file=./testbuffer_mem_check.xml  --leak-check=full ./testbuffer
 	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./testmutex
+	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./testmutex_2
 	valgrind --xml=yes --xml-file=./testrwmutex_mem_check.xml  --leak-check=full ./testrwmutex
 	valgrind --xml=yes --xml-file=./testteststring8_mem_check.xml  --leak-check=full ./teststring8
 	valgrind --xml=yes --xml-file=./testthread_mem_check.xml  --leak-check=full ./testthread
@@ -27,8 +32,13 @@ memcheck:testbuffer testmutex testrwmutex teststring8 \
 	valgrind --xml=yes --xml-file=./testsingleton_mem_check.xml  --leak-check=full ./testsingleton
 	valgrind --xml=yes --xml-file=./testutils_mem_check.xml  --leak-check=full ./testutils
 	valgrind --xml=yes --xml-file=./testbitmap_mem_check.xml  --leak-check=full ./testbitmap
+	valgrind --xml=yes --xml-file=./testmapnode_mem_check.xml  --leak-check=full ./testmapnode
+	valgrind --xml=yes --xml-file=./testmap_mem_check.xml  --leak-check=full ./testmap
 
 testmutex : testmutex.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
+testmutex_2 : test_mutex_2.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 testrwmutex : test_rwmutex.cc
@@ -58,20 +68,29 @@ testsingleton : test_singleton.cc
 testrbtree : test_rbtree.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
-testyaml : testyaml.cc
-	g++ testyaml.cc -o testyaml -std=c++11 -lyaml-cpp
-
 testutils : test_utils.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 testbitmap : test_bitmap.cc
 	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
+
 testtypes : test_types.cc
 	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
+testrbtreeapi : test_rbtree_api.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
+testmapnode : test_map_node.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
+testmap : test_map.cc
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
+
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
-	testtimer testrwmutex testsingleton testrbtree clean all
+		testtimer testrwmutex testsingleton testrbtree testrbtreeapi testmapnode testmap \
+		clean all
 
 clean :
 	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testutils \
-		testcallstack testtimer testrwmutex testsingleton testrbtree testbitmap
+		testcallstack testtimer testrwmutex testsingleton testrbtree testbitmap \
+		testrbtreeapi testmapnode testmap

@@ -30,6 +30,15 @@
     ClassName(const ClassName&) = delete; \
     ClassName& operator=(const ClassName&) = delete;
 
+#ifdef __cplusplus
+    #define EXTERN_C_BEGIN extern "C" {
+    #define EXTERN_C_END }
+    #define DEFAULT(x) = x
+#else
+    #define EXTERN_C_BEGIN
+    #define EXTERN_C_END
+    #define DEFAULT(x)
+#endif
 
 #define eular_likely(cond)        __builtin_expect(!!(cond), 1)       // 编译器优化，条件大概率成立
 #define eular_unlikely(cond)      __builtin_expect(!!(cond), 0)       // 编译器优化，条件大概率不成立
@@ -56,7 +65,7 @@ std::string         getNameByPid(pid_t pid);
 std::vector<std::string> getLocalAddress();
 std::vector<std::string> getdir(const std::string &path);
 
-bool isPicture(const std::string &fileName); 
+bool isPicture(const std::string &fileName);
 
 std::string Time2Str(time_t ts, const std::string& format = "%Y-%m-%d %H:%M:%S");
 time_t Str2Time(const char* str, const char* format = "%Y-%m-%d %H:%M:%S");
