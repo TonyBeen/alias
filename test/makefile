@@ -86,12 +86,15 @@ testmapnode : test_map_node.cc
 testmap : test_map.cc
 	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
+testany : test_any.cc
+	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
 		testtimer testrwmutex testsingleton testrbtree testrbtreeapi testmapnode testmap \
-		testmutex_2 \
+		testmutex_2 testany \
 		clean all
 
 clean :
 	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testutils \
 		testcallstack testtimer testrwmutex testsingleton testrbtree testbitmap \
-		testrbtreeapi testmapnode testmap
+		testrbtreeapi testmapnode testmap testany
