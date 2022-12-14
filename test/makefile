@@ -10,7 +10,6 @@ all :
 	make testrwmutex
 	make teststring8
 	make testthread
-	make teststring8_2
 	make testtimer
 	make testsingleton
 	make testutils
@@ -34,6 +33,7 @@ memcheck:testbuffer testmutex testmutex_2 testrwmutex teststring8 \
 	valgrind --xml=yes --xml-file=./testbitmap_mem_check.xml  --leak-check=full ./testbitmap
 	valgrind --xml=yes --xml-file=./testmapnode_mem_check.xml  --leak-check=full ./testmapnode
 	valgrind --xml=yes --xml-file=./testmap_mem_check.xml  --leak-check=full ./testmap
+	valgrind --xml=yes --xml-file=./testsharedbuffer_mem_check.xml  --leak-check=full ./testsharedbuffer
 
 testmutex : testmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -45,10 +45,7 @@ testrwmutex : test_rwmutex.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 teststring8 : teststring8.cc
-	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
-
-teststring8_2 : teststring8_2.cc
-	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
 testthread : testthread.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
@@ -89,12 +86,15 @@ testmap : test_map.cc
 testany : test_any.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
+testsharedbuffer : test_sharedbuffer.cc
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
+
 .PHONY : testbuffer testmutex teststring8 testthread testcallstack testutils \
 		testtimer testrwmutex testsingleton testrbtree testrbtreeapi testmapnode testmap \
-		testmutex_2 testany \
+		testmutex_2 testany testsharedbuffer \
 		clean all
 
 clean :
-	-rm -rf testbuffer testmutex teststring8 testthread teststring8_2 testutils \
+	-rm -rf testbuffer testmutex teststring8 testthread testutils \
 		testcallstack testtimer testrwmutex testsingleton testrbtree testbitmap \
-		testrbtreeapi testmapnode testmap testany
+		testrbtreeapi testmapnode testmap testany testsharedbuffer

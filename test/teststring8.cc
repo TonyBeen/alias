@@ -2,152 +2,172 @@
 #include <stdio.h>
 #include <log/log.h>
 #include <utils/string8.h>
+#include <gtest/gtest.h>
 
-#define LOG_TAG "String8 test"
+#define LOG_TAG "String8-test"
 
 using namespace eular;
 using namespace std;
 
-void testAdd(const String8 &str)
-{
-    cout << str << endl;
+class String8Test : public testing::Test {
+protected:
+    virtual void SetUp() {
+    }
+
+    virtual void TearDown() {
+    }
+};
+
+TEST_F(String8Test, Cstr) {
+    String8 tmp("Hello, world!");
+    EXPECT_STREQ(tmp.c_str(), "Hello, world!");
 }
 
-int main()
-{
+TEST_F(String8Test, OperatorPlus) {
+    String8 src1("Hello, ");
+
+    const char* ccsrc2 = "world!";
+    String8 dst1 = src1 + ccsrc2;
+    EXPECT_STREQ(dst1.c_str(), "Hello, world!");
+    EXPECT_STREQ(src1.c_str(), "Hello, ");
+    EXPECT_STREQ(ccsrc2, "world!");
+
+    String8 ssrc2("world!");
+    String8 dst2 = src1 + ssrc2;
+    EXPECT_STREQ(dst2.c_str(), "Hello, world!");
+    EXPECT_STREQ(src1.c_str(), "Hello, ");
+    EXPECT_STREQ(ssrc2.c_str(), "world!");
+}
+
+TEST_F(String8Test, OperatorPlusEquals) {
+    String8 src1("My voice");
+
+    // Testing String8 += String8
+    String8 src2(" is my passport.");
+    src1 += src2;
+    EXPECT_STREQ(src1.c_str(), "My voice is my passport.");
+    EXPECT_STREQ(src2.c_str(), " is my passport.");
+
+    // Adding const char* to the previous string.
+    const char* src3 = " Verify me.";
+    src1 += src3;
+    EXPECT_STREQ(src1.c_str(), "My voice is my passport. Verify me.");
+    EXPECT_STREQ(src2.c_str(), " is my passport.");
+    EXPECT_STREQ(src3, " Verify me.");
+}
+
+TEST_F(String8Test, stringAppend) {
+    String8 s;
+    EXPECT_EQ(3, s.append("foo"));
+    EXPECT_STREQ("foo", s.c_str());
+    EXPECT_EQ(3, s.append("bar"));
+    EXPECT_STREQ("foobar", s.c_str());
+    EXPECT_EQ(0, s.append("baz", 0));
+    EXPECT_STREQ("foobar", s.c_str());
+}
+
+TEST_F(String8Test, appendFormat) {
+    const char *str1 = "Hello";
+    const char *str2 = "World";
+    String8 ret;
+    ret.appendFormat("%s%s", str1, str2);
+    EXPECT_STREQ(ret.c_str(), "HelloWorld");
+}
+
+TEST_F(String8Test, stringCompare) {
+    String8 str1 = "hello";
+    const char *str2 = "world";
+
+    EXPECT_EQ(str1.compare("hello"), 0);
+    EXPECT_LT(str1.compare(str2), 0);
+}
+
+TEST_F(String8Test, stringFind) {
+    eular::String8 str2 = "sssabcssdeabcss";
+    int index = str2.find_last_of("abc");
+    EXPECT_EQ(index, 10);
+    index = str2.find("abc");
+    EXPECT_EQ(index, 3);
+}
+
+TEST_F(String8Test, otherFunction) {
+    String8 str1 = "127.0.0.1:8000";
+    int index = str1.find(":");
+    ASSERT_EQ(index, 9);
+    String8 left = str1.left(index);
+    String8 right = str1.right(str1.length() - (index + 1));
+    EXPECT_STREQ(left.c_str(), "127.0.0.1");
+    EXPECT_STREQ(right.c_str(), "8000");
+
+    EXPECT_EQ(str1[index], ':');
+    EXPECT_EQ(str1[str1.length()], '\0');
+    EXPECT_EQ(str1[1000], str1[str1.capacity()]);
+
     {
-        eular::String8 str1 = "123456789";
-        str1.append("abcde", 3);
-        std::cout << str1.c_str() << "\n";
-        str1.appendFormat(" %p", str1.c_str());
-        std::cout << "ptr = " << str1.c_str() << "\n";
-
-        str1.clear();
-        str1.appendFormat("[%d.%d.%d.%d]", 192, 168, 124, 7);
-        std::cout << str1.c_str() << "\n";
-
-        eular::String8 str2 = str1;
-        str2.appendFormat(" %p", str2.c_str());
-        std::cout << "str2: "<< str2.c_str() << "\n";
-        std::cout << str2.find("168.124.7") << "\n";
-        std::cout << str2.contains("168.124.7") << "\n";
-        std::cout << str2.compare(str1) << "\n";
-        str2 = "ABcdEF";
-        str2.toLower();
-        std::cout << "toLower str2: "<< str2.c_str() << "\n";
-
-        eular::String8 str3(str1);
-        std::cout << "str3: "<< str3.c_str() << "\n";
-        std::cout << (str3 == str2) << "\n";
-        str3 = "AbcdEF";
-        std::cout << str3.StrCaseCmp(str2) << "\n";
-        str3.toLower();
-        std::cout << "toLower str3: "<< str3.c_str() << "\n";
-        std::cout << "str3 == str2 -> " << (str3 == str2) << "\n";
-
-        str3.removeAll("abcdef");
-        str3 += str2;
-        std::cout << "str3: "<< str3.c_str() << "\n";
-        eular::String8 str4 = str1 + str2 + str3;
-        std::cout << "str4: " << str4.toStdString() << std::endl;
-
-        eular::String8 str5 = eular::String8::format("%s", str4.c_str());
-        std::cout << "str5: " << str5.toStdString() << std::endl;
-    }
-
-    std::cout << "----------------------------------------\n";
-
-    {
-        // 测试移动构造和移动赋值函数
-        std::cout << "测试移动构造和移动赋值函数\n";
-        eular::String8 tmp = "1234567890";
-        printf("tmp.mString ptr = %p\n", tmp.c_str());
-        eular::String8 str1 = std::move(tmp);   // 此处走的移动构造
-        printf("str1.mString ptr = %p\n", str1.c_str());
-        std::cout << "str1: " << str1.toStdString() << std::endl;
-
-        std::cout << "*************\n";
-
-        printf("tmp.mString ptr = %p\n", tmp.c_str());
-        tmp = "abcdefg";
-        printf("tmp.mString ptr = %p\n", tmp.c_str());
-        eular::String8 str2;
-        str2 = std::move(tmp);  // 此处走的移动赋值
-        printf("str2.mString ptr = %p\n", str2.c_str());
-        std::cout << "str2: " << str2.toStdString() << std::endl;
-
-        /*
-            通过此次测试可以发现函数返回值是通过拷贝构造赋值给新的变量的，并非通过等号赋值函数
-            另外，创建变量使用等号赋值也走的是构造函数，只有在声明变量后在赋值调用的是等号赋值函数
-         */
-    }
-
-    {
-        // 测试左移运算符
-        std::cout << "测试左移运算符\n";
-        eular::String8 str8 = "Hello World!";
-        std::cout << "str8 = " << str8 << std::endl;
-    }
-
-    {
-        // 测试left right operator[] trim trimLeft trimRight reverse
-        eular::String8 str1 = "127.0.0.1:8000";
-        int32_t index = str1.find(':');
-        std::cout << str1[index] << std::endl;
-        std::cout << "A big number: " << str1[100] << std::endl;
-        std::cout << (str1[str1.length()] == '\0' ? "true" : "false") << std::endl;
-        if (index > 0) {
-            std::cout << str1.left(index) << std::endl;
-            std::cout << str1.right(str1.length() - (index + 1)) << std::endl;
-        }
-        eular::String8 str2 = "\t\t12345\t\t";
+        String8 str2 = "\t\t12345\t\t\t";
         str2.trim('\t');
-        std::cout << str2 << std::endl;
-
-        eular::String8 str3 = "\t12345";
-        str3.trimLeft('\t');
-        std::cout << str3 << std::endl;
-
-        eular::String8 str4 = "12345\n";
-        str4.trimRight('\n');
-        std::cout << "trimRight: " << str4 << std::endl;
-        str4.reverse();
-        std::cout << str4 << std::endl;
+        EXPECT_STREQ(str2.c_str(), "12345");
     }
 
     {
-        // 测试 find_last_of kmp_strstr
-        eular::String8 str1 = "sssabcssdeabcss";
-        int index = str1.find_last_of("abc");
-        std::cout << "find_last_of: " << index << std::endl;
-        LOG_ASSERT(index == 10, "index should equal to five\n");
+        String8 str2 = "\t\t12345\t\t\t";
+        str2.trimLeft('\t');
+        EXPECT_STREQ(str2.c_str(), "12345\t\t\t");
+    }
 
+    {
+        String8 str2 = "\t\t12345\t\t\t";
+        str2.trimRight('\t');
+        EXPECT_STREQ(str2.c_str(), "\t\t12345");
+    }
+    
+    {
+        String8 str2 = "123456789";
+        String8 str3 = str2.reverse();
+        EXPECT_STREQ(str3.c_str(), "987654321");
+    }
+
+    {
+        String8 str2 = "123abc456abc789";
+        str2.removeAll("abc");
+        EXPECT_STREQ(str2.c_str(), "123456789");
+    }
+
+    {
+        String8 str2 = "abcDEF";
+        EXPECT_EQ(str2.StrCaseCmp("abcDef"), 0);
+        str2.toUpper();
+        EXPECT_STREQ(str2.c_str(), "ABCDEF");
+        str2.toLower();
+        EXPECT_STREQ(str2.c_str(), "abcdef");
+    }
+
+    {
         const char *val = "BBC ABCDAB ABCDABCDABDE";
         const char *key = "ABCDABD";
-        bool flag = (eular::String8::kmp_strstr(val, key) == strstr(val, key) - val);
-        //LOG_ASSERT(false, "error");
+        EXPECT_EQ(eular::String8::kmp_strstr(val, key), strstr(val, key) - val);
     }
+}
 
-    {
-        // 测试format
-        std::cout << "测试format\n";
-        std::cout << String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110) << std::endl;
-        String8 str1 = String8::format("-0x%012lx: (%s + 0x%lx)", 0x1110, "for test", 0x1110);
-        std::cout << std::endl;
-    }
+TEST_F(String8Test, copyAndAssign) {
+    String8 str1 = "hello";
+    String8 str2 = str1;
+    EXPECT_EQ(str1.c_str(), str2.c_str());
+    str2.append(" world");
+    EXPECT_STREQ(str2.c_str(), "hello world");
 
-    {
-        // 测试operator+
-        std::cout << "测试operator+\n";
-        String8 str1 = "0123456789";
-        String8 str2 = str1 + str1;
-        std::cout << str2 << std::endl;
-        testAdd(str1 + str2);
-        for (int i = 0; i < 3; ++i) {
-            str1.appendFormat("[]");
-        }
-        str1.append("***************");
-    }
+    String8 str3;
+    str3 = str1;
+    EXPECT_STREQ(str3.c_str(), "hello");
+    str3.append(" world");
+    EXPECT_STREQ(str3.c_str(), "hello world");
 
+    EXPECT_STREQ(str1.c_str(), "hello");
+}
+
+int main(int argc, char* argv[])
+{
+    testing::InitGoogleTest(&argc, argv); 
+	return RUN_ALL_TESTS();
     return 0;
 }
