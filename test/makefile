@@ -51,7 +51,7 @@ testthread : testthread.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
 
 testbuffer : testbuffer.cc
-	$(cc) $^ -o $@ $(cppflags) $(shared_lib)
+	$(cc) $^ -o $@ $(cppflags) $(static_lib) $(shared_lib)
 
 testcallstack : testcallstack.cc
 	$(cc) $^ -o $@ $(cppflags) $(shared_lib)

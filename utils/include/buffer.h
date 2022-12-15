@@ -18,8 +18,8 @@ namespace eular {
 class ByteBuffer final
 {
 public:
-    ByteBuffer();                       // call ByteBuffer(4096);
-    ByteBuffer(size_t size);            // size == 0 ? 创建4096大小, 内容为空的buf : size
+    ByteBuffer();                       // call ByteBuffer(256);
+    ByteBuffer(size_t size);            // size == 0 ? 创建256大小, 内容为空的buf : size
     ByteBuffer(const char *data, size_t dataLength);  // 如果data为null，则和上面一致
     ByteBuffer(const uint8_t *data, size_t dataLength);
     ByteBuffer(ByteBuffer&& other);
@@ -44,7 +44,7 @@ public:
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
     void        clear();
-    void        setDataSize(size_t sz) { mDataSize = sz; }
+    void        setDataSize(size_t sz) { sz > mCapacity ? mCapacity : sz; }
 
     std::string dump()  const;
 
@@ -53,6 +53,7 @@ private:
     size_t      getBuffer(size_t size);
     void        freeBuffer();
     void        moveAssign(ByteBuffer &other);
+    void        detach();
 
 private:
     uint8_t*    mBuffer;

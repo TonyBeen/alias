@@ -98,14 +98,13 @@ ByteBuffer& ByteBuffer::operator=(ByteBuffer&& other)
 
 uint8_t& ByteBuffer::operator[](size_t index)
 {
-    assert(index < mCapacity);
     if (mBuffer == nullptr) {
         mCapacity = getBuffer(DEFAULT_BUFFER_SIZE);
         if (mBuffer == nullptr) {
             throw Exception("no memory");
         }
     }
-
+    assert(index < mCapacity);
     return mBuffer[index];
 }
 
@@ -115,6 +114,7 @@ size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
         return 0;
     }
 
+    detach();
     size_t real_offset = mDataSize >= offset ? offset : 0;
     uint8_t *temp = nullptr;
     size_t newSize = 0;
@@ -154,6 +154,8 @@ size_t ByteBuffer::insert(const uint8_t *data, size_t dataSize, size_t offset)
     if (data == nullptr || offset > mDataSize) { // offset范围必须在0-mDataSize，等于mDataSize相当于尾插，offset=0相当于头插
         return 0;
     }
+
+    detach();
 
     size_t newSize = 0;
     size_t copySize = mDataSize - offset;
@@ -199,6 +201,13 @@ void ByteBuffer::resize(size_t newSize)
         return;
     }
 
+    // NOTE 移动构造的mBuffer可能会是null
+    if (mBuffer == nullptr) {
+        mCapacity = getBuffer(newSize);
+        mDataSize = 0;
+        return;
+    }
+
     SharedBuffer *buf = SharedBuffer::bufferFromData(mBuffer)->editResize(newSize);
     if (buf) {
         mBuffer = static_cast<uint8_t *>(buf->data());
@@ -210,23 +219,30 @@ void ByteBuffer::clear()
 {
     if (mBuffer) {
         memset(mBuffer, 0, mCapacity);
-        mDataSize = 0;
     }
+    mDataSize = 0;
 }
 
 std::string ByteBuffer::dump() const
 {
     std::string ret;
+    if (mBuffer == nullptr || mDataSize == 0) {
+        return ret;
+    }
+
     char buf[64] = {0};
     int cycle = mDataSize / 4;
     for (int i = 0; i < cycle; ++i) {
         snprintf(buf, sizeof(buf), "0x%02x 0x%02x 0x%02x 0x%02x ",
             mBuffer[i * 4], mBuffer[i * 4 + 1], mBuffer[i * 4 + 2], mBuffer[i * 4 + 3]);
         ret.append(buf);
+        if (i && i % 4 == 0) {
+            ret.append("\n");
+        }
     }
 
-    cycle = mDataSize % 4;
-    for (int i = 0; i < cycle; ++i) {
+    int remainder = mDataSize % 4;
+    for (int i = mDataSize - remainder; i < mDataSize; ++i) {
         snprintf(buf, sizeof(buf), "0x%02x ", mBuffer[i]);
         ret.append(buf);
     }
@@ -275,17 +291,26 @@ void ByteBuffer::freeBuffer()
 
 void ByteBuffer::moveAssign(ByteBuffer &other)
 {
-    uint8_t *tmp = this->mBuffer;
-    this->mBuffer = other.mBuffer;
-    other.mBuffer = tmp;
+    std::swap(mBuffer, other.mBuffer);
+    std::swap(mDataSize, other.mDataSize);
+    std::swap(mCapacity, other.mCapacity);
+}
 
-    size_t dataSize = this->mDataSize;
-    this->mDataSize = other.mDataSize;
-    other.mDataSize = dataSize;
+void ByteBuffer::detach()
+{
+    SharedBuffer *psb = SharedBuffer::bufferFromData(mBuffer);
+    if (psb == nullptr) {
+        mCapacity = getBuffer(DEFAULT_BUFFER_SIZE);
+        mDataSize = 0;
+        return;
+    }
 
-    size_t cap = this->mCapacity;
-    this->mCapacity = other.mCapacity;
-    other.mCapacity = cap;
+    if (psb->onlyOwner() == false) {
+        SharedBuffer *newSb = psb->editResize(mCapacity);
+        if (newSb) {
+            mBuffer = static_cast<uint8_t *>(newSb->data());
+        }
+    }
 }
 
 } // namespace eular
