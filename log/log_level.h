@@ -16,32 +16,32 @@ class LogLevel {
 public:
     enum Level {
         UNKNOW = -1,
-        DEBUG = 0,
-        INFO  = 1,
-        WARN  = 2,
-        ERROR = 3,
-        FATAL = 4
+        LEVEL_DEBUG = 0,
+        LEVEL_INFO  = 1,
+        LEVEL_WARN  = 2,
+        LEVEL_ERROR = 3,
+        LEVEL_FATAL = 4
     };
     static std::string ToString(Level l)
     {
         std::string str;
         switch (l) {
-        case DEBUG:
+        case LEVEL_DEBUG:
             str = "DEBUG";
             break;
-        case INFO:
+        case LEVEL_INFO:
             str = "INFO";
             break;
-        case WARN:
+        case LEVEL_WARN:
             str = "WARN";
             break;
-        case ERROR:
+        case LEVEL_ERROR:
             str = "ERROR";
             break;
-        case FATAL:
+        case LEVEL_FATAL:
             str = "FATAL";
             break;
-        
+
         default:
             str = "";
             break;
@@ -53,19 +53,19 @@ public:
     {
         std::string str;
         switch (level) {
-        case DEBUG:
+        case LEVEL_DEBUG:
             str = "[D]";
             break;
-        case INFO:
+        case LEVEL_INFO:
             str = "[I]";
             break;
-        case WARN:
+        case LEVEL_WARN:
             str = "[W]";
             break;
-        case ERROR:
+        case LEVEL_ERROR:
             str = "[E]";
             break;
-        case FATAL:
+        case LEVEL_FATAL:
             str = "[F]";
             break;
         
@@ -78,19 +78,19 @@ public:
     static LogLevel::Level String2Level(const std::string& lev)
     {
         if (strcasecmp(lev.c_str(), "debug") == 0) {
-            return DEBUG;
+            return LEVEL_DEBUG;
         }
         if (strcasecmp(lev.c_str(), "info") == 0) {
-            return INFO;
+            return LEVEL_INFO;
         }
         if (strcasecmp(lev.c_str(), "warn") == 0) {
-            return WARN;
+            return LEVEL_WARN;
         }
         if (strcasecmp(lev.c_str(), "error") == 0) {
-            return ERROR;
+            return LEVEL_ERROR;
         }
         if (strcasecmp(lev.c_str(), "fatal") == 0) {
-            return FATAL;
+            return LEVEL_FATAL;
         }
         return UNKNOW;
     }

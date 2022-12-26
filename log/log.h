@@ -7,33 +7,33 @@
 #include <sys/time.h>
 
 #ifndef LOGD
-#define LOGD(...) ((void)eular::log_write(eular::LogLevel::Level::DEBUG, LOG_TAG, __VA_ARGS__))
+#define LOGD(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_DEBUG, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGI
-#define LOGI(...) ((void)eular::log_write(eular::LogLevel::Level::INFO, LOG_TAG, __VA_ARGS__))
+#define LOGI(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_INFO, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGW
-#define LOGW(...) ((void)eular::log_write(eular::LogLevel::Level::WARN, LOG_TAG, __VA_ARGS__))
+#define LOGW(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_WARN, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGE
-#define LOGE(...) ((void)eular::log_write(eular::LogLevel::Level::ERROR, LOG_TAG, __VA_ARGS__))
+#define LOGE(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_ERROR, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOGF
-#define LOGF(...) ((void)eular::log_write(eular::LogLevel::Level::FATAL, LOG_TAG, __VA_ARGS__))
+#define LOGF(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_FATAL, LOG_TAG, __VA_ARGS__))
 #endif
 
 #ifndef LOG_ASSERT
 #define LOG_ASSERT(cond, ...) \
-    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
+    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::LEVEL_FATAL, #cond, LOG_TAG, __VA_ARGS__)) : (void)0)
 #endif
 
 #ifndef LOG_ASSERT2
 #define LOG_ASSERT2(cond)   \
-    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::FATAL, #cond, LOG_TAG, "")) : (void)0)
+    (!(cond) ? ((void)eular::log_write_assert(eular::LogLevel::Level::LEVEL_FATAL, #cond, LOG_TAG, "")) : (void)0)
 #endif
 
 namespace eular {
@@ -42,7 +42,7 @@ namespace eular {
  * @brief 修改输出日志级别
  * @param lev   最小输出级别
  */
-void InitLog(LogLevel::Level lev = LogLevel::DEBUG);
+void InitLog(LogLevel::Level lev = LogLevel::LEVEL_DEBUG);
 /**
  * @param lev   设置最小输出级别
  */

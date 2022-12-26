@@ -23,15 +23,15 @@
 
 #define COLOR_MAP(XXX)                      \
     XXX(LogLevel::UNKNOW,   CLR_CLR)        \
-    XXX(LogLevel::DEBUG,    CLR_BLUE)       \
-    XXX(LogLevel::INFO,     CLR_WHITE)      \
-    XXX(LogLevel::WARN,     CLR_YELLOW)     \
-    XXX(LogLevel::ERROR,    CLR_RED)        \
-    XXX(LogLevel::FATAL,    CLR_PURPLE)     \
+    XXX(LogLevel::LEVEL_DEBUG,    CLR_BLUE)       \
+    XXX(LogLevel::LEVEL_INFO,     CLR_WHITE)      \
+    XXX(LogLevel::LEVEL_WARN,     CLR_YELLOW)     \
+    XXX(LogLevel::LEVEL_ERROR,    CLR_RED)        \
+    XXX(LogLevel::LEVEL_FATAL,    CLR_PURPLE)     \
 
 
 namespace eular {
-std::atomic<int> LogFormat::mLevel(LogLevel::DEBUG);
+std::atomic<int> LogFormat::mLevel(LogLevel::LEVEL_DEBUG);
 
 void LogFormat::SetLevel(const LogLevel::Level &lev)
 {
