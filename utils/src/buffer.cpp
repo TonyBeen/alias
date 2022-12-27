@@ -236,9 +236,6 @@ std::string ByteBuffer::dump() const
         snprintf(buf, sizeof(buf), "0x%02x 0x%02x 0x%02x 0x%02x ",
             mBuffer[i * 4], mBuffer[i * 4 + 1], mBuffer[i * 4 + 2], mBuffer[i * 4 + 3]);
         ret.append(buf);
-        if (i && i % 4 == 0) {
-            ret.append("\n");
-        }
     }
 
     int remainder = mDataSize % 4;
