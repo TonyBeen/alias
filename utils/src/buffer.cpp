@@ -22,7 +22,8 @@ ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 ByteBuffer::ByteBuffer(size_t size) :
     mBuffer(nullptr),
     mCapacity(0),
-    mDataSize(0)
+    mDataSize(0),
+    mPos(0)
 {
     mCapacity = getBuffer(size);
     LOG("%s(size_t size) mCapacity = %zu\n", __func__, mCapacity);
@@ -31,7 +32,8 @@ ByteBuffer::ByteBuffer(size_t size) :
 ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mBuffer(nullptr),
     mCapacity(0),
-    mDataSize(0)
+    mDataSize(0),
+    mPos(0)
 {
     mCapacity = getBuffer(dataLength + 1);
     set((const uint8_t *)data, dataLength);
@@ -42,7 +44,8 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
 ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mBuffer(nullptr),
     mCapacity(0),
-    mDataSize(0)
+    mDataSize(0),
+    mPos(0)
 {
     mCapacity = getBuffer(dataLength);
     set((const uint8_t *)data, dataLength);
@@ -51,7 +54,8 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
 ByteBuffer::ByteBuffer(const ByteBuffer& other) :
     mBuffer(other.mBuffer),
     mCapacity(other.mCapacity),
-    mDataSize(other.mDataSize)
+    mDataSize(other.mDataSize),
+    mPos(other.mPos)
 {
     SharedBuffer::bufferFromData(mBuffer)->acquire();
 }
@@ -59,7 +63,8 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other) :
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
     mBuffer(nullptr),
     mCapacity(0),
-    mDataSize(0)
+    mDataSize(0),
+    mPos(0)
 {
     if (std::addressof(other) == this) {
         return;
@@ -79,6 +84,7 @@ ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mDataSize = other.mDataSize;
+        mPos = other.mPos;
         SharedBuffer::bufferFromData(mBuffer)->acquire();
     }
 
@@ -205,6 +211,7 @@ void ByteBuffer::resize(size_t newSize)
     if (mBuffer == nullptr) {
         mCapacity = getBuffer(newSize);
         mDataSize = 0;
+        mPos = 0;
         return;
     }
 
@@ -217,10 +224,29 @@ void ByteBuffer::resize(size_t newSize)
 
 void ByteBuffer::clear() 
 {
+    detach();
     if (mBuffer) {
         memset(mBuffer, 0, mCapacity);
     }
     mDataSize = 0;
+    mPos = 0;
+}
+
+bool ByteBuffer::write(const void *data, size_t size)
+{
+    return set(static_cast<const uint8_t *>(data), size, mDataSize) == size;
+}
+
+bool ByteBuffer::read(void *data, size_t size)
+{
+    if (mBuffer == nullptr || mPos == mDataSize) {
+        return false;
+    }
+
+    size = size > (mDataSize - mPos) ? mDataSize - mPos : size;
+    memcpy(data, mBuffer + mPos, size);
+    mPos += size;
+    return true;
 }
 
 std::string ByteBuffer::dump() const
@@ -263,7 +289,7 @@ size_t ByteBuffer::getBuffer(size_t size)
         size = DEFAULT_BUFFER_SIZE;
     }
 
-    if (mBuffer == nullptr) {
+    if (mBuffer == nullptr) { 
         mBuffer = static_cast<uint8_t *>(SharedBuffer::alloc(size)->data());
         LOG("new buffer %p\n", mBuffer);
         if (mBuffer) {
@@ -291,6 +317,7 @@ void ByteBuffer::moveAssign(ByteBuffer &other)
     std::swap(mBuffer, other.mBuffer);
     std::swap(mDataSize, other.mDataSize);
     std::swap(mCapacity, other.mCapacity);
+    std::swap(mPos, other.mPos);
 }
 
 void ByteBuffer::detach()
