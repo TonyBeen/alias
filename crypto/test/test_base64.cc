@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "base64.h"
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <log/log.h>
 #include <stdio.h>
 #include <stdlib.h>

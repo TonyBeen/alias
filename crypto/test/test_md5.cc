@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "md5.h"
-#include <utils/Buffer.h>
+#include <utils/buffer.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

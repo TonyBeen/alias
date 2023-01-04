@@ -10,6 +10,7 @@
 
 #include "string8.h"
 #include <stdint.h>
+#include <atomic>
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/types.h>
@@ -43,7 +44,6 @@ private:
     MutexType& mMutex;
 };
 
-class Condition;
 class Mutex : public NonCopyAble
 {
 public:
@@ -119,6 +119,10 @@ public:
 
 private:
     mutable pthread_rwlock_t mRWMutex;
+#ifdef DEBUG
+    std::atomic<bool> mReadLocked;
+    std::atomic<bool> mWritLocked;
+#endif
 };
 
 class Sem : public NonCopyAble {

@@ -20,14 +20,15 @@ namespace eular {
 
 Mutex::Mutex(int type)
 {
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST); // for pthread_mutex_lock will return EOWNERDEAD
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);  // for EDEADLK
     if (type == SHARED) {
-        pthread_mutexattr_t attr;
         pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-        pthread_mutex_init(&mMutex, &attr);
-        pthread_mutexattr_destroy(&attr);
-    } else {
-        pthread_mutex_init(&mMutex, nullptr);
     }
+    pthread_mutex_init(&mMutex, &attr);
+    pthread_mutexattr_destroy(&attr);
 }
 
 Mutex::~Mutex()
@@ -49,12 +50,26 @@ void Mutex::setMutexName(const String8 &name)
 
 int Mutex::lock()
 {
-    return pthread_mutex_lock(&mMutex);
+    int ret = 0;
+    do {
+        ret = pthread_mutex_lock(&mMutex);
+        if (ret == EDEADLK) { // already locked
+            ret = 0;
+        } else if (ret == EOWNERDEAD) { // other threads exited abnormally without unlocking the mutex
+            pthread_mutex_consistent(&mMutex); // will lock the mutex
+            ret = 0;
+        }
+    } while (0);
+
+    return ret;
 }
 
 void Mutex::unlock()
 {
-    assert(pthread_mutex_unlock(&mMutex) == 0);
+    int ret = pthread_mutex_unlock(&mMutex);
+    if (ret != 0 && ret != EPERM) { // EPERM the calling thread does not own the mutex
+        printf("pthread_mutex_unlock error. return %d", ret);
+    }
 }
 
 int Mutex::trylock()
@@ -74,26 +89,41 @@ RWMutex::~RWMutex()
 
 void RWMutex::rlock()
 {
-    pthread_rwlock_rdlock(&mRWMutex);
+    int ret = pthread_rwlock_rdlock(&mRWMutex);
+    if (ret != 0 && ret != EAGAIN) {
+        throw Exception("pthread_rwlock_rdlock error");
+    } else {
+#ifdef DEBUG
+        mReadLocked.store(true);
+#endif
+    }
 }
 
 void RWMutex::wlock()
 {
-    pthread_rwlock_wrlock(&mRWMutex);
+    if (pthread_rwlock_wrlock(&mRWMutex) != 0) {
+        throw Exception("pthread_rwlock_wrlock error");
+    } else {
+#ifdef DEBUG
+        mWritLocked.store(true);
+#endif
+    }
 }
 
 void RWMutex::unlock()
 {
-    pthread_rwlock_unlock(&mRWMutex);
+    if (pthread_rwlock_unlock(&mRWMutex) != 0) {
+        throw Exception("pthread_rwlock_unlock error");
+    } else {
+#ifdef DEBUG
+        if (mReadLocked) {
+            mReadLocked.store(false);
+        } else if (mWritLocked) {
+            mWritLocked.store(false);
+        }
+#endif
+    }
 }
-
-
-union semun {
-    int              val;    /* Value for SETVAL */
-    struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
-    unsigned short  *array;  /* Array for GETALL, SETALL */
-    struct seminfo  *__buf;  /* Buffer for IPC_INFO (Linux-specific) */
-};
 
 Sem::Sem(const char *semPath, uint8_t val)
 {

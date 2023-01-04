@@ -2,50 +2,69 @@
 
     .
     ├── include
-    │   ├── Buffer.h
+    │   ├── alloc.h
+    │   ├── bitmap.h
+    │   ├── buffer.h
     │   ├── condition.h
+    │   ├── convert.h
     │   ├── debug.h
     │   ├── Errors.h
     │   ├── exception.h
+    │   ├── file.h
+    │   ├── map.h
+    │   ├── map_node.h
     │   ├── mutex.h
-    │   ├── rbtree.h
-    │   ├── singlelist.h
+    │   ├── rbtree_api.h
+    │   ├── rbtree_base.h
+    │   ├── refcount.h
+    │   ├── sharedbuffer.h
     │   ├── singleton.h
     │   ├── string8.h
     │   ├── sysdef.h
-    │   ├── threaddef.h
     │   ├── thread.h
     │   ├── timer.h
+    │   ├── types.hpp
     │   └── utils.h
     ├── Makefile
     ├── Readme.md
     └── src
-        ├── Buffer.cpp
+        ├── alloc.cpp
+        ├── bitmap.cpp
+        ├── buffer.cpp
         ├── condition.cpp
+        ├── convert.cpp
+        ├── file.cpp
+        ├── map_node.cpp
         ├── mutex.cpp
-        ├── rbtree.cpp
+        ├── rbtree_api.cpp
+        ├── rbtree_base.cpp
+        ├── sharedbuffer.cpp
         ├── string8.cpp
         ├── thread.cpp
         ├── timer.cpp
         └── utils.cpp
     
-    utils包含线程、互斥锁、条件变量、信号量、字符串、缓存、函数堆栈、单例、定时器、异常、红黑树(未完善)。
+    utils包含线程、互斥锁、条件变量、信号量、字符串、缓存、函数堆栈、单例、定时器、异常、红黑树Map、共享计数。
     依赖：libpthread
 
 **log:**
 
     .
+    ├── callstack.cpp
+    ├── callstack.h
+    ├── logcat.cc
     ├── log.cpp
     ├── log_event.h
     ├── log_format.cpp
     ├── log_format.h
     ├── log.h
-    ├── log_leavl.h
+    ├── log_level.h
     ├── log_main.cpp
     ├── log_main.h
     ├── log_write.cpp
     ├── log_write.h
-    ├── makefile
+    ├── Makefile
+    ├── readme.md
     └── testlog.cc
 
     日志类
@@ -56,6 +75,7 @@
     日志输出时间(到毫秒) 父进程 当前线程 日志级别 日志tag: 具体日志信息
     07-11 15:01:26.751  9040  9040 [I] Test: xxxxxxxxxxxxxxx
     07-11 15:01:26.751  9040  9041 [I] Test: xxxxxxxxxxxxxxx
+    callstack类用于获取当前线程的堆栈
     log独立于其他模块, 可以直接使用make install安装，提供sudo权限把动态库移动到/usr/lib/下
 
 **crypto:**

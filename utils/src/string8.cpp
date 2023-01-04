@@ -11,35 +11,78 @@
 #include "Errors.h"
 #include "exception.h"
 #include <error.h>
+#include <assert.h>
+#include <unistd.h>
 
 #define DEFAULT_STRING_SIZE 128
-#define MAXSIZE (1024 * 8)
+#define MAXSIZE (1024 * 128)
 
 namespace eular {
-char *String8::getBuffer(size_t numChars)
+
+static inline char* getEmptyString()
 {
-    char *buf = nullptr;
-    if (numChars < DEFAULT_STRING_SIZE) {   // 小于默认字符串长度
-        mCapacity = DEFAULT_STRING_SIZE;
-        SharedBuffer *psb = SharedBuffer::alloc(mCapacity);
-        buf = static_cast<char *>(psb->data());
-    } else if (numChars < MAXSIZE / 2) {    // 小于最大长度的二分之一就申请1.5倍
-        mCapacity = numChars / 2 * 3;
-        SharedBuffer *psb = SharedBuffer::alloc(mCapacity);
-        buf = static_cast<char *>(psb->data());
-    } else if (numChars < MAXSIZE) {        // 大于最大长度二分之一小于最大长度，就申请最大长度
-        mCapacity = MAXSIZE;
-        buf = (char *)malloc(mCapacity);
-    } else {                                // 大于最大长度，抛出异常
-        throw Exception("Too many characters");
+    static SharedBuffer* gEmptyStringBuf = [] {
+        SharedBuffer* buf = SharedBuffer::alloc(1);
+        char* str = static_cast<char*>(buf->data());
+        *str = 0;
+        return buf;
+    }();
+
+    gEmptyStringBuf->acquire();
+    return static_cast<char*>(gEmptyStringBuf->data());
+}
+
+static char* allocFromUTF8(const char* in, size_t len)
+{
+    if (in && len > 0 && len < MAXSIZE) {
+        SharedBuffer* buf = SharedBuffer::alloc(len + 1);
+        assert(buf && "Unable to allocate shared buffer");
+        if (buf) {
+            char* str = static_cast<char *>(buf->data());
+            memset(str, 0, len + 1); // 防止因 strlen(in) < len 而导致\0的位置出现偏差
+            memcpy(str, in, len);
+            return str;
+        }
     }
 
-    if (buf) {
-        memset(buf, 0, mCapacity);
-    } else {
-        mCapacity = 0;
+    return nullptr;
+}
+
+char *String8::getBuffer(size_t numChars)
+{
+    if (numChars < DEFAULT_STRING_SIZE) {   // 小于默认字符串长度
+        mCapacity = DEFAULT_STRING_SIZE;
+    } else if (numChars < MAXSIZE) {        // 小于最大长度则就申请(numChars + 1)
+        mCapacity = numChars;
+    } else {                                // 大于最大长度，抛出异常
+        throw Exception("String8::getBuffer() too many characters");
     }
+
+    SharedBuffer *psb = SharedBuffer::alloc(mCapacity + 1);
+    if (psb == nullptr) {
+        throw Exception("Unable to allocate shared buffer");
+    }
+    char *buf = static_cast<char *>(psb->data());
+    memset(buf, 0, mCapacity + 1);
     return buf;
+}
+
+/**
+ * @brief 将当前String8从共享中分离，如果只有当前String8使用则无操作
+ * 
+ */
+void String8::detach()
+{
+    SharedBuffer *psb = SharedBuffer::bufferFromData(mString);
+    if (psb == nullptr) {
+        mString = getBuffer();
+        return;
+    }
+
+    if (psb->onlyOwner() == false) {
+        SharedBuffer *new_psb = psb->editResize(mCapacity + 1);
+        mString = static_cast<char *>(new_psb->data());
+    }
 }
 
 void String8::release()
@@ -52,86 +95,63 @@ void String8::release()
 }
 
 String8::String8() :
-    mString(nullptr)
+    mString(getEmptyString()),
+    mCapacity(0)
 {
-    mString = getBuffer();
 }
 
 String8::String8(uint32_t size) :
-    mString(nullptr)
+    mString(getBuffer(size))
 {
-    mString = (char *)malloc(size);
-    if (mString) {
-        memset(mString, 0, size);
-        mCapacity = size;
-    }
 }
 
 String8::String8(const String8& other) :
-    mString(nullptr)
+    mString(other.mString),
+    mCapacity(other.mCapacity)
 {
-    if (other.length() == 0) {
-        mString = getBuffer();
-        return;
+    if (mString == nullptr) {
+        throw Exception("invalid String8");
     }
-    mString = getBuffer(other.length());
-    if (mString) {
-        memcpy(mString, other.mString, other.length());
-    }
+    SharedBuffer::bufferFromData(mString)->acquire();
 }
 
 String8::String8(const char* other) :
-    mString(nullptr)
+    mString(allocFromUTF8(other, strlen(other))),
+    mCapacity(strlen(other))
 {
-    if (other == nullptr) {
-        mString = getBuffer();
-        return;
-    }
-    size_t length = strlen(other);
-    mString = getBuffer(length);
-    if (mString) {
-        memcpy(mString, other, length);
+    if (mString == nullptr) {
+        mString = getEmptyString();
+        mCapacity = 0;
     }
 }
 
 String8::String8(const char* other, const size_t numChars) :
-    mString(nullptr)
+    mString(allocFromUTF8(other, numChars)),
+    mCapacity(numChars)
 {
-    if (other == nullptr) {
-        mString = getBuffer();
-        return;
-    }
-    size_t length = strlen(other);
-    if (length > numChars) {
-        length = numChars;
-    }
-    mString = getBuffer(length);
-    if (mString) {
-        memcpy(mString, other, length);
+    if (mString == nullptr) {
+        mString = getEmptyString();
+        mCapacity = 0;
     }
 }
 
 String8::String8(const std::string& other) :
-    mString(nullptr)
+    mString(allocFromUTF8(other.c_str(), other.length())),
+    mCapacity(other.length())
 {
-    size_t length = other.length();
-    mString = getBuffer(length);
-    if (mString) {
-        memcpy(mString, other.c_str(), length);
+    if (mString == nullptr) {
+        mString = getEmptyString();
+        mCapacity = 0;
     }
 }
 
 String8::String8(String8 &&other) :
-    mString(nullptr),
+    mString(getEmptyString()),
     mCapacity(0)
 {
-    if (other.mString == nullptr) {
-        mString = getBuffer();
-        return;
-    }
-    mString = other.mString;
-    other.mString = nullptr;
-    mCapacity = other.mCapacity;
+    assert(other.mString != nullptr);
+    std::swap(mString, other.mString);
+    std::swap(mCapacity, other.mCapacity);
 }
 
 String8::~String8()
@@ -141,20 +161,23 @@ String8::~String8()
 
 int32_t String8::find(const String8 &other, size_t start) const
 {
+    assert(mString && other.mString);
     const char *tmp = strstr(mString + start, other.mString);
-    return tmp ? tmp - mString : -1;
+    return tmp ? (tmp - mString) : -1;
 }
 
 int32_t String8::find(const char* other, size_t start) const
 {
+    assert(mString);
     const char *tmp = strstr(mString + start, other);
-    return tmp ? tmp - mString : -1;
+    return tmp ? (tmp - mString) : -1;
 }
 
 int32_t String8::find(const char c, size_t start) const
 {
+    assert(mString);
     const char *index = strchr(mString + start, c);
-    return index ? index - mString : -1;
+    return index ? (index - mString) : -1;
 }
 
 const char* String8::c_str() const
@@ -167,46 +190,36 @@ char *String8::data()
     return mString;
 }
 
-String8 String8::left(uint32_t count) const
+String8 String8::left(uint32_t n) const
 {
-    char *buf = new char[count + 1]{ 0 };
-    if (buf == nullptr) {
-        return String8("");
-    }
-
-    strncpy(buf, mString, count);
-    String8 str = buf;
-    delete [] buf;
-    return std::move(str);
+    String8 ret(mString, n);
+    return std::move(ret);
 }
+
 String8 String8::right(uint32_t n) const
 {
-    char *buf = new char[n + 1]{ 0 };
-    if (buf == nullptr) {
-        return String8("");
+    if (length() <= n) {
+        return String8();
     }
 
-    strncpy(buf, mString + (length() - n), n);
-    String8 str = buf;
-    delete [] buf;
-    return std::move(str);
+    size_t offset = length() - n;
+    return std::move(String8(mString + offset, n));
 }
 
 void String8::trim(char c)
 {
+    detach();
     int begin = 0;
     int end = 0;
     findNotChar(begin, end, c);
-    String8 tmp(mString + begin, end - begin);
+    String8 tmp(mString + begin, end - begin + 1);
 
-    char *swap = nullptr;
-    swap = tmp.mString;
-    tmp.mString = this->mString;
-    this->mString = swap;
+    *this = std::move(tmp);
 }
 
 void String8::trimLeft(char c)
 {
+    detach();
     int begin = 0;
     int end = 0;
     findNotChar(begin, end, c);
@@ -220,6 +233,7 @@ void String8::trimLeft(char c)
 
 void String8::trimRight(char c)
 {
+    detach();
     int begin = 0;
     int end = 0;
     findNotChar(begin, end, c);
@@ -231,31 +245,29 @@ void String8::trimRight(char c)
     this->mString = swap;
 }
 
-void String8::reverse()
+String8 String8::reverse()
 {
     if (length() == 0) {
-        return;
+        return String8();
     }
-    char *buf = getBuffer(length());
+
+    String8 ret = this->c_str();
+    ret.clear();
+    char *buf = ret.data();
     if (buf == nullptr) {
-        return;
+        return ret;
     }
     for (size_t i = 0; i < length(); ++i) {
         buf[i] = mString[length() - 1 - i];
     }
-    SharedBuffer::bufferFromData(mString)->release();
-    mString = buf;
+
+    return ret;
 }
 
 void String8::resize(size_t size)
 {
-    if (length() >= size) {
-        return;
-    }
-    String8 temp(size);
-    temp = mString;
-    release();
-    std::move(temp);
+    String8 temp(mString, size);
+    *this = std::move(temp);
 }
 
 std::string String8::toStdString() const
@@ -279,6 +291,7 @@ size_t String8::length() const
 
 void String8::clear()
 {
+    detach();
     if (mString) {
         memset(mString, 0, strlen(mString));
     }
@@ -297,8 +310,17 @@ int String8::append(const char* other)
 int String8::append(const char* other, size_t numChars)
 {
     if (other == nullptr) {
-        return -1;
+        return INVALID_PARAM;
     }
+
+    if (numChars == 0) {
+        return 0;
+    } 
+
+    if (length() == 0) {
+        return setTo(other, numChars);
+    }
+
     size_t size = strlen(other);
     if (size > numChars) {
         size = numChars;
@@ -310,21 +332,21 @@ int String8::append(const char* other, size_t numChars)
     size_t oldLen = length();
     size_t totalSize = size + oldLen;
     if (totalSize < mCapacity) {
-        if (mString) {
-            memmove(mString + length(), other, size);
-            return size;
-        }
+        detach();
+        memmove(mString + oldLen, other, size);
+        mString[totalSize] = '\0';
+        return size;
     } else {
         char *buf = getBuffer(totalSize);
-        if (buf) {
-            if (mString) {
-                memcpy(buf, mString, length());
-            }
-            memcpy(buf + length(), other, size);
-            this->release();
-            mString = buf;
-            return size;
+        if (mString) {
+            memcpy(buf, mString, length());
         }
+        memcpy(buf + length(), other, size);
+        size_t cap = mCapacity;
+        this->release();
+        mString = buf;
+        mCapacity = cap;
+        return size;
     }
     
     return 0;
@@ -332,7 +354,13 @@ int String8::append(const char* other, size_t numChars)
 
 String8& String8::operator=(const String8& other)
 {
-    setTo(other.c_str(), other.length());
+    if (&other != this) {
+        release();
+        mString = other.mString;
+        mCapacity = other.mCapacity;
+        SharedBuffer::bufferFromData(mString)->acquire();
+    }
+
     return *this;
 }
 
@@ -344,11 +372,11 @@ String8& String8::operator=(const char* other)
 
 String8& String8::operator=(String8&& other)
 {
-    char *tmp = this->mString;
-    this->mString = other.mString;
-    other.mString = tmp;
-    mCapacity = other.mCapacity;
-    other.mCapacity = 0;
+    if (&other != this) {
+        std::swap(mString, other.mString);
+        std::swap(mCapacity, other.mCapacity);
+    }
+
     return *this;
 }
 
@@ -467,8 +495,15 @@ bool String8::operator>(const char* other) const
 // 如果index超过范围则返回最后一个位置'\0'
 char& String8::operator[](size_t index)
 {
-    if (index >= length()) {    // 如果mString为null则返回0，故无需再判断mString
-        return mString[length()];
+    detach();
+    if (mString == nullptr) {
+        mString = getBuffer(index);
+        if (mString == nullptr) {
+            throw Exception("no memory");
+        }
+    }
+    if (index >= mCapacity) {
+        return mString[mCapacity];
     }
     return mString[index];
 }
@@ -515,14 +550,21 @@ int String8::setTo(const char* other)
 int String8::setTo(const char* other, size_t numChars)
 {
     if (other == nullptr || numChars == 0) {
-        return -1;
+        return INVALID_PARAM;
     }
     int ret = 0;
 
     size_t otherLen = strlen(other);
     numChars = numChars > otherLen ? otherLen : numChars;
 
-    if (mString && mCapacity < numChars) {
+    if (mString == nullptr) {
+        mString = getBuffer(numChars);
+        assert(mString);
+        memcpy(mString, other, numChars);
+        return numChars;
+    }
+
+    if (mCapacity < numChars) {
         release();
         mString = getBuffer(numChars);
         if (mString) {
@@ -530,12 +572,16 @@ int String8::setTo(const char* other, size_t numChars)
             ret = numChars;
         }
     } else {
-        if (!mString) {
-            mString = getBuffer(numChars);
+        if (SharedBuffer::bufferFromData(mString)->onlyOwner()) {
+            clear();
+            if (mString) {
+                memmove(mString, other, numChars);
+                ret = numChars;
+            }
+        } else {
+            String8 temp(other, numChars);
+            std::swap(mString, temp.mString);
         }
-        clear();
-        memmove(mString, other, numChars);
-        ret = numChars;
     }
 
     return ret;
@@ -565,9 +611,10 @@ int32_t String8::find_last_of(const char *key) const
     // 思想，将两个字符串均翻转后在匹配，在使用字符串长度减去匹配字符串长度减查找到的字符串位置
     String8 keyStr = key;
     String8 value = mString;
-    value.reverse();
-    keyStr.reverse();
-    int index = value.find(keyStr.c_str());
+    String8 valReverse = value.reverse();
+    String8 keyReverse = keyStr.reverse();
+    assert(valReverse.length() == value.length() && keyReverse.length() == keyStr.length());
+    int index = valReverse.find(keyReverse.c_str());
     if (index < 0) {
         return index;
     }
@@ -597,26 +644,26 @@ bool String8::contains(const char* other) const
 
 bool String8::removeAll(const char* other)
 {
-    size_t start = 0;
-    if (other && ((start = find(other)) >= 0)) {
-        size_t end = strlen(other) + start;
-        if (end >= length()) {
-            mString[start] = '\0';
-            return true;
-        } else {
-            size_t bufferSize = length() - (end - start);
-            char *newString = getBuffer(bufferSize);
-            if (newString == nullptr) {
-                return false;
-            }
-            memcpy(newString, mString, start);
-            memcpy(newString + start, mString + end, length() - end);
-            SharedBuffer::bufferFromData(mString)->release();
-            mString = newString;
-            return true;
-        }
+    detach();
+    while (removeOne(other));
+    return true;
+}
+
+// Remove the first matching string found
+bool String8::removeOne(const char *other)
+{
+    // detach();
+    int start = find(other);
+    if (start < 0) {
+        return false;
     }
-    return false;
+
+    size_t oldLen = length();
+    size_t otherLen = strlen(other);
+    size_t end = otherLen + start;
+    memmove(mString + start, mString + end, length() - end);
+    mString[oldLen - otherLen] = '\0';
+    return true;
 }
 
 /**
@@ -725,12 +772,17 @@ String8 String8::formatV(const char* fmt, va_list args)
     va_end(tmp_args);
 
     if (len > 0) {
-        buf = (char *)malloc(len + 1);
-        if (buf != nullptr) {
-            vsnprintf(buf, len + 1, fmt, args);
-            result = buf;
-            free(buf);
+        size_t cap = len;
+        SharedBuffer *psb = SharedBuffer::alloc(cap + 1);
+        if (psb == nullptr) {
+            return String8();
         }
+        buf = static_cast<char *>(psb->data());
+        vsnprintf(buf, cap, fmt, args);
+        buf[cap] = '\0';
+        result.release();
+        result.mString = buf;
+        result.mCapacity = cap;
     }
 
     return std::move(result);
@@ -762,29 +814,33 @@ int String8::appendFormatV(const char* fmt, va_list args)
     if ((oldLength + n) > MAXSIZE - 1) {
         return -1;
     }
+
+    detach();
+
+    SharedBuffer *oldBuffer = SharedBuffer::bufferFromData(mString);
     char *buf = nullptr;
-    if (mCapacity < oldLength + n) {
-        buf = getBuffer(oldLength + n);
-        if (buf == nullptr) {
+    if (mCapacity < (oldLength + n)) {
+        SharedBuffer *buffer = SharedBuffer::bufferFromData(mString)->editResize(oldLength + n + 1);
+        if (buffer == nullptr) {
             return -1;
         }
+        buf = static_cast<char *>(buffer->data());
+        mCapacity = oldLength + n;
     }
 
     if (buf) {
-        memcpy(buf, mString, oldLength);
-        vsnprintf(buf + oldLength, n + 1, fmt, args);   // 加1是包含最后的\0
-        release();
+        vsnprintf(buf + oldLength, n + 1, fmt, args);
         mString = buf;
         return n;
     }
 
-    vsnprintf(mString + oldLength, n + 1, fmt, args);
+    vsnprintf(mString + oldLength, n, fmt, args);
     return n;
 }
 
 std::ostream& operator<<(std::ostream &out, const String8& in)
 {
-    out << in.toStdString();
+    out << in.c_str();
     return out;
 }
 

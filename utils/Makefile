@@ -7,6 +7,7 @@ destfile := /usr/local
 
 src := $(wildcard ./src/*.cpp)
 headerfile := $(wildcard ./include/*.h)
+headerfile += $(wildcard ./include/*.hpp)
 obj := $(patsubst %.cpp, %.o, $(src))
 
 libutils.so : $(obj)

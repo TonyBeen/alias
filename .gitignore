@@ -1,13 +1,9 @@
 *.o
 
-testbuffer
-testmutex
-testrwmutex
-teststring8
-testthrea
-teststring8_2
-testtimer
-testsingleton
-testrbtree
-testutils
-testbitmap
+config/bin
+config/bin/*
+
+test/bin
+test/bin/*
+test/xml
+test/xml/*

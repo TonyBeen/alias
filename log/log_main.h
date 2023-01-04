@@ -27,6 +27,7 @@ public:
     LogManager(const LogManager&) = delete;
     LogManager& operator=(const LogManager&) = delete;
 
+    void setPath(const std::string &path);
     void WriteLog(LogEvent *event);
     static LogManager *getInstance();
     static void deleteInstance();
@@ -40,6 +41,7 @@ private:
 
 private:
     std::list<LogWrite *>   mLogWriteList;
+    std::string             mBasePath;
     pthread_mutex_t         mListMutex;
 };
 } // namespace eular

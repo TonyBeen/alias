@@ -11,7 +11,7 @@
 
 namespace eular {
 static LogManager *gLogManager = nullptr;
-static LogLevel::Level gLevel = LogLevel::DEBUG;
+static LogLevel::Level gLevel = LogLevel::LEVEL_DEBUG;
 static volatile bool gEnableLogoutColor = true;
 
 void getLogManager()
@@ -24,10 +24,7 @@ void getLogManager()
 void InitLog(LogLevel::Level lev)
 {
     gLevel = lev;
-
-    if (gLogManager == nullptr) {
-        gLogManager = LogManager::getInstance();
-    }
+    getLogManager();
     LogFormat::SetLevel(gLevel);
 }
 
@@ -35,6 +32,12 @@ void SetLeval(LogLevel::Level lev)
 {
     gLevel = lev;
     LogFormat::SetLevel(gLevel);
+}
+
+void SetPath(const char *path)
+{
+    getLogManager();
+    gLogManager->setPath(path);
 }
 
 void EnableLogColor(bool flag)
@@ -150,7 +153,7 @@ void log_write_assertv(const LogEvent *ev)
     }
     CallStack cs;
     cs.update(2, 2);
-    cs.log("Stack", LogLevel::ERROR);
+    cs.log("Stack", LogLevel::LEVEL_ERROR);
     abort();
 }
 

@@ -6,7 +6,6 @@
  ************************************************************************/
 
 // #define _DEBUG
-
 #include "timer.h"
 #include "exception.h"
 #include "Errors.h"
@@ -96,15 +95,14 @@ TimerManager::TimerManager() :
     mEpollFd(-1),
     ThreadBase("timer thread"),
     mSignal(0),
-    mShouldExit(0)
+    mShouldExit(false)
 {
 
 }
 
 TimerManager::~TimerManager()
 {
-    mSignal.post();
-    mShouldExit.store(1);
+    stopTimer();
     if (mEpollFd > 0) {
         close(mEpollFd);
     }
@@ -118,22 +116,25 @@ TimerManager::~TimerManager()
     mRWMutex.unlock();
 }
 
-int TimerManager::StartTimer(bool useCallerThread)
+int TimerManager::startTimer(bool useCallerThread)
 {
     mEpollFd = epoll_create(gMaxEpollEvents);
     if (mEpollFd < 0) {
         return UNKNOWN_ERROR;
     }
-    epoll_event ev;
-    ev.events = EPOLLIN | EPOLLET;
-    ev.data.fd = 0;
-    epoll_ctl(mEpollFd, EPOLL_CTL_ADD, 0, &ev);
+
     LOG("epoll fd = %d\n", mEpollFd);
 
     if (useCallerThread) {
         return threadWorkFunction(this);
     }
     return run();
+}
+
+void TimerManager::stopTimer()
+{
+    mSignal.post();
+    mShouldExit = true;
 }
 
 /**
@@ -213,7 +214,7 @@ int TimerManager::threadWorkFunction(void *arg)
     sleepTime.tv_sec = 0;
 
     LOG("timer thread loop begin\n");
-    while (!mShouldExit.load()) {
+    while (mShouldExit == false) {
         {
             RDAutoLock<RWMutex> lock(mRWMutex);
             LOG("timers size %zu\n", mTimers.size());
@@ -260,7 +261,7 @@ int TimerManager::threadWorkFunction(void *arg)
         }
     }
 
-    return THREAD_WAITING;
+    return THREAD_EXIT;
 }
 
 } // namespace eular

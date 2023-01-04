@@ -4,16 +4,18 @@
 #include <utils/thread.h>
 #include <assert.h>
 #include <stdio.h>
+#include <atomic>
 
 using namespace std;
 using namespace eular;
 
 static char buf[128] = {0};
 RWMutex gRwMutex;
+std::atomic<bool> gExit;
 
 int read_func(void *)
 {
-    while (1) {
+    while (gExit == false) {
         {
             RDAutoLock<RWMutex> lock(gRwMutex);
             printf("[%ld]buf: %s\n", gettid(), buf);
@@ -25,7 +27,7 @@ int read_func(void *)
 int write_func(void *)
 {
     int num = 0;
-    while (1) {
+    while (gExit == false) {
         {
             WRAutoLock<RWMutex> lock(gRwMutex);
             snprintf(buf, 127, "num = %d", ++num);
@@ -36,14 +38,14 @@ int write_func(void *)
 
 int main()
 {
-    Thread t1("read", read_func);
-    Thread t2("write", write_func);
+    gExit = false;
+    Thread t1(std::bind(read_func, nullptr), "read");
+    Thread t2(std::bind(write_func, nullptr), "write");
 
-    t1.run();
-    t2.run();
+    t1.detach();
+    t2.detach();
 
-    while (1) {
-        sleep(1);
-    }
+    sleep(2);
+    gExit = true;
     return 0;
 }

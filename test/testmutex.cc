@@ -24,7 +24,7 @@ void *func(void *arg)
             (*ptr)->append("12345");
             printf("func after [%s]\n\n", (*ptr)->c_str());
         }
-        usleep(1000 * 100);
+        usleep(1000 * 500);
     }
 }
 
@@ -43,7 +43,7 @@ void testmutex()
             ptr->append("abcde");
             printf("after [%s]\n\n", ptr->c_str());
         }
-        usleep(1000 * 200);
+        usleep(1000 * 600);
     }
 
     pthread_join(pid, nullptr);
@@ -126,7 +126,8 @@ void test_rwmutex()
 
 int main()
 {
-    named_thread_main();
-    test_rwmutex();
+    testmutex();
+    // named_thread_main();
+    // test_rwmutex();
     return 0;
 }

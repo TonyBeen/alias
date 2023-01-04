@@ -92,7 +92,8 @@ public:
     TimerManager();
     ~TimerManager();
 
-    int StartTimer(bool useCallerThread = false);
+    int startTimer(bool useCallerThread = false);
+    void stopTimer();
 
     const Timer *getNearTimer() { return *(mTimers.begin()); }
     uint64_t addTimer(uint64_t ms, Timer::CallBack cb, uint32_t recycle = 0);
@@ -108,7 +109,7 @@ private:
     RWMutex mRWMutex;
     int     mEpollFd;
 
-    std::atomic<uint8_t> mShouldExit;
+    std::atomic<bool> mShouldExit;
     std::vector<Timer *> mExpireTimerVec;
     std::set<Timer *, Timer::Comparator>  mTimers;        // 定时器集合
     friend class Singleton<TimerManager>;

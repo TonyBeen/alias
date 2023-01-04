@@ -23,8 +23,19 @@ LogManager::~LogManager()
     }
 }
 
+void LogManager::setPath(const std::string &path)
+{
+    mBasePath = path;
+}
+
+/**
+ * @brief 非线程安全，禁止在程序运行后在添加日志节点，加锁影响性能
+ * 
+ * @param event 
+ */
 void LogManager::WriteLog(LogEvent *event)
 {
+    // pthread_mutex_lock(&mListMutex);
     for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
         if (*it != nullptr) {
             if ((*it)->type() != LogWrite::STDOUT) {
@@ -34,6 +45,7 @@ void LogManager::WriteLog(LogEvent *event)
             (*it)->WriteToFile(log);
         }
     }
+    // pthread_mutex_unlock(&mListMutex);
 }
 
 const std::list<LogWrite *> &LogManager::GetLogWrite() const
@@ -63,6 +75,7 @@ void LogManager::addLogWriteToList(int type)
             break;
         case LogWrite::FILEOUT:
             logWrite = new FileLogWrite();
+            logWrite->setBasePath(mBasePath);
             break;
         case LogWrite::CONSOLEOUT:
             logWrite = new ConsoleLogWrite();
@@ -72,6 +85,7 @@ void LogManager::addLogWriteToList(int type)
     }
 
     mLogWriteList.push_back(logWrite);
+
 unlock:
     pthread_mutex_unlock(&mListMutex);
 }

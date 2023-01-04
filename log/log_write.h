@@ -37,11 +37,18 @@ public:
 };
 
 namespace eular {
-class LogWrite : public NonCopyAndAssign{
+class LogWrite : public NonCopyAndAssign {
 public:
     LogWrite();
     virtual ~LogWrite();
 
+    void setBasePath(const std::string &path)
+    {
+        mBasePath = path;
+        if (mBasePath[mBasePath.length() - 1] != '/') {
+            mBasePath.append("/");
+        }
+    }
     virtual ssize_t      WriteToFile(std::string msg) = 0;
     virtual std::string  getFileName() = 0;
     virtual size_t       getFileSize() = 0;
@@ -64,6 +71,7 @@ public:
 
 protected:
     pthread_mutex_t *mMutex;        // 同步状态下保护文件描述符
+    std::string      mBasePath;
 };
 
 class StdoutLogWrite : public LogWrite {

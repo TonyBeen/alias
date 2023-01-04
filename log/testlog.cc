@@ -4,10 +4,12 @@
 
 #define LOG_TAG "Test"
 
+#define CYCLE_TIMES 5
+
 void *thread(void *)
 {
     int num = 0;
-    while (num < 10) {
+    while (num < CYCLE_TIMES) {
         LOGI("thread-%.5d", num++);
         usleep(500000);
     }
@@ -15,7 +17,8 @@ void *thread(void *)
 
 int main()
 {
-    eular::InitLog(eular::LogLevel::DEBUG);
+    eular::InitLog(eular::LogLevel::LEVEL_DEBUG);
+    eular::SetPath("/home/eular/vscode/eular/log");
     eular::EnableLogColor(true);
     eular::addOutputNode(eular::LogWrite::FILEOUT);
 
@@ -28,8 +31,7 @@ int main()
     pthread_t tid;
     pthread_create(&tid, nullptr, thread, nullptr);
     int num = 0;
-    LOG_ASSERT(num == 0, "Should not output");
-    while (num < 10) {
+    while (num < CYCLE_TIMES) {
         LOGI("main-%d", num++);
         usleep(500000);
     }

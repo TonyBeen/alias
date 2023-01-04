@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include <utils/bitmap.h>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <assert.h>
 
@@ -17,26 +18,24 @@ int main()
     BitMap bitmap;
     int index = 10;
     bitmap.set(index, true);
-	assert(bitmap.at(index) == true);
+    EXPECT_TRUE(bitmap.at(index));
+    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
 
-	cout << "BitMap Capacity: " << bitmap.capacity() << endl;
+    bitmap.resize(100);
+    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
 
-	bitmap.resize(100);
-	cout << "BitMap Capacity: " << bitmap.capacity() << endl;
+    EXPECT_TRUE(bitmap.at(index));
+    bitmap.set(index, false);
+    EXPECT_FALSE(bitmap.at(index));
 
-	assert(bitmap.at(index) == true);
-	bitmap.set(index, false);
-	assert(bitmap.at(index) == false);
+    index = 6000;
+    bitmap.set(index, true);
+    EXPECT_FALSE(bitmap.at(index));
 
-	index = 6000;
-	bitmap.set(index, true);
-	assert(bitmap.at(index) == false);
+    bitmap.set(1, true);
+    EXPECT_TRUE(bitmap.at(1));
+    bitmap.clear();
+    EXPECT_FALSE(bitmap.at(1));
 
-	bitmap.set(1, true);
-	assert(bitmap.at(1) == true);
-	bitmap.clear();
-	assert(bitmap.at(1) == false);
-
-	printf("test success\n");
     return 0;
 }

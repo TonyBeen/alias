@@ -99,10 +99,6 @@ FileLogWrite::FileLogWrite(uint32_t fileFlag, uint32_t fileMode) :
     mFileSize = (uint64_t *)mmap(nullptr, sizeof(uint64_t), 
         PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     assert(mFileDesc && mFileSize);
-    pthread_mutex_lock(mMutex);
-    std::string fileName = getFileName();
-    CreateNewFile(fileName);
-    pthread_mutex_unlock(mMutex);
 }
 
 FileLogWrite::~FileLogWrite()
@@ -134,7 +130,9 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
     pthread_mutex_lock(mMutex);
     if (*mFileDesc <= 0 || *mFileSize > MAX_FILE_SIZE) {
         CloseFile();
-        CreateNewFile(getFileName());
+        if (false == CreateNewFile(getFileName())) {
+            return -1;
+        }
     }
     if (msg.length()) {
         ret = write(*mFileDesc, msg.c_str(), msg.length());
@@ -226,7 +224,12 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
     if (*mFileDesc > 0 && *mFileSize < MAX_FILE_SIZE) {
         return true;
     }
+
     std::string path = "~/log/";
+    if (mBasePath.length()) {
+        path = mBasePath;
+    }
+
     std::string realPath = path;
     if (path[0] == '~') {
         uid_t uid = getuid();

@@ -78,10 +78,11 @@ SharedBuffer* SharedBuffer::editResize(size_t newSize) const
     SharedBuffer* sb = alloc(newSize);
     if (sb) {
         const size_t mySize = mSize;
+        memset(sb->data(), 0, newSize);
         memcpy(sb->data(), data(), newSize < mySize ? newSize : mySize);
         release();
     }
-    return sb;    
+    return sb;
 }
 
 SharedBuffer* SharedBuffer::attemptEdit() const

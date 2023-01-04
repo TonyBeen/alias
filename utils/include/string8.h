@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include <string>
+#include <iostream>
 
 namespace eular {
 class String8 {
@@ -30,12 +31,12 @@ public:
 
     const char*         c_str() const;
     char *              data();
-    String8             left(uint32_t count) const;     // 从左拷贝count个字符
+    String8             left(uint32_t n) const;         // 从左拷贝n个字符
     String8             right(uint32_t n) const;        // 从右拷贝n个字符
     void                trim(char c = ' ');             // 把字符串前后空格去掉
     void                trimLeft(char c = ' ');         // 去掉字符串左侧空格
     void                trimRight(char c = ' ');        // 去掉字符串右侧空格
-    void                reverse();                      // 翻转字符串
+    String8             reverse();                      // 翻转字符串
     void                resize(size_t size);
     std::string         toStdString() const;            // String8 -> std::string
 
@@ -128,10 +129,12 @@ private:
     int                 stringcompare(const char *other) const;
     // kmp next数组获取，非-1版本
     static int          getNext(String8 key, int n);
+    void                detach();
+    bool                removeOne(const char *str);
 
 private:
     char *      mString;
-    uint32_t    mCapacity;
+    uint32_t    mCapacity; // 为实际内存大小减1
 };
 
 // 为了方便输出
