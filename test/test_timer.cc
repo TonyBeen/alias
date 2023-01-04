@@ -43,7 +43,7 @@ void catchSignal(int sig)
     if (sig == SIGSEGV) {
         CallStack stack;
         stack.update();
-        stack.log(LOG_TAG, LogLevel::FATAL);
+        stack.log(LOG_TAG, LogLevel::LEVEL_FATAL);
     }
     exit(0);
 }

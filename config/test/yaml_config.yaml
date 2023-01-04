@@ -1,0 +1,21 @@
+apiVersion: 1.1
+kind: Deployment
+metadata:
+  labels:
+    app: nginx
+  name: nginx-demo
+spec:
+  selector:
+    app: nginx
+  volum:
+    containers:
+      - image: nginx:1.14
+        imagePullPolicy: IfNotPresent
+      - image: websocket:2.10
+        imagePullPolicy: IfNotPresent
+log:
+  level: info
+  target: stdout
+  sync: true
+  int: 10
+  double: 3.1415

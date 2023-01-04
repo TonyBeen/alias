@@ -1,19 +1,9 @@
 *.o
 
-testbuffer
-testmutex
-teststring8
-testthread
-teststring8_2
-testutils
-testcallstack
-testtimer
-testrwmutex
-testsingleton
-testrbtree
-testbitmap
-testrbtreeapi
-testmapnode
-testmap
-testany
-testsharedbuffer
+config/bin
+config/bin/*
+
+test/bin
+test/bin/*
+test/xml
+test/xml/*
