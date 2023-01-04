@@ -49,7 +49,7 @@ void InitLog(LogLevel::Level lev = LogLevel::LEVEL_DEBUG);
 void SetLevel(LogLevel::Level lev);
 
 /**
- * @brief 设置日志输出路径，必须以'/'结尾
+ * @brief 设置日志输出路径, 建议使用全局路径，使用相对路径时取决去bash执行时的路径, 不稳定
  */
 void SetPath(const char *path);
 
