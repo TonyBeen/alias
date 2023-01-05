@@ -14,8 +14,9 @@ using namespace eular;
 
 eular::YamlReader reader;
 
+static std::string file = "./yaml_config.yaml";
+
 TEST(YamlConfigTest, test_loadYaml) {
-    static const std::string file = "./yaml_config.yaml";
     reader.loadYaml(file);
     EXPECT_TRUE(reader.valid());
 }
@@ -47,6 +48,10 @@ TEST(YamlConfigTest, test_foreach) {
 
 int main(int argc, char **argv)
 {
+    if (argc == 2) {
+        file = argv[1];
+    }
+
     testing::InitGoogleTest(&argc, argv);
-	return RUN_ALL_TESTS();
+    return RUN_ALL_TESTS();
 }

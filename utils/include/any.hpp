@@ -18,7 +18,9 @@ class Any {
 public:
     Any() : content_(nullptr) {}
     ~Any() {
-        delete content_;
+        if (content_) {
+            delete content_;
+        }
     }
 
     template<typename ValueType>
@@ -26,7 +28,7 @@ public:
         : content_(new Holder<ValueType>(value)) {}
 
     Any(const Any& rhs)
-        : content_(rhs.content_ ? rhs.content_->Clone() : nullptr) {}
+        : content_(rhs.content_ ? rhs.content_->clone() : nullptr) {}
 
 public:
     Any& swap(Any& rhs) {
@@ -37,25 +39,25 @@ public:
     template<typename ValueType>
     Any& operator=(const ValueType& rhs) {
         Any(rhs).swap(*this);
-        return*this;
+        return *this;
     }
 
     Any& operator=(const Any& rhs) {
         Any(rhs).swap(*this);
-        return*this;
+        return *this;
     }
 
-    bool IsEmpty() const {
+    bool empty() const {
         return !content_;
     }
 
-    const std::type_info& GetType() const {
-        return content_ ? content_->GetType() : typeid(void);
+    const std::type_info& type() const {
+        return content_ ? content_->getType() : typeid(void);
     }
 
     template<typename ValueType>
     ValueType operator()() const {
-        if (GetType() == typeid(ValueType)) {
+        if (getType() == typeid(ValueType)) {
             return static_cast<Any::Holder<ValueType>*>(content_)->held_;
         } else {
             return ValueType();
@@ -67,8 +69,8 @@ protected:
     public:
         virtual ~PlaceHolder() {}
     public:
-        virtual const std::type_info& GetType() const = 0;
-        virtual PlaceHolder* Clone() const = 0;
+        virtual const std::type_info& getType() const = 0;
+        virtual PlaceHolder* clone() const = 0;
     };
 
     template<typename ValueType>
@@ -77,11 +79,11 @@ protected:
         Holder(const ValueType& value)
             : held_(value) {}
 
-        virtual const std::type_info& GetType() const {
+        virtual const std::type_info& getType() const {
             return typeid(ValueType);
         }
 
-        virtual PlaceHolder* Clone() const {
+        virtual PlaceHolder* clone() const {
             return new Holder(held_);
         }
 
@@ -97,7 +99,7 @@ protected:
 
 template<typename ValueType>
 ValueType* any_cast(Any* any) {
-    if (any && any->GetType() == typeid(ValueType)) {
+    if (any && any->getType() == typeid(ValueType)) {
         return &(static_cast<Any::Holder<ValueType>*>(any->content_)->held_);
     }
 
