@@ -31,7 +31,7 @@ all:
 	$(GEN_BIN)
 	make $(TARGET)
 
-install: $(TARGET)
+install: all
 	if [ ! -d $(DEST_INC) ]; then mkdir $(DEST_INC); fi
 	cp $(HEADER_FILE_LIST) $(DEST_INC)
 	mv $(TARGET) $(DEST_LIB)
