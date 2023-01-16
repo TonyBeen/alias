@@ -40,7 +40,7 @@ XmlConfig::XmlConfig() :
 
 XmlConfig::~XmlConfig()
 {
-    delete m_mutex;
+    delete toMutex(m_mutex);
 }
 
 bool XmlConfig::loadFile(const std::string &xmlFile)

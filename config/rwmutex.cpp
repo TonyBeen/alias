@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "rwmutex.h"
+#include <assert.h>
 #include <exception>
 
 RWMutex::RWMutex() :
@@ -16,9 +17,7 @@ RWMutex::RWMutex() :
 
 RWMutex::~RWMutex()
 {
-    if (m_readCount > 0 || m_writeCount) {
-        throw std::logic_error("unreleased locks exist");
-    }
+    assert(m_readCount == 0 && m_writeCount == false && "unreleased locks exist");
 }
 
 void RWMutex::rlock()

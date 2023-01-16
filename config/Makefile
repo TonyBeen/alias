@@ -6,8 +6,12 @@ LIB_LIST  := -ljsoncpp -lyaml-cpp -lpthread
 JSON_LIB  := /usr/local/lib/libjsoncpp.a
 YAML_LIB  := /usr/local/lib/libyaml-cpp.a
 GTEST_LIB := /usr/local/lib/libgtest.a
+
+DEST_PATH := /usr/local
+DEST_INC  := $(DEST_PATH)/include/config
+DEST_LIB  := $(DEST_PATH)/lib
+
 CC := g++
-DEST := /usr/local
 
 SRC_LIST = $(wildcard $(PWD)/*.cpp)
 OBJ_LIST = $(patsubst %.cpp, %.o, $(SRC_LIST))
@@ -26,6 +30,15 @@ TARGET := bin/libconfig.so
 all:
 	$(GEN_BIN)
 	make $(TARGET)
+
+install: $(TARGET)
+	if [ ! -d $(DEST_INC) ]; then mkdir $(DEST_INC); fi
+	cp $(HEADER_FILE_LIST) $(DEST_INC)
+	mv $(TARGET) $(DEST_LIB)
+
+uninstall:
+	rm -rf $(DEST_INC)
+	rm $(DEST_LIB)/libconfig.so
 
 $(TARGET) : $(OBJ_LIST)
 	$(CC) $^ -o $@ -shared $(LIB_LIST)
@@ -53,7 +66,7 @@ bin/test_rwmutex: test/test_rwmutex.cpp rwmutex.cpp
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(INCLUDE_DIR) -lpthread
 
-.PHONY: all clean			\
+.PHONY: all clean install uninstall \
 	bin/test_yaml_config	\
 	bin/test_json_config	\
 	bin/test_xml_config		\
