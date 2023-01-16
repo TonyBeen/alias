@@ -58,4 +58,3 @@ void RWMutex::wunlock()
         m_cond.notify_all();
     }
 }
-

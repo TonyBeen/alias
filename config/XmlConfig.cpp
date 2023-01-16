@@ -9,7 +9,7 @@
 #include "rwmutex.h"
 #include "tinyxml2.h"
 
-RWMutex *toMutex(void *mtx)
+static inline RWMutex *toMutex(void *mtx)
 {
     return static_cast<RWMutex *>(mtx);
 }
@@ -40,7 +40,7 @@ XmlConfig::XmlConfig() :
 
 XmlConfig::~XmlConfig()
 {
-
+    delete m_mutex;
 }
 
 bool XmlConfig::loadFile(const std::string &xmlFile)
