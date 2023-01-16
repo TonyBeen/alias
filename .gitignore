@@ -2,6 +2,8 @@
 
 config/bin
 config/bin/*
+config/obj/
+config/obj/*
 
 test/bin
 test/bin/*
