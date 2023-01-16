@@ -197,7 +197,7 @@ bool IniConfig::keep(std::string file)
     if (file.length() == 0) {
         file = mConfigFilePath;
     }
-    FILE *fp = fopen(file.c_str(), "w+");
+    FILE *fp = fopen(file.c_str(), "w");
     if (fp == nullptr) {
         perror("fopen error");
         return false;
@@ -222,6 +222,7 @@ bool IniConfig::keep(std::string file)
                 snprintf(buf, sizeof(buf), "%s = %s" WRAP, nit->first.c_str(), nit->second.c_str());
                 nodeStream << buf;
             }
+
             nodeStream << WRAP;
         }
     }
@@ -232,7 +233,7 @@ bool IniConfig::keep(std::string file)
         fwrite(global.c_str(), sizeof(char), global.length(), fp);
     }
     if (node.length() > 0) {
-        fwrite(node.c_str(), sizeof(char), node.length(), fp);
+        fwrite(node.c_str(), sizeof(char), node.length() - strlen(WRAP), fp); // 去除最后的换行符
     }
 
     fclose(fp);
