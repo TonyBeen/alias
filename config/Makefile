@@ -2,17 +2,17 @@ PWD := $(shell pwd)
 CC := g++
 include 3rd_party/3rd_party.mk # 必须放在PWD后面, 其他.mk文件会使用PWD
 
-INCLUDE_DIR := -I$(PWD)
+INCLUDE_DIR := -I$(PWD) $(YAML_CXX_INCLUDES) $(JSON_CXX_INCLUDES)
 CPPFLAGS  := -std=c++11 # -m64
 LIBFLAGS  := -fPIC
-LIB_LIST  := -lyaml-cpp -lpthread
+LIB_LIST  := -lpthread
 JSON_LIB  := /usr/local/lib/libjsoncpp.a
 YAML_LIB  := /usr/local/lib/libyaml-cpp.a
 GTEST_LIB := /usr/local/lib/libgtest.a
 
 DEST_PATH := /usr/local
-DEST_INC  := $(DEST_PATH)/include/config
-DEST_LIB  := $(DEST_PATH)/lib
+DEST_INC  := $(DEST_PATH)/include/
+DEST_LIB  := $(DEST_PATH)/lib/
 
 SRC_LIST = $(wildcard $(PWD)/*.cpp)
 OBJ_LIST = $(patsubst %.cpp, %.o, $(SRC_LIST))
@@ -27,22 +27,26 @@ HEADER_FILE_LIST = 	\
 GEN_BIN := if [ ! -d bin ]; then mkdir bin; fi
 GEN_OBJ := if [ ! -d obj ]; then mkdir obj; fi
 
-TARGET := bin/libconfig.so
+LIB_NAME = libconfig.so
+TARGET := bin/$(LIB_NAME)
 
 all:
 	$(GEN_BIN)
 	make $(TARGET)
 
 install: all
-	if [ ! -d $(DEST_INC) ]; then mkdir $(DEST_INC); fi
-	cp $(HEADER_FILE_LIST) $(DEST_INC)
+	if [ ! -d $(DEST_INC)/config ]; then mkdir $(DEST_INC)/config; fi
+	cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
 	mv $(TARGET) $(DEST_LIB)
+	ldconfig
+	cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
+	cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
 
 uninstall:
-	rm -rf $(DEST_INC)
-	rm $(DEST_LIB)/libconfig.so
+	rm -rf $(DEST_INC)/config
+	rm $(DEST_LIB)/$(LIB_NAME)
 
-$(TARGET) : $(OBJ_LIST) $(JSON_CXX_OBJ_LIST)
+$(TARGET) : $(OBJ_LIST) $(JSON_CXX_OBJ_LIST) $(YAML_CXX_OBJ_LIST)
 	$(CC) $^ -o $@ -shared $(LIB_LIST)
 
 # 以下表示编译当前文件夹下的源文件时使用以下编译方式，用于对jsoncpp和yamlcpp区分
@@ -72,7 +76,7 @@ bin/test_rwmutex: test/test_rwmutex.cpp rwmutex.cpp
 debug:
 	@echo $(JSON_CXX_SRC_LIST)
 	@echo $(JSON_CXX_FLAGS)
-	@echo $(JSON_CXX_INCLUDE)
+	@echo $(JSON_CXX_INCLUDES)
 	@echo $(JSON_CXX_OBJ_LIST)
 
 .PHONY: all clean install uninstall \
@@ -82,4 +86,4 @@ debug:
 	bin/test_rwmutex		\
 
 clean:
-	rm -rf bin $(OBJ_LIST) $(JSON_CXX_OBJ_LIST) $(TARGET)
+	rm -rf bin $(OBJ_LIST) $(JSON_CXX_OBJ_LIST) $(YAML_CXX_OBJ_LIST) $(TARGET)
