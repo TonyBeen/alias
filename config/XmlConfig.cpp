@@ -111,4 +111,17 @@ void XmlConfig::loadXml(std::string prefix, void *e)
     }
 }
 
+std::string XmlConfig::lookup(const std::string &key)
+{
+    std::string ret;
+    toMutex(m_mutex)->rlock();
+    auto it = m_xmlMap.find(key);
+    if (it != m_xmlMap.end()) {
+        ret = it->second.c_str();
+    }
+
+    toMutex(m_mutex)->runlock();
+    return ret;
+}
+
 } // namespace eular

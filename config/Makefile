@@ -53,7 +53,7 @@ $(TARGET) : $(OBJ_LIST) $(JSON_CXX_OBJ_LIST) $(YAML_CXX_OBJ_LIST)
 $(PWD)/%.o : $(PWD)/%.cpp
 	$(CC) $^ -c -o $@ $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE_DIR)
 
-bin/test_yaml_config : test/test_yaml_config.cpp YamlConfig.cpp
+bin/test_yaml_config : test/test_yaml_config.cpp YamlConfig.cpp rwmutex.cpp
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(INCLUDE_DIR) $(YAML_LIB) $(GTEST_LIB) -lpthread
 

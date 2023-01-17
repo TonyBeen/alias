@@ -26,15 +26,16 @@ public:
     template<typename T>
     T lookup(const std::string &key, const T &defaultVal = T())
     {
-        auto it = m_xmlMap.find(key);
-        if (it == m_xmlMap.end()) {
+        const std::string &val = lookup(key);
+        if (val.empty()) {
             return defaultVal;
         }
 
         T ret = defaultVal;
         try {
-            ret = TypeCast::type_cast<T>(it->second.c_str());
+            ret = TypeCast::type_cast<T>(val.c_str());
         } catch (...) {
+            printf("XmlConfig::lookup<%s>(key = %s) conversion failed\n", typeid(T).name(), key.c_str());
         }
 
         return ret;
@@ -44,6 +45,7 @@ public:
 
 protected:
     void loadXml(std::string prefix, void *ele);
+    std::string lookup(const std::string &key);
 
 private:
     void *m_mutex;
