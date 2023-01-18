@@ -18,7 +18,7 @@ void *thread(void *)
 int main()
 {
     eular::InitLog(eular::LogLevel::LEVEL_DEBUG);
-    eular::SetPath("/home/eular/vscode/eular/log");
+    eular::SetPath("./");
     eular::EnableLogColor(true);
     eular::addOutputNode(eular::LogWrite::FILEOUT);
 

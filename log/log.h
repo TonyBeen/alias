@@ -3,8 +3,6 @@
 
 #include "log_main.h"
 #include <stdarg.h>
-#include <time.h>
-#include <sys/time.h>
 
 #ifndef LOGD
 #define LOGD(...) ((void)eular::log_write(eular::LogLevel::Level::LEVEL_DEBUG, LOG_TAG, __VA_ARGS__))

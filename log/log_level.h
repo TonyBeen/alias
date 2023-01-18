@@ -22,6 +22,7 @@ public:
         LEVEL_ERROR = 3,
         LEVEL_FATAL = 4
     };
+
     static std::string ToString(Level l)
     {
         std::string str;
@@ -43,7 +44,6 @@ public:
             break;
 
         default:
-            str = "";
             break;
         }
         return str;
@@ -75,6 +75,7 @@ public:
         }
         return str;
     }
+
     static LogLevel::Level String2Level(const std::string& lev)
     {
         if (strcasecmp(lev.c_str(), "debug") == 0) {

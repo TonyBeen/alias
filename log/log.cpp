@@ -1,7 +1,9 @@
 #include "log.h"
 #include "callstack.h"
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <assert.h>
+#include <time.h>
 
 #ifndef gettid
 #define gettid() syscall(__NR_gettid)
