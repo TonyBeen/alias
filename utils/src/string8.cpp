@@ -778,14 +778,14 @@ String8 String8::formatV(const char* fmt, va_list args)
             return String8();
         }
         buf = static_cast<char *>(psb->data());
-        vsnprintf(buf, cap, fmt, args);
+        vsnprintf(buf, cap + 1, fmt, args);
         buf[cap] = '\0';
         result.release();
         result.mString = buf;
         result.mCapacity = cap;
     }
 
-    return std::move(result);
+    return result;
 }
 
 int String8::appendFormat(const char* fmt, ...)

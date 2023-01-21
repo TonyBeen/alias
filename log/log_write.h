@@ -8,6 +8,7 @@
 #ifndef __LOG_WRITE_H__
 #define __LOG_WRITE_H__
 
+#include "log_event.h"
 #include <string>
 #include <error.h>
 #include <errno.h>
@@ -50,6 +51,7 @@ public:
         }
     }
     virtual ssize_t      WriteToFile(std::string msg) = 0;
+    virtual ssize_t      WriteToFile(const LogEvent &ev) = 0;
     virtual std::string  getFileName() = 0;
     virtual size_t       getFileSize() = 0;
     virtual uint32_t     getFileMode() = 0;
@@ -80,6 +82,7 @@ public:
     ~StdoutLogWrite() {}
 
     virtual ssize_t      WriteToFile(std::string msg) override;
+    virtual ssize_t      WriteToFile(const LogEvent &ev) override;
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -101,6 +104,7 @@ public:
     virtual ~FileLogWrite();
 
     virtual ssize_t      WriteToFile(std::string msg) override;
+    virtual ssize_t      WriteToFile(const LogEvent &ev) override;
     virtual std::string  getFileName();
     virtual size_t       getFileSize();
     virtual uint32_t     getFileMode();
@@ -127,6 +131,7 @@ public:
     ~ConsoleLogWrite();
 
     ssize_t      WriteToFile(std::string msg) override;
+    ssize_t      WriteToFile(const LogEvent &ev) override;
     std::string  getFileName();
     size_t       getFileSize();
     uint32_t     getFileMode();

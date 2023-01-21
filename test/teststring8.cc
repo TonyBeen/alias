@@ -165,6 +165,21 @@ TEST_F(String8Test, copyAndAssign) {
     EXPECT_STREQ(str1.c_str(), "hello");
 }
 
+TEST_F(String8Test, format) {
+    {
+        const char *str = "Hello World!";
+        const String8 &format = String8::format("%s", str);
+        EXPECT_TRUE(format == str);
+    }
+    
+    {
+        int num = 996;
+        const String8 &format = String8::format("%d", num);
+        int num_2 = atoi(format.c_str());
+        EXPECT_EQ(num, num_2);
+    }
+}
+
 int main(int argc, char* argv[])
 {
     testing::InitGoogleTest(&argc, argv); 

@@ -20,7 +20,7 @@
 #define MAX_QUEUE_SIZE (1024 * 10)
 
 namespace eular {
-class LogManager : public std::enable_shared_from_this<LogManager> {
+class LogManager {
 public:
     typedef std::list<LogWrite *>::iterator LogWriteIt;
     ~LogManager();

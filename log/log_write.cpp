@@ -50,6 +50,11 @@ ssize_t StdoutLogWrite::WriteToFile(std::string msg)
     return ret;
 }
 
+ssize_t StdoutLogWrite::WriteToFile(const LogEvent &ev)
+{
+
+}
+
 std::string StdoutLogWrite::getFileName()
 {
     return std::string("stdout");

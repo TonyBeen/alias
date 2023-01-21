@@ -30,7 +30,7 @@ void InitLog(LogLevel::Level lev)
     LogFormat::SetLevel(gLevel);
 }
 
-void SetLeval(LogLevel::Level lev)
+void SetLevel(LogLevel::Level lev)
 {
     gLevel = lev;
     LogFormat::SetLevel(gLevel);

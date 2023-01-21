@@ -83,7 +83,7 @@ bool Mkdir(const std::string &path)
 int32_t GetFileLength(const eular::String8 &path)
 {
     static struct stat lst;
-    int ret = lstat(path.c_str(), &lst);
+    int ret = stat(path.c_str(), &lst);
     if (ret != 0) {
         return eular::status_t::NOT_FOUND;
     }
