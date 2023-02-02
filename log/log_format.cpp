@@ -19,10 +19,10 @@
 #define CLR_SKYBLUE_WHT "\033[46;37m"   // 天蓝底白字
 #define CLR_WHT_BLK     "\033[47;30m"   // 白底黑字
 
-#define CLR_MAX_SIZE    (10)
+#define CLR_MAX_SIZE    (12)
 
 #define COLOR_MAP(XXX)                          \
-    XXX(LogLevel::UNKNOW,   CLR_CLR)            \
+    XXX(LogLevel::UNKNOW,         CLR_CLR)      \
     XXX(LogLevel::LEVEL_DEBUG,    CLR_BLUE)     \
     XXX(LogLevel::LEVEL_INFO,     CLR_WHITE)    \
     XXX(LogLevel::LEVEL_WARN,     CLR_YELLOW)   \
@@ -74,7 +74,7 @@ std::string LogFormat::Format(const LogEvent *ev)
     snprintf(output, PERFIX_SIZE, "%.2d-%.2d %.2d:%.2d:%.2d.%.3ld %5d %5ld %s %s: ",
         pTime->tm_mon + 1, pTime->tm_mday, pTime->tm_hour, pTime->tm_min, pTime->tm_sec, ev->time.tv_usec / 1000,
         ev->pid, ev->tid, LogLevel::ToFormatString(ev->level).c_str(), ev->tag);
-    
+
     ret += output;
     ret += ev->msg;
     if (ev->msg[msglen - 1] != '\n') {

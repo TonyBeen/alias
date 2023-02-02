@@ -103,6 +103,7 @@ public:
     FileLogWrite(uint32_t fileFlag = O_WRONLY | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
     virtual ~FileLogWrite();
 
+    void                 maintainFile();
     virtual ssize_t      WriteToFile(std::string msg) override;
     virtual ssize_t      WriteToFile(const LogEvent &ev) override;
     virtual std::string  getFileName();
