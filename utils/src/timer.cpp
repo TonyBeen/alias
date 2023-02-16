@@ -20,20 +20,21 @@ static std::atomic<uint64_t> gTimerCount = {0};
 static const uint32_t gMaxEpollEvents = 2;
 
 Timer::Timer(uint64_t ms, CallBack cb, uint32_t recycle) :
+    mTime(0),
+    mRecycleTime(recycle),
     mCb(cb),
-    mRecycleTime(recycle)
+    mUniqueId(++gTimerCount)
 {
-    mUniqueId = ++gTimerCount;
     mTime = getCurrentTime() + ms;
-
     LOG("%s(uint64_t ms, CallBack cb, uint32_t recycle)\n", __func__);
 }
 
 Timer::Timer(const Timer& timer) :
-    mUniqueId(timer.mUniqueId),
+    std::enable_shared_from_this<Timer>(),
     mTime(timer.mTime),
     mRecycleTime(timer.mRecycleTime),
-    mCb(timer.mCb)
+    mCb(timer.mCb),
+    mUniqueId(timer.mUniqueId)
 {
     LOG("%s(const Timer& timer)\n", __func__);
 }
@@ -45,10 +46,14 @@ Timer::~Timer()
 
 Timer &Timer::operator=(const Timer& timer)
 {
-    mUniqueId = timer.mUniqueId;
-    mTime = timer.mTime;
-    mRecycleTime = timer.mRecycleTime;
-    mCb = timer.mCb;
+    if (this != &timer) {
+        mUniqueId = timer.mUniqueId;
+        mTime = timer.mTime;
+        mRecycleTime = timer.mRecycleTime;
+        mCb = timer.mCb;
+    }
+
+    return *this;
 }
 
 /**
@@ -86,15 +91,15 @@ void Timer::reset(uint64_t ms, CallBack cb, uint32_t recycle)
 uint64_t Timer::getCurrentTime(clockid_t type)
 {
     timespec curTime;
-    clock_gettime(CLOCK_MONOTONIC, &curTime);   // 获取系统运行时间，如果使用realtime，可能存在修改系统时间的进程，导致定时器出问题
+    clock_gettime(type, &curTime);   // 获取系统运行时间，如果使用realtime，可能存在修改系统时间的进程，导致定时器出问题
     uint64_t time = curTime.tv_sec * 1000 + curTime.tv_nsec / 1000 / 1000;
     return time;
 }
 
 TimerManager::TimerManager() :
-    mEpollFd(-1),
     ThreadBase("timer thread"),
     mSignal(0),
+    mEpollFd(-1),
     mShouldExit(false)
 {
 
@@ -206,12 +211,12 @@ void TimerManager::ListExpireTimer()
 
 int TimerManager::threadWorkFunction(void *arg)
 {
+    TimerManager *this_ = static_cast<TimerManager *>(arg);
+    UNUSED(this_);
+
     TimerManager::TimerIterator it;
     epoll_event ev[gMaxEpollEvents];
     int n = 0;
-    struct timespec sleepTime;
-    sleepTime.tv_nsec = 1000000;
-    sleepTime.tv_sec = 0;
 
     LOG("timer thread loop begin\n");
     while (mShouldExit == false) {

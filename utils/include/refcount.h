@@ -13,7 +13,7 @@
 namespace eular {
 class RefCount {
 public:
-    RefCount() : atomic_ref_count(0) {}
+    RefCount() {}
     RefCount(uint32_t init) : atomic_ref_count(init) {}
     ~RefCount() { }
 
@@ -36,7 +36,7 @@ public:
         return atomic_ref_count;
     }
 
-    std::atomic<uint32_t> atomic_ref_count;
+    std::atomic<uint32_t> atomic_ref_count{0};
 };
 
 } // namespace eular

@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "string8.h"
+#include "utils.h"
 #include "sharedbuffer.h"
 #include "debug.h"
 #include "Errors.h"
@@ -590,14 +591,14 @@ int String8::setTo(const char* other, size_t numChars)
 void String8::findNotChar(int &begin, int &end, char c) const
 {
     const int len = length();
-    for (size_t i = 0; i < len; ++i) {
+    for (int i = 0; i < len; ++i) {
         if (mString[i] == c) {
             continue;
         }
         begin = i;
         break;
     }
-    for (size_t i = len - 1; i > 0; --i) {
+    for (int i = len - 1; i > 0; --i) {
         if (mString[i] == c) {
             continue;
         }
@@ -818,6 +819,7 @@ int String8::appendFormatV(const char* fmt, va_list args)
     detach();
 
     SharedBuffer *oldBuffer = SharedBuffer::bufferFromData(mString);
+    UNUSED(oldBuffer);
     char *buf = nullptr;
     if (mCapacity < (oldLength + n)) {
         SharedBuffer *buffer = SharedBuffer::bufferFromData(mString)->editResize(oldLength + n + 1);

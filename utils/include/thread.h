@@ -36,7 +36,7 @@ public:
     bool            forceExit();
     const String8&  threadName() const { return mThreadName; }
     const uint32_t& getKernalTid() const { return mKernalTid; }
-    const pthread_t getTid() const { return mTid; }
+    const pthread_t &getTid() const { return mTid; }
 
 protected:
             void    *userData;       // 用户传参数据块

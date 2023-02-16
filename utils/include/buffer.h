@@ -44,7 +44,7 @@ public:
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
     void        clear();
-    void        setDataSize(size_t sz) { sz > mCapacity ? mCapacity : sz; }
+    void        setDataSize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
 
     bool        write(const void *data, size_t size);
     bool        read(void *data, size_t size);

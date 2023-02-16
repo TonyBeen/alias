@@ -1,5 +1,5 @@
 INCLUDE_DIR := -I./include
-cppflags := -std=c++11
+cppflags := -std=c++11 -W -Wall -Wextra -Werror -Wno-deprecated
 soflags := -fPIC
 shared_lib := -lpthread
 cc := g++
