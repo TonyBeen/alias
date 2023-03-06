@@ -20,10 +20,11 @@ all :
 	make bin/testtypes
 	make bin/testrbtreeapi
 	make bin/testmapnode
+	make bin/testhash
 
 memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/teststring8 \
 	bin/testthread bin/teststring8_2 bin/testtimer bin/testsingleton bin/testutils bin/testbitmap \
-	bin/testmapnode bin/testmap
+	bin/testmapnode bin/testmap make bin/testhash
 	$(GEN_XML)
 	valgrind --xml=yes --xml-file=./testbuffer_mem_check.xml  --leak-check=full ./bin/testbuffer
 	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./bin/testmutex
@@ -38,6 +39,7 @@ memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/tests
 	valgrind --xml=yes --xml-file=./testmapnode_mem_check.xml  --leak-check=full ./bin/testmapnode
 	valgrind --xml=yes --xml-file=./testmap_mem_check.xml  --leak-check=full ./bin/testmap
 	valgrind --xml=yes --xml-file=./testsharedbuffer_mem_check.xml  --leak-check=full ./bin/testsharedbuffer
+	valgrind --xml=yes --xml-file=./testhash_mem_check.xml  --leak-check=full ./bin/testhash
 
 bin/testmutex : testmutex.cc
 	$(GEN_BIN)
@@ -111,20 +113,28 @@ bin/testsharedbuffer : test_sharedbuffer.cc
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
 
+bin/testhash : test_hash.cc
+	$(GEN_BIN)
+	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
+
 .PHONY : clean all 		\
 	bin/testbuffer 		\
 	bin/testmutex 		\
 	bin/testmutex_2		\
 	bin/testrwmutex		\
 	bin/teststring8		\
-	bin/testthread 		\
 	bin/teststring8_2 	\
+	bin/testthread 		\
 	bin/testtimer 		\
 	bin/testsingleton 	\
 	bin/testutils 		\
 	bin/testbitmap 		\
+	bin/testrbtree		\
+	bin/testrbtreeapi	\
 	bin/testmapnode 	\
 	bin/testmap			\
+	bin/testsharedbuffer \
+	bin/testhash		\
 
 
 clean :

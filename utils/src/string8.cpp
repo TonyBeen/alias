@@ -194,7 +194,7 @@ char *String8::data()
 String8 String8::left(uint32_t n) const
 {
     String8 ret(mString, n);
-    return std::move(ret);
+    return ret;
 }
 
 String8 String8::right(uint32_t n) const
@@ -390,7 +390,7 @@ String8 String8::operator+(const String8& other) const
 {
     String8 tmp(*this);
     tmp += other;
-    return std::move(tmp);
+    return tmp;
 }
 String8& String8::operator+=(const char* other)
 {
@@ -401,7 +401,7 @@ String8 String8::operator+(const char* other) const
 {
     String8 tmp(*this);
     tmp += other;
-    return std::move(tmp);
+    return tmp;
 }
 
 int String8::compare(const String8& other) const
@@ -758,7 +758,7 @@ String8 String8::format(const char* fmt, ...)
     String8 result = formatV(fmt, args);
 
     va_end(args);
-    return std::move(result);
+    return result;
 }
 
 String8 String8::formatV(const char* fmt, va_list args)

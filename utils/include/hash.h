@@ -9,6 +9,7 @@
 #define __EULAR_UTILS_HASH_H__
 
 #include <stdint.h>
+#include <assert.h>
 #include <vector>
 #include <initializer_list>
 #include "refcount.h"
@@ -68,7 +69,7 @@ class HashCmptBase
 {
 public:
     virtual ~HashCmptBase() { }
-    virtual uint32_t hash() = 0;
+    virtual uint32_t hash() const { return 0; }
 
 protected:
     static uint32_t compute(const uint8_t *key, uint32_t size);
@@ -97,6 +98,17 @@ public:
     {
         data->ref.ref();
     }
+    HashMap &operator=(const HashMap &other)
+    {
+        if (data != other.data) {
+            HashData *o = other.data;
+            o->ref.ref();
+            if (!data->ref.deref())
+                freeData(data);
+            data = o;
+        }
+        return *this;
+    }
     HashMap(HashMap &&other) noexcept :
         data(other.data)
     {
@@ -105,8 +117,7 @@ public:
     HashMap &operator=(HashMap &&other) noexcept
     {
         if (this != &other) {
-            HashMap moved(other);
-            swap(moved);
+            swap(other);
         }
 
         return *this;
@@ -227,8 +238,8 @@ public:
 
     inline iterator begin() { detach(); return iterator(data->firstNode()); }
     inline const_iterator begin() const { return const_iterator(data->firstNode()); }
-    inline iterator end() { detach(); return iterator(end); }
-    inline const_iterator end() const { return const_iterator(end); }
+    inline iterator end() { detach(); return iterator(nodeEnd); }
+    inline const_iterator end() const { return const_iterator(nodeEnd); }
 
     iterator erase(iterator it) { return erase(const_iterator(it.n)); }
     iterator erase(const_iterator it);
@@ -287,7 +298,7 @@ template <class Key, class Val>
 void HashMap<Key, Val>::detach_helper()
 {
     HashData *x = data->detach_helper(duplicateNode, deleteNode2, sizeof(Node), alignOfNode());
-    if (!data->ref.deref())
+    if (data != &HashData::shared_null && !data->ref.deref())
         freeData(data);
     data = x;
 }
@@ -301,12 +312,12 @@ void HashMap<Key, Val>::freeData(HashData *d)
 template <class Key, class Val>
 typename HashMap<Key, Val>::Node **HashMap<Key, Val>::findNode(const Key &k, uint32_t hash) const
 {
-    Node **node = &nodeEnd;
+    Node **node = const_cast<Node **>(&nodeEnd);
     if (data->numBuckets) {
         node = reinterpret_cast<Node **>(&data->buckets[hash % data->numBuckets]);
-        assert(*node == nodeEnd || *node->next); // node != nodeEnd 时 node->next必不为空
+        assert(*node == nodeEnd || (*node)->next); // node != nodeEnd 时 node->next必不为空
         while (*node != nodeEnd && !((*node)->sameKeyWith(k, hash))) {
-            *node = &(*node)->next;
+            node = &(*node)->next;
         }
     }
 
@@ -317,6 +328,7 @@ template <class Key, class Val>
 typename HashMap<Key, Val>::Node *HashMap<Key, Val>::createNode(uint32_t h, const Key &key, const Val &value, Node **nextNode)
 {
     Node *node = new (data->allocateNode(alignOfNode())) Node(key, value, h, *nextNode);
+    printf("%s(), node = %p, *nextNode = %p\n", __func__, node, *nextNode);
     *nextNode = node;
     ++data->size;
     return node;
@@ -339,7 +351,7 @@ template <class Key, class Val>
 void HashMap<Key, Val>::duplicateNode(HashData::Node *originalNode, void *newNode)
 {
     Node *concreteNode = concrete(originalNode);
-    new (newNode) Node(concreteNode->key, concreteNode->value, concreteNode->h, nullptr);
+    new (newNode) Node(concreteNode->key, concreteNode->value, concreteNode->hash, nullptr);
 }
 
 template <class Key, class Val>
@@ -362,7 +374,7 @@ template <class Key, class Val>
 Val &HashMap<Key, Val>::at(const Key &key)
 {
     detach();
-    Node **node = findNode(key);
+    Node **node = findNode(key, key.hash());
     if (*node == nodeEnd) {
         iterator it = insert(key, Val());
         if (it == end()) {
@@ -377,7 +389,7 @@ Val &HashMap<Key, Val>::at(const Key &key)
 template <class Key, class Val>
 const Val &HashMap<Key, Val>::at(const Key &key, const Val &v) const
 {
-    Node **node = findNode(key);
+    Node **node = findNode(key, key.hash());
     if (*node == nodeEnd) {
         return v;
     }
@@ -428,13 +440,13 @@ template <class Key, class Val>
 typename HashMap<Key, Val>::iterator HashMap<Key, Val>::find(const Key &key)
 {
     detach();
-    return iterator(*findNode(key));
+    return iterator(*findNode(key, key.hash()));
 }
 
 template <class Key, class Val>
 typename HashMap<Key, Val>::const_iterator HashMap<Key, Val>::find(const Key &key) const
 {
-    return const_iterator(*findeNode(key));
+    return const_iterator(*findNode(key, key.hash()));
 }
 
 template <class Key, class Val>
@@ -446,9 +458,10 @@ typename HashMap<Key, Val>::iterator HashMap<Key, Val>::insert(const Key &key, c
     Node **node = findNode(key, hash);
     if (*node == nodeEnd) {
         if (data->grow()) {
-            node = findeNode(key, hash);
+            node = findNode(key, hash);
         }
 
+        printf("%s() node = %p\n", __func__, node);
         return iterator(createNode(hash, key, value, node));
     }
 

@@ -28,8 +28,8 @@ public:
         if (atomic_ref_count.load() == 0) {
             return 0;
         }
-        --atomic_ref_count;
-        return atomic_ref_count.load();
+
+        return --atomic_ref_count;
     }
 
     inline uint32_t load() const {

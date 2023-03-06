@@ -194,6 +194,7 @@ bool Sem::trywait()
     return 0 == rt;
 }
 
+#if _POSIX_C_SOURCE >= 200112L
 bool Sem::timedwait(uint32_t ms)
 {
     struct timespec expire;
@@ -211,5 +212,11 @@ bool Sem::timedwait(uint32_t ms)
     } while (rt == -1 && errno == EINTR);
     return 0 == rt;
 }
+#else
+bool Sem::timedwait(uint32_t ms)
+{
+    return false;
+}
+#endif
 
 }

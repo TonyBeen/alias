@@ -41,8 +41,20 @@ void test_singleton()
     assert(*obj == "-------");
 }
 
+void test_free_buffer()
+{
+    class Test {
+    public:
+        Test() { std::cout << __func__ << "()\n"; }
+        ~Test() { std::cout << __func__ << "()\n"; }
+    };
+
+    Singleton<Test>::get();
+}
+
 int main(int argc, char **argv)
 {
     test_singleton();
+    test_free_buffer();
     return 0;
 }

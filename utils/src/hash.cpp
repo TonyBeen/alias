@@ -7,7 +7,6 @@
 
 #include "hash.h"
 #include "alloc.h"
-#include <assert.h>
 #include <string>
 #include <exception>
 
@@ -102,13 +101,13 @@ static int countBits(int hint)
 
 static const uint8_t minNumBits = 4;
 const HashData HashData::shared_null = {
-    0,          // fakeNode
-    {},         // buckets
-    { 0 },      // ref
-    0,          // size
-    0,          // nodeSize
-    minNumBits, // numBits
-    0           // numBuckets
+    0,              // fakeNode
+    {},             // buckets
+    { UINT32_MAX }, // ref
+    0,              // size
+    0,              // nodeSize
+    minNumBits,     // numBits
+    0               // numBuckets
 };
 
 void *HashData::allocateNode(int align)
@@ -125,7 +124,7 @@ void HashData::freeNode(void *node)
 
 HashData *HashData::detach_helper(void (*node_duplicate)(Node *, void *),
                                   void (*node_delete)(Node *),
-                                  int nodeSize, int nodeAlign)
+                                  int anodeSize, int nodeAlign)
 {
     union {
         HashData *d;
@@ -135,22 +134,26 @@ HashData *HashData::detach_helper(void (*node_duplicate)(Node *, void *),
     CHECK_PTR(d);
 
     d->fakeNode = nullptr;
-    d->buckets.clear();
     d->ref.ref();
     d->size = size;
-    d->nodeSize = nodeSize;
-    d->numBits = numBits;
-    d->numBuckets = numBuckets;
+    d->nodeSize = anodeSize;
+    if (this == &shared_null) {
+        d->numBits = minNumBits;
+        d->numBuckets = primeForNumBits(minNumBits);
+    } else {
+        d->numBits = numBits;
+        d->numBuckets = numBuckets;
+    }
+
+    try {
+        d->buckets.resize(d->numBuckets, end);
+    } catch (...) {
+        d->numBuckets = 0;
+        d->free_helper(node_delete);
+        std::__throw_runtime_error(ERROR_MSG("std::vector resize error."));
+    }
 
     if (numBuckets) {
-        try {
-            d->buckets.reserve(numBuckets);
-        } catch (...) {
-            d->numBuckets = 0;
-            d->free_helper(node_delete);
-            std::__throw_runtime_error(ERROR_MSG("std::vector resize error."));
-        }
-
         // NOTE QT的hash表采用单向链表来扩容冲突的值
         Node *this_node = reinterpret_cast<Node *>(this);
         for (int i = 0; i < numBuckets; ++i) {
@@ -232,9 +235,9 @@ void HashData::rehash(int hint)
         numBuckets = nb;
         std::vector<Node *> newBuckets;
         try {
-            newBuckets.reserve(nb);
+            newBuckets.resize(nb, end);
         } catch (...) {
-            std::__throw_runtime_error(ERROR_MSG("std::vector reserve error."));
+            std::__throw_runtime_error(ERROR_MSG("std::vector resize error."));
         }
 
         for (int i = 0; i < oldNumBuckets; ++i) {
@@ -298,19 +301,24 @@ HashData::Node *HashData::nextNode(Node *node)
     next = node->next;
     assert(next);
 
+    printf("node = %p, next = %p, next->next = %p\n", node, next, next->next);
     if (next->next) { // 如果next是最后节点HashData，则next->next == nullptr
         return next;
     }
 
     // 此时next为HashData的内存地址
     int start = (node->hash % d->numBuckets) + 1;
-    Node *bucket = d->buckets[start]; // TODO 判断start是否会等于numBuckets
-    int n = d->numBuckets - start;
-    while (n--) { // 找到下一个存在数据的桶
-        if (bucket != e) {
-            return bucket;
+    printf("start = %d, buckets = %d\n", start, d->numBuckets);
+    if (start < d->numBuckets) {
+        Node *bucket = d->buckets[start]; // TODO 判断start是否会等于numBuckets
+        int n = d->numBuckets - start;
+        while (n--) { // 找到下一个存在数据的桶
+            if (bucket != e) {
+                printf("bucket = %p\n", bucket);
+                return bucket;
+            }
+            ++bucket;
         }
-        ++bucket;
     }
 
     return e; // 未找到就返回结尾
@@ -390,6 +398,5 @@ uint32_t HashCmptBase::compute2(const void *key, uint32_t size)
     }
     return hash;
 }
-
 
 } // namespace eular
