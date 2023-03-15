@@ -7,6 +7,7 @@
 
 #include "YamlConfig.h"
 #include "rwmutex.h"
+#include <assert.h>
 #include <exception>
 #include <fstream>
 

@@ -11,10 +11,6 @@
 #include <yaml-cpp/yaml.h>
 #include <map>
 #include <string>
-#include <mutex>
-#include <atomic>
-#include <condition_variable>
-#include <assert.h>
 
 /**
  * @brief Yaml文件解析类
