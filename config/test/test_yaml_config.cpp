@@ -23,7 +23,7 @@ TEST(YamlConfigTest, test_loadYaml) {
 
 TEST(YamlConfigTest, test_lookup) {
     EXPECT_EQ(reader.lookup<std::string>("spec.selector.app"), "nginx");
-    EXPECT_EQ(reader.lookup<bool>("log.sync"), 1);
+    EXPECT_EQ(reader.lookup<bool>("log.sync"), true);
     EXPECT_EQ(reader.lookup<int>("log.int"), 10);
     EXPECT_EQ(reader.lookup<double>("log.double"), 3.1415);
 }
