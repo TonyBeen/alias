@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "convert.h"
+#include "utils.h"
 #include <string.h>
 #include <assert.h>
 
@@ -146,6 +147,8 @@ int convert_code(iconv_t cd, char *inbuf, size_t inlen, char *outbuf, size_t out
 
 bool GBK2UTF8(std::string &out, const std::string &in)
 {
+    UNUSED(out);
+    UNUSED(in);
     iconv_t iconv = convert_open(CODE_TYPE_GBK, CODE_TYPE_UTF8);
     if (iconv == nullptr) {
         return false;
@@ -153,7 +156,6 @@ bool GBK2UTF8(std::string &out, const std::string &in)
 
     bool ret = false;
 
-_error:
     convert_close(iconv);
     return ret;
 }

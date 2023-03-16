@@ -1,4 +1,5 @@
 #include "log_write.h"
+#include "log_format.h"
 #include <assert.h>
 #include <time.h>
 #include <sys/time.h>
@@ -44,6 +45,19 @@ ssize_t StdoutLogWrite::WriteToFile(std::string msg)
     if (msg.length()) {
         pthread_mutex_lock(mMutex);
         ret = write(STDOUT_FILENO, msg.c_str(), msg.length());
+        pthread_mutex_unlock(mMutex);
+    }
+
+    return ret;
+}
+
+ssize_t StdoutLogWrite::WriteToFile(const LogEvent &ev)
+{
+    const std::string &format_string = LogFormat::Format(&ev);
+    int ret = format_string.length();
+    if (ret > 0) {
+        pthread_mutex_lock(mMutex);
+        ret = ::write(STDOUT_FILENO, format_string.c_str(), ret);
         pthread_mutex_unlock(mMutex);
     }
 
@@ -124,16 +138,25 @@ std::string FileLogWrite::getFileName()
     return std::string(buf);
 }
 
-ssize_t FileLogWrite::WriteToFile(std::string msg)
+void FileLogWrite::maintainFile()
 {
-    ssize_t ret = 0;
     pthread_mutex_lock(mMutex);
     if (*mFileDesc <= 0 || *mFileSize > MAX_FILE_SIZE) {
         CloseFile();
         if (false == CreateNewFile(getFileName())) {
-            return -1;
+            goto unlock;
         }
     }
+
+unlock:
+    pthread_mutex_unlock(mMutex);
+}
+
+ssize_t FileLogWrite::WriteToFile(std::string msg)
+{
+    ssize_t ret = 0;
+    maintainFile();
+    pthread_mutex_lock(mMutex);
     if (msg.length()) {
         ret = write(*mFileDesc, msg.c_str(), msg.length());
     }
@@ -144,6 +167,26 @@ ssize_t FileLogWrite::WriteToFile(std::string msg)
         perror("write error");
     }
     pthread_mutex_unlock(mMutex);
+    return ret;
+}
+
+ssize_t FileLogWrite::WriteToFile(const LogEvent &ev)
+{
+    const std::string &format_string = LogFormat::Format(&ev);
+    ssize_t ret = format_string.length();
+    if (ret > 0) {
+        maintainFile();
+        pthread_mutex_lock(mMutex);
+        ret = write(*mFileDesc, format_string.c_str(), format_string.length());
+        if (ret > 0) {
+            fsync(*mFileDesc);
+            *mFileSize += ret;
+        } else if (ret < 0) {
+            perror("write error");
+        }
+        pthread_mutex_unlock(mMutex);
+    }
+
     return ret;
 }
 
@@ -265,6 +308,7 @@ bool FileLogWrite::CloseFile()
 #define LOCAL_SOCKET_CLIENT_PATH_FMT    "/tmp/log_sock_client_%d"   // %d 是父进程的ID，使用子进程ID时多进程时容易出问题
 #define MAX_SIZE_OF_SUNPATH             108
 static std::string gClientSockPath;
+ConsoleLogWrite *pConsoleLogWrite = nullptr;
 
 ConsoleLogWrite::ConsoleLogWrite() :
     mClientFd(-1)
@@ -281,14 +325,18 @@ ConsoleLogWrite::ConsoleLogWrite() :
     // 捕获信号
     signal(SIGINT, signalHandler);
     signal(SIGQUIT, signalHandler);
+    signal(SIGSEGV, signalHandler);
+    signal(SIGABRT, signalHandler);
     signal(SIGPIPE, SIG_IGN);
 
     InitParams();
+    pConsoleLogWrite = this;
 }
 
 ConsoleLogWrite::~ConsoleLogWrite()
 {
     Destroy();
+    pConsoleLogWrite = nullptr;
 }
 
 void ConsoleLogWrite::InitParams()
@@ -325,7 +373,9 @@ void ConsoleLogWrite::Destroy()
 
 void ConsoleLogWrite::signalHandler(int sig)
 {
-    printf("%s() catch signal %d\n", __func__, sig);
+    char log[128] = {0};
+    sprintf(log, "%s() catch signal %d\n", __func__, sig);
+    pConsoleLogWrite->WriteToFile(log);
     unlink(gClientSockPath.c_str());
     exit(0);
 }
@@ -347,6 +397,13 @@ ssize_t ConsoleLogWrite::WriteToFile(std::string msg)
 
     pthread_mutex_unlock(mMutex);
     return sendSize;
+}
+
+ssize_t ConsoleLogWrite::WriteToFile(const LogEvent &ev)
+{
+    // TODO 日志协议，方便logcat过滤，暂定json数据，cjson接口
+
+    return 0;
 }
 
 std::string ConsoleLogWrite::getFileName()

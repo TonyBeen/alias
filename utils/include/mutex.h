@@ -129,6 +129,7 @@ class Sem : public NonCopyAble {
 public:
     Sem(const char *semPath, uint8_t val);      // 此种走有名信号量
     Sem(uint8_t valBase);                       // 此种走无名信号量
+    Sem(const Sem &) = delete;
     ~Sem();
 
     bool post();

@@ -21,8 +21,8 @@ ByteBuffer::ByteBuffer() : ByteBuffer(DEFAULT_BUFFER_SIZE)
 
 ByteBuffer::ByteBuffer(size_t size) :
     mBuffer(nullptr),
-    mCapacity(0),
     mDataSize(0),
+    mCapacity(0),
     mPos(0)
 {
     mCapacity = getBuffer(size);
@@ -31,8 +31,8 @@ ByteBuffer::ByteBuffer(size_t size) :
 
 ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mBuffer(nullptr),
-    mCapacity(0),
     mDataSize(0),
+    mCapacity(0),
     mPos(0)
 {
     mCapacity = getBuffer(dataLength + 1);
@@ -43,8 +43,8 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
 
 ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mBuffer(nullptr),
-    mCapacity(0),
     mDataSize(0),
+    mCapacity(0),
     mPos(0)
 {
     mCapacity = getBuffer(dataLength);
@@ -53,8 +53,8 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
 
 ByteBuffer::ByteBuffer(const ByteBuffer& other) :
     mBuffer(other.mBuffer),
-    mCapacity(other.mCapacity),
     mDataSize(other.mDataSize),
+    mCapacity(other.mCapacity),
     mPos(other.mPos)
 {
     SharedBuffer::bufferFromData(mBuffer)->acquire();
@@ -62,8 +62,8 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other) :
 
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
     mBuffer(nullptr),
-    mCapacity(0),
     mDataSize(0),
+    mCapacity(0),
     mPos(0)
 {
     if (std::addressof(other) == this) {
@@ -122,7 +122,6 @@ size_t ByteBuffer::set(const uint8_t *data, size_t dataSize, size_t offset)
 
     detach();
     size_t real_offset = mDataSize >= offset ? offset : 0;
-    uint8_t *temp = nullptr;
     size_t newSize = 0;
 
     if (__builtin_add_overflow(dataSize, real_offset, &newSize)) {
@@ -265,7 +264,7 @@ std::string ByteBuffer::dump() const
     }
 
     int remainder = mDataSize % 4;
-    for (int i = mDataSize - remainder; i < mDataSize; ++i) {
+    for (int i = mDataSize - remainder; i < (int)mDataSize; ++i) {
         snprintf(buf, sizeof(buf), "0x%02x ", mBuffer[i]);
         ret.append(buf);
     }

@@ -11,10 +11,6 @@
 #include <yaml-cpp/yaml.h>
 #include <map>
 #include <string>
-#include <mutex>
-#include <atomic>
-#include <condition_variable>
-#include <assert.h>
 
 /**
  * @brief Yaml文件解析类
@@ -39,6 +35,7 @@
  * 想要获取containers的数组，可以通过 YamlReader->at("spec.volum.containers"); 获取
  * 具体操作请查看test_yaml_config.cpp
  *
+ * 加载yaml文件采用的是递归方式并且不支持数组，当文件过大时请不要使用
  */
 
 namespace eular {
@@ -86,17 +83,12 @@ protected:
     void loadYaml(const std::string &prefix, const YamlValue &node);
     void rlock();
     void runlock();
-    void wlock();
-    void wunlock();
 
 private:
     YAML::Node  mYamlRoot;
     std::string mYamlPath;
+    void *      mMutex;
     std::map<std::string, YamlValue> mYamlConfigMap;
-    std::mutex              mMapMutex;
-    std::condition_variable mCond;
-    std::atomic<uint8_t>    mRDLock;
-    std::atomic<bool>       mWRLock;
     bool isValid;
 };
 

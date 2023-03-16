@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "string8.h"
+#include "utils.h"
 #include "sharedbuffer.h"
 #include "debug.h"
 #include "Errors.h"
@@ -193,7 +194,7 @@ char *String8::data()
 String8 String8::left(uint32_t n) const
 {
     String8 ret(mString, n);
-    return std::move(ret);
+    return ret;
 }
 
 String8 String8::right(uint32_t n) const
@@ -389,7 +390,7 @@ String8 String8::operator+(const String8& other) const
 {
     String8 tmp(*this);
     tmp += other;
-    return std::move(tmp);
+    return tmp;
 }
 String8& String8::operator+=(const char* other)
 {
@@ -400,7 +401,7 @@ String8 String8::operator+(const char* other) const
 {
     String8 tmp(*this);
     tmp += other;
-    return std::move(tmp);
+    return tmp;
 }
 
 int String8::compare(const String8& other) const
@@ -590,14 +591,14 @@ int String8::setTo(const char* other, size_t numChars)
 void String8::findNotChar(int &begin, int &end, char c) const
 {
     const int len = length();
-    for (size_t i = 0; i < len; ++i) {
+    for (int i = 0; i < len; ++i) {
         if (mString[i] == c) {
             continue;
         }
         begin = i;
         break;
     }
-    for (size_t i = len - 1; i > 0; --i) {
+    for (int i = len - 1; i > 0; --i) {
         if (mString[i] == c) {
             continue;
         }
@@ -757,7 +758,7 @@ String8 String8::format(const char* fmt, ...)
     String8 result = formatV(fmt, args);
 
     va_end(args);
-    return std::move(result);
+    return result;
 }
 
 String8 String8::formatV(const char* fmt, va_list args)
@@ -778,14 +779,14 @@ String8 String8::formatV(const char* fmt, va_list args)
             return String8();
         }
         buf = static_cast<char *>(psb->data());
-        vsnprintf(buf, cap, fmt, args);
+        vsnprintf(buf, cap + 1, fmt, args);
         buf[cap] = '\0';
         result.release();
         result.mString = buf;
         result.mCapacity = cap;
     }
 
-    return std::move(result);
+    return result;
 }
 
 int String8::appendFormat(const char* fmt, ...)
@@ -818,6 +819,7 @@ int String8::appendFormatV(const char* fmt, va_list args)
     detach();
 
     SharedBuffer *oldBuffer = SharedBuffer::bufferFromData(mString);
+    UNUSED(oldBuffer);
     char *buf = nullptr;
     if (mCapacity < (oldLength + n)) {
         SharedBuffer *buffer = SharedBuffer::bufferFromData(mString)->editResize(oldLength + n + 1);

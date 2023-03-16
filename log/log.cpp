@@ -1,7 +1,9 @@
 #include "log.h"
 #include "callstack.h"
 #include <sys/syscall.h>
+#include <sys/time.h>
 #include <assert.h>
+#include <time.h>
 
 #ifndef gettid
 #define gettid() syscall(__NR_gettid)
@@ -28,7 +30,7 @@ void InitLog(LogLevel::Level lev)
     LogFormat::SetLevel(gLevel);
 }
 
-void SetLeval(LogLevel::Level lev)
+void SetLevel(LogLevel::Level lev)
 {
     gLevel = lev;
     LogFormat::SetLevel(gLevel);

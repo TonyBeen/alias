@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     }
 
     assert(InitSocket() > 0);
-    
+
     int netSocket = ::socket(AF_INET, SOCK_DGRAM, 0);
     if (netSocket < 0) {
         printf("%s() socket error. %d %s\n", __func__, errno, strerror(errno));

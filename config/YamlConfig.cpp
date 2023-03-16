@@ -6,19 +6,28 @@
  ************************************************************************/
 
 #include "YamlConfig.h"
+#include "rwmutex.h"
+#include <assert.h>
 #include <exception>
 #include <fstream>
 
 namespace eular {
 
+static inline RWMutex *toMutex(void *mtx)
+{
+    return static_cast<RWMutex *>(mtx);
+}
+
 YamlReader::YamlReader() :
-    isValid(false)
+    isValid(false),
+    mMutex(new RWMutex)
 {
 
 }
 
 YamlReader::YamlReader(const std::string &path) :
-    isValid(false)
+    isValid(false),
+    mMutex(new RWMutex)
 {
     loadYaml(path);
 }
@@ -26,14 +35,14 @@ YamlReader::YamlReader(const std::string &path) :
 YamlReader::~YamlReader()
 {
     isValid = false;
-    wlock();
+    toMutex(mMutex)->wlock();
     mYamlConfigMap.clear();
-    wunlock();
+    toMutex(mMutex)->wunlock();
 }
 
 void YamlReader::loadYaml(const std::string &path)
 {
-    wlock();
+    toMutex(mMutex)->wlock();
     mYamlPath = path;
     mYamlConfigMap.clear();
     try {
@@ -48,34 +57,34 @@ void YamlReader::loadYaml(const std::string &path)
     }
 
 _unlock:
-    wunlock();
+    toMutex(mMutex)->wunlock();
 }
 
 YamlValue YamlReader::at(const std::string &key)
 {
     YamlValue node;
-    wlock();
+    toMutex(mMutex)->rlock();
     auto it = mYamlConfigMap.find(key);
     if (it != mYamlConfigMap.end()) {
         node = it->second;
     }
-    wunlock();
+    toMutex(mMutex)->runlock();
 
     return node;
 }
 
 YamlValue YamlReader::root()
 {
-    rlock();
+    toMutex(mMutex)->rlock();
     YamlValue node = mYamlConfigMap[""];
-    runlock();
+    toMutex(mMutex)->runlock();
 
     return node;
 }
 
 void YamlReader::foreach(bool outValue)
 {
-    rlock();
+    toMutex(mMutex)->rlock();
     std::stringstream strstream;
     for (auto it = mYamlConfigMap.begin(); it != mYamlConfigMap.end(); ++it) {
         // std::cout << it->first << ": " << it->second << std::endl;
@@ -86,7 +95,7 @@ void YamlReader::foreach(bool outValue)
         strstream << std::endl;
     }
     printf("%s\n", strstream.str().c_str());
-    runlock();
+    toMutex(mMutex)->runlock();
 }
 
 void YamlReader::loadYaml(const std::string &prefix, const YamlValue &node)
@@ -117,40 +126,13 @@ void YamlReader::loadYaml(const std::string &prefix, const YamlValue &node)
 
 void YamlReader::rlock()
 {
-    std::unique_lock<std::mutex> lock;
-    if (mWRLock.load()) {
-        std::unique_lock<std::mutex> temp(mMapMutex);
-        lock.swap(temp);
-        mCond.wait(lock);
-    }
-    ++mRDLock;
+    toMutex(mMutex)->rlock();
 }
 
 void YamlReader::runlock()
 {
-    --mRDLock;
-    if (mRDLock.load() == 0) {
-        mCond.notify_one();
-    }
+    toMutex(mMutex)->runlock();
 }
 
-void YamlReader::wlock()
-{
-    std::unique_lock<std::mutex> lock;
-    if (mRDLock > 0 || mWRLock) {
-        std::unique_lock<std::mutex> temp(mMapMutex);
-        lock.swap(temp);
-        mCond.wait(lock);
-    }
-    mWRLock = true;
-}
-
-void YamlReader::wunlock()
-{
-    if (mWRLock.load()) {
-        mWRLock = false;
-        mCond.notify_all();
-    }
-}
 
 } // namespace eular

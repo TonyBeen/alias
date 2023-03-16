@@ -1,12 +1,13 @@
 #include "log_main.h"
 
-static eular::LogManager *lm = nullptr;
+static eular::LogManager *gLogManager = nullptr;
 
 namespace eular {
 LogManager::LogManager()
 {
     pthread_mutex_init(&mListMutex, nullptr);
     mLogWriteList.push_back(new StdoutLogWrite());
+    ::atexit(deleteInstance);
 }
 
 LogManager::~LogManager()
@@ -111,17 +112,17 @@ void LogManager::delLogWriteFromList(int type)
 
 LogManager *LogManager::getInstance()
 {
-    if (lm == nullptr) {
-        lm = new LogManager();
+    if (gLogManager == nullptr) {
+        gLogManager = new LogManager();
     }
-    return lm;
+    return gLogManager;
 }
 
 void LogManager::deleteInstance()
 {
-    if (lm != nullptr) {
-        delete lm;
-        lm = nullptr;
+    if (gLogManager != nullptr) {
+        delete gLogManager;
+        gLogManager = nullptr;
     }
 }
 

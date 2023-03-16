@@ -181,11 +181,17 @@
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#ifndef WEAK_FUNCTION
+#define WEAK_FUNCTION __attribute__((weak))
+#endif
+
+#ifndef NORETURN
 #define NORETURN __attribute__((__noreturn__))
-#define UNUSED __attribute__((__unused__))
+#endif
+
 #else
 #define NORETURN
-#define UNUSED
+#define WEAK_FUNCTION
 #endif
 
 #endif // __SYSDEF_H__

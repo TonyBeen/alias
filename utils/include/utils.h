@@ -53,6 +53,10 @@
 #define cmpxchg(P, O, N)    __sync_val_compare_and_swap((P), (O), (N))
 // #define cpu_relax()         asm volatile("rep; nop\n": : :"memory")
 
+#ifndef UNUSED
+#define UNUSED(x) (void)x;
+#endif
+
 typedef unsigned long long nsec_t;
 nsec_t  seconds(uint16_t sec);
 nsec_t  mseconds(uint16_t ms);

@@ -10,75 +10,47 @@
 
 #include "mutex.h"
 #include "exception.h"
+#include "refcount.h"
 #include <bits/move.h>
-#include <stdlib.h>
-#include <atomic>
 
 namespace eular {
-
-template<typename T>
-class Singleton;
-
-template <typename T>
-class RefCount
-{
-public:
-    RefCount() : mRefCount(0) {}
-    ~RefCount() {}
-
-    uint32_t ref()
-    {
-        return ++mRefCount;
-    }
-
-    uint32_t deref()
-    {
-        return --mRefCount;
-    }
-
-    uint32_t refCount() const
-    {
-        return mRefCount;
-    }
-
-private:
-    std::atomic<uint32_t> mRefCount;
-    friend class Singleton<T>;
-};
 
 template<typename T>
 class Singleton {
 public:
     struct SObject
     {
-        SObject(T *obj, RefCount<T> *ref) :
+    private:
+        friend class Singleton<T>;
+        SObject(T *obj, RefCount *ref) :
             mObj(obj),
-            mRef(ref)
+            mRefPtr(ref)
         {
-            assert(mRef != nullptr);
-            mRef->ref();
+            assert(mRefPtr != nullptr);
+            mRefPtr->ref();
         }
 
+    public:
         SObject(const SObject &other)
         {
             mObj = other.mObj;
-            mRef = other.mRef;
-            mRef->ref();
+            mRefPtr = other.mRefPtr;
+            mRefPtr->ref();
         }
 
         SObject &operator=(const SObject &other)
         {
             mObj = other.mObj;
-            mRef = other.mRef;
-            mRef->ref();
+            mRefPtr = other.mRefPtr;
+            mRefPtr->ref();
             return *this;
         }
 
         ~SObject()
         {
             mObj = nullptr;
-            mRef->deref();
-            mRef = nullptr;
+            mRefPtr->deref();
+            mRefPtr = nullptr;
         }
 
         T *operator->()
@@ -106,20 +78,22 @@ public:
         {
             return mObj;
         }
+
     private:
         T *mObj;
-        RefCount<T> *mRef;
+        RefCount *mRefPtr;
     };
 
     template<typename... Args>
     static SObject get(Args... args)
     {
-        // 编译期间检测类型完整性，不完整编译不过
+        // 编译期间检测类型完整性
         static_assert(sizeof(T), "incomplete type");
         AutoLock<Mutex> lock(mMutex);
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
-            ::atexit(Singleton::free); // 在mian结束后调用free函数
+            mDeleter.Register(); // 模板静态成员变量需要使用才会构造
+            // ::atexit(Singleton<T>::free); // 在mian结束后调用free函数
         }
         SObject obj(mInstance, &mRef);
         return obj;
@@ -132,7 +106,7 @@ public:
     static SObject reset(Args... args)
     {
         AutoLock<Mutex> lock(mMutex);
-        if (mRef.refCount() == 0) {
+        if (mRef.load() == 0) {
             if (mInstance != nullptr) {
                 delete mInstance;
                 mInstance = nullptr;
@@ -146,11 +120,11 @@ public:
 
     static void free()
     {
-        AutoLock<Mutex> lock(mMutex);
-        if (mRef.refCount() > 0) {
+        if (mRef.load() > 0) {
             return;
         }
 
+        AutoLock<Mutex> lock(mMutex);
         if (mInstance != nullptr) {
             delete mInstance;
             mInstance = nullptr;
@@ -158,9 +132,20 @@ public:
     }
 
 private:
+    class Deleter {
+    public:
+        void Register() { }
+        ~Deleter()
+        {
+            Singleton<T>::free();
+        }
+    };
+
+private:
     static T *mInstance;
-    static RefCount<T> mRef;
+    static RefCount mRef;
     static Mutex mMutex;
+    static Deleter mDeleter;
 
     Singleton() {}
     Singleton(const Singleton&) = delete;
@@ -174,7 +159,10 @@ template<typename T>
 Mutex Singleton<T>::mMutex;
 
 template<typename T>
-RefCount<T> Singleton<T>::mRef;
+RefCount Singleton<T>::mRef;
+
+template<typename T>
+typename Singleton<T>::Deleter Singleton<T>::mDeleter;
 
 } // namespace eular
 

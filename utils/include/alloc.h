@@ -10,6 +10,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <exception>
+
+#define CHECK_PTR(p) if (!(p)) { throw std::bad_alloc(); }
 
 void *Malloc(size_t size);
 void  Free(void *ptr);

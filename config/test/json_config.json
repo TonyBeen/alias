@@ -1,0 +1,15 @@
+{
+    "key1": null,
+    "key2": 7,
+    "key3": 3.1415000000000002,
+    "key4": "value",
+    "key5": true,
+    "friends": [
+        "Dammy",
+        "Jack"
+    ],
+    "players": {
+        "one": "Kante",
+        "two": "Hazard"
+    }
+}

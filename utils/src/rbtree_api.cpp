@@ -21,7 +21,7 @@ void rbtree_clear(rb_root *root, void (*free_node_cb)(rb_node *))
         return;
     }
     struct rb_node *node = nullptr;
-    while (node = root->rb_node) {
+    while ((node = root->rb_node) != nullptr) {
         rb_erase(node, root);
         if (eular_likely(free_node_cb != nullptr)) {
             free_node_cb(node);

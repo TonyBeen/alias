@@ -69,8 +69,8 @@
 
     日志类
     只需包含log.h即可使用
-    用法：定义一个字符串宏LOG_TAG; LOGI(const char *fmt,...); 与printf用法一致
-    依赖: libpthread
+    用法：定义一个字符串宏LOG_TAG; 使用LOGI输出; 具体可参考testlog.cc
+    依赖: libpthread libunwind
     样式：
     日志输出时间(到毫秒) 父进程 当前线程 日志级别 日志tag: 具体日志信息
     07-11 15:01:26.751  9040  9040 [I] Test: xxxxxxxxxxxxxxx

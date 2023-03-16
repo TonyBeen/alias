@@ -15,14 +15,14 @@
 
 namespace eular {
 ThreadBase::ThreadBase(const String8 &threadName) :
-    mExitStatus(false),
-    mPid(0),
-    mTid(0),
-    mKernalTid(0),
+    userData(nullptr),
     mThreadName(threadName),
-    mThreadStatus(THREAD_EXIT),
+    mPid(0),
+    mKernalTid(0),
+    mTid(0),
     mSem(0),
-    userData(nullptr)
+    mThreadStatus(THREAD_EXIT),
+    mExitStatus(false)
 {
 }
 
@@ -136,11 +136,12 @@ static thread_local Thread *gLocalThread = nullptr;
 static thread_local eular::String8 gThreadName;
 
 Thread::Thread(std::function<void()> callback, const String8 &threadName) :
+    mKernalTid(0),
+    mTid(0),
     mThreadName(threadName.length() ? threadName : "Unknow"),
     mCallback(callback),
     mShouldJoin(true),
-    mSemaphore(0),
-    mTid(0)
+    mSemaphore(0)
 {
     pthread_attr_t attr;
     pthread_attr_init(&attr);

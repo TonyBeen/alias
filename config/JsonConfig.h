@@ -13,6 +13,8 @@
 namespace eular {
 
 using JsonValue = Json::Value;
+using JsonMembers = Json::Value::Members;       // std::vector<String>
+using JsonValueType = Json::ValueType;
 using JsonFastWriter = Json::FastWriter;
 using JsonStyledWriter = Json::StyledWriter;
 using JsonReader = Json::Reader;

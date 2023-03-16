@@ -83,7 +83,7 @@ bool Mkdir(const std::string &path)
 int32_t GetFileLength(const eular::String8 &path)
 {
     static struct stat lst;
-    int ret = lstat(path.c_str(), &lst);
+    int ret = stat(path.c_str(), &lst);
     if (ret != 0) {
         return eular::status_t::NOT_FOUND;
     }
@@ -114,6 +114,7 @@ std::vector<int> getPidByName(const char *procName)
     FILE *fp = nullptr;
     char fildPath[BUF_SIZE];
     char cur_task_name[32];
+    UNUSED(cur_task_name);
     char buf[BUF_SIZE];
 
     dir = opendir("/proc");
@@ -213,7 +214,7 @@ bool isPicture(const std::string &fileName)
     };
 
     size_t size = sizeof(extentArray) / sizeof(char *);
-    for (int i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
         if (fileName.find_first_of(extentArray[i])) {
             return true;
         }
@@ -320,7 +321,6 @@ std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, co
 {
     assert(argc > 0);
     std::unordered_map<std::string, std::string> result;
-    char c = '\0';
     if (!opt || !argv) {
         return result;
     }
@@ -331,15 +331,17 @@ std::unordered_map<std::string, std::string> getargopt(int argc, char **argv, co
     }
 
     std::vector<uint8_t> characterVec;
-    char charMap[256] = {0};
-    for (auto it : temp) {
+    uint8_t charMap[128] = {0};
+    for (uint8_t it : temp) {
         if ( ('a' <= it && it <= 'z') || ('A' <= it || it <= 'Z')) {
             charMap[it] = 1;
         }
     }
 
-    while ((c = ::getopt(argc, argv, opt)) != -1) {
-        if (charMap[c]) {
+    char c = '\0';
+    while ((c = ::getopt(argc, argv, opt)) > 0) {
+        uint8_t index = static_cast<uint8_t>(c);
+        if (charMap[index]) {
             result.emplace(eular::String8::format("-%c", c).c_str(), optarg ? optarg : "");
             //result.insert(std::make_pair(eular::String8::format("-%c", c).c_str(), optarg ? optarg : "null"));
         }
