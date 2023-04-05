@@ -366,58 +366,58 @@ static pthread_once_t __once_control2 = PTHREAD_ONCE_INIT;
 
 static inline unsigned long long rte_rdtsc(void)
 {
-	union {
-		unsigned long long tsc_64;
+    union {
+        unsigned long long tsc_64;
         #if BYTE_ORDER == LITTLE_ENDIAN
         struct {
-			unsigned lo_32;
-			unsigned hi_32;
-		};
+            unsigned lo_32;
+            unsigned hi_32;
+        };
         #elif BYTE_ORDER == BIG_ENDIAN
         struct {
-			unsigned hi_32;
-			unsigned lo_32;
-		};
+            unsigned hi_32;
+            unsigned lo_32;
+        };
         #endif
-	} tsc;
+    } tsc;
 
-	asm volatile("rdtsc" :
-			"=a" (tsc.lo_32),
-			"=d" (tsc.hi_32));
-	return tsc.tsc_64;
+    asm volatile("rdtsc" :
+            "=a" (tsc.lo_32),
+            "=d" (tsc.hi_32));
+    return tsc.tsc_64;
 }
 
 void set_time_metric()
 {
-	unsigned long long now, startup, end;
-	unsigned long long begin = rte_rdtsc();
-	usleep(1000);
-	end        = rte_rdtsc();
-	__one_msec = end - begin;
-	__one_sec  = __one_msec * 1000;     // 获取CPU频率
+    unsigned long long now, startup, end;
+    unsigned long long begin = rte_rdtsc();
+    usleep(1000);
+    end        = rte_rdtsc();
+    __one_msec = end - begin;
+    __one_sec  = __one_msec * 1000;     // 获取CPU频率
 
-	startup    = rte_rdtsc();           // 获取当前cpu时间戳
+    startup    = rte_rdtsc();           // 获取当前cpu时间戳
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
-	now        = tp.tv_sec * __one_sec; // 获取系统绝对时间
+    now        = tp.tv_sec * __one_sec; // 获取系统绝对时间
     // now = time(NULL) * __one_sec;    // 获取系统实时时间
-	if (now > startup) {
-		__metric_diff = now - startup;
-	} else {
-		__metric_diff = 0;
-	}
+    if (now > startup) {
+        __metric_diff = now - startup;
+    } else {
+        __metric_diff = 0;
+    }
 }
 
 uint64_t asm_gettimeofday()
 {
-	if (__metric_diff == 0) {
-		if (pthread_once(&__once_control2, set_time_metric) != 0) {
-			abort();
-		}
-	}
+    if (__metric_diff == 0) {
+        if (pthread_once(&__once_control2, set_time_metric) != 0) {
+            abort();
+        }
+    }
 
-	uint64_t now = rte_rdtsc() + __metric_diff;
-	return now / __one_sec + (now % __one_sec) / __one_msec;
+    uint64_t now = rte_rdtsc() + __metric_diff;
+    return now / __one_sec + (now % __one_sec) / __one_msec;
 }
 
 uint64_t Abstime(bool useAsm)
