@@ -26,20 +26,20 @@ memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/tests
 	bin/testthread bin/teststring8_2 bin/testtimer bin/testsingleton bin/testutils bin/testbitmap \
 	bin/testmapnode bin/testmap make bin/testhash
 	$(GEN_XML)
-	valgrind --xml=yes --xml-file=./testbuffer_mem_check.xml  --leak-check=full ./bin/testbuffer
-	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./bin/testmutex
-	valgrind --xml=yes --xml-file=./testmutex_mem_check.xml  --leak-check=full ./bin/testmutex_2
-	valgrind --xml=yes --xml-file=./testrwmutex_mem_check.xml  --leak-check=full ./bin/testrwmutex
-	valgrind --xml=yes --xml-file=./testteststring8_mem_check.xml  --leak-check=full ./bin/teststring8
-	valgrind --xml=yes --xml-file=./testthread_mem_check.xml  --leak-check=full ./bin/testthread
-	valgrind --xml=yes --xml-file=./testtimer_mem_check.xml  --leak-check=full ./bin/testtimer
-	valgrind --xml=yes --xml-file=./testsingleton_mem_check.xml  --leak-check=full ./bin/testsingleton
-	valgrind --xml=yes --xml-file=./testutils_mem_check.xml  --leak-check=full ./bin/testutils
-	valgrind --xml=yes --xml-file=./testbitmap_mem_check.xml  --leak-check=full ./bin/testbitmap
-	valgrind --xml=yes --xml-file=./testmapnode_mem_check.xml  --leak-check=full ./bin/testmapnode
-	valgrind --xml=yes --xml-file=./testmap_mem_check.xml  --leak-check=full ./bin/testmap
-	valgrind --xml=yes --xml-file=./testsharedbuffer_mem_check.xml  --leak-check=full ./bin/testsharedbuffer
-	valgrind --xml=yes --xml-file=./testhash_mem_check.xml  --leak-check=full ./bin/testhash
+	valgrind --xml=yes --xml-file=./xml/testbuffer_mem_check.xml  --leak-check=full ./bin/testbuffer
+	valgrind --xml=yes --xml-file=./xml/testmutex_mem_check.xml  --leak-check=full ./bin/testmutex
+	valgrind --xml=yes --xml-file=./xml/testmutex_mem_check.xml  --leak-check=full ./bin/testmutex_2
+	valgrind --xml=yes --xml-file=./xml/testrwmutex_mem_check.xml  --leak-check=full ./bin/testrwmutex
+	valgrind --xml=yes --xml-file=./xml/testteststring8_mem_check.xml  --leak-check=full ./bin/teststring8
+	valgrind --xml=yes --xml-file=./xml/testthread_mem_check.xml  --leak-check=full ./bin/testthread
+	valgrind --xml=yes --xml-file=./xml/testtimer_mem_check.xml  --leak-check=full ./bin/testtimer
+	valgrind --xml=yes --xml-file=./xml/testsingleton_mem_check.xml  --leak-check=full ./bin/testsingleton
+	valgrind --xml=yes --xml-file=./xml/testutils_mem_check.xml  --leak-check=full ./bin/testutils
+	valgrind --xml=yes --xml-file=./xml/testbitmap_mem_check.xml  --leak-check=full ./bin/testbitmap
+	valgrind --xml=yes --xml-file=./xml/testmapnode_mem_check.xml  --leak-check=full ./bin/testmapnode
+	valgrind --xml=yes --xml-file=./xml/testmap_mem_check.xml  --leak-check=full ./bin/testmap
+	valgrind --xml=yes --xml-file=./xml/testsharedbuffer_mem_check.xml  --leak-check=full ./bin/testsharedbuffer
+	valgrind --xml=yes --xml-file=./xml/testhash_mem_check.xml  --leak-check=full ./bin/testhash
 
 bin/testmutex : testmutex.cc
 	$(GEN_BIN)

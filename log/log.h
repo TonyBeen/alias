@@ -38,16 +38,16 @@ namespace eular {
 
 /**
  * @brief 修改输出日志级别
- * @param lev   最小输出级别
+ * @param lev 最小输出级别
  */
 void InitLog(LogLevel::Level lev = LogLevel::LEVEL_DEBUG);
 /**
- * @param lev   设置最小输出级别
+ * @param lev 设置最小输出级别
  */
 void SetLevel(LogLevel::Level lev);
 
 /**
- * @brief 设置日志输出路径。建议使用全局路径, 使用相对路径时取决去bash执行时的路径, 相对不稳定
+ * @brief 设置日志输出路径。建议使用全局路径, 使用相对路径时取决于bash执行时的路径, 相对不稳定
  */
 void SetPath(const char *path);
 
@@ -59,11 +59,11 @@ void SetPath(const char *path);
 void EnableLogColor(bool flag);
 
 /**
- * @param type  输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
+ * @param type 输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
 void addOutputNode(int type);
 /**
- * @param type  输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
+ * @param type 输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
 void delOutputNode(int type);
 

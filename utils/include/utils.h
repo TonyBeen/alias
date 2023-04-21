@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <string>
 #include <vector>
+#include <list>
 #include <unordered_map>
 
 #ifndef gettid
@@ -68,6 +69,7 @@ std::vector<int>    getPidByName(const char *procName);
 std::string         getNameByPid(pid_t pid);
 std::vector<std::string> getLocalAddress();
 std::vector<std::string> getdir(const std::string &path);
+int32_t ForeachDir(const std::string &path, std::list<std::string> &fileList);
 
 bool isPicture(const std::string &fileName);
 

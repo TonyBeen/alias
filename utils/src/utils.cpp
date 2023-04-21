@@ -234,6 +234,7 @@ std::vector<std::string> getdir(const std::string &path)
         while ((ptr = readdir(dir)) != nullptr) {
             if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0))
                 continue;
+
             if (ptr->d_type == DT_REG) {
                 ret.push_back(ptr->d_name);
             }
@@ -243,6 +244,33 @@ std::vector<std::string> getdir(const std::string &path)
     }
 
     return ret;
+}
+
+int32_t ForeachDir(const std::string &path, std::list<std::string> &fileList)
+{
+    DIR *dir = nullptr;
+    struct dirent *ptr = nullptr;
+
+    int32_t count = 0;
+    dir = opendir(path.c_str());
+    if (dir != nullptr) {
+        while ((ptr = readdir(dir)) != nullptr) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+                continue;
+            }
+
+            if (ptr->d_type == DT_REG) {
+                fileList.push_back(path + "/" + ptr->d_name);
+                ++count;
+            } else if (ptr->d_type == DT_DIR) {
+                count += ForeachDir(path + "/" + ptr->d_name, fileList);
+            }
+        }
+
+        closedir(dir);
+    }
+
+    return count;
 }
 
 pid_t GetThreadId()
