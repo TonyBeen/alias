@@ -9,6 +9,7 @@
 #define __CONFIG_XML_CONFIG_H__
 
 #include "typecast.h"
+#include <boost/lexical_cast.hpp>
 #include <string>
 #include <map>
 
@@ -33,7 +34,7 @@ public:
 
         T ret = defaultVal;
         try {
-            ret = TypeCast::type_cast<T>(val.c_str());
+            ret = boost::lexical_cast<T>(val.c_str());
         } catch (...) {
             printf("XmlConfig::lookup<%s>(key = %s) conversion failed\n", typeid(T).name(), key.c_str());
         }

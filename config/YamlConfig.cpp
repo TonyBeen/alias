@@ -9,6 +9,7 @@
 #include "rwmutex.h"
 #include <assert.h>
 #include <exception>
+#include <regex>
 #include <fstream>
 
 namespace eular {
@@ -100,11 +101,17 @@ void YamlReader::foreach(bool outValue)
 
 void YamlReader::loadYaml(const std::string &prefix, const YamlValue &node)
 {
-    static const std::string ext = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._1234567890";
-    if (prefix.find_first_not_of(ext) != std::string::npos) {
+    static const std::regex regex("^[A-Za-z0-9\\s\\._]*$");
+    if (!std::regex_match(prefix, regex)) {
         printf("Config invalid prefix: %s\n", prefix.c_str());
         return;
     }
+
+    // static const std::string ext = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._1234567890";
+    // if (prefix.find_first_not_of(ext) != std::string::npos) {
+    //     printf("Config invalid prefix: %s\n", prefix.c_str());
+    //     return;
+    // }
 
     mYamlConfigMap.insert(std::make_pair(prefix, node));
     if (node.IsMap()) {
