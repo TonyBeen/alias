@@ -36,11 +36,11 @@ all:
 
 install: all
 	if [ ! -d $(DEST_INC)/config ]; then mkdir $(DEST_INC)/config; fi
-	cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
+	sudo cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
 	mv $(TARGET) $(DEST_LIB)
 	ldconfig
-	cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
-	cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
+	sudo cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
+	sudo cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
 
 uninstall:
 	rm -rf $(DEST_INC)/config
