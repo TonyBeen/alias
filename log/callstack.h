@@ -8,7 +8,7 @@
 #ifndef __ALIAS_CALLSTACK_H__
 #define __ALIAS_CALLSTACK_H__
 
-#include "log.h"
+#include "log_level.h"
 #include <stdio.h>
 #include <string>
 #include <vector>

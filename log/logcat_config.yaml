@@ -1,0 +1,9 @@
+root:
+  - "id"
+  - "keyword"
+
+id:
+  - "notice"
+  - "data"
+  - "warn"
+  - "error"

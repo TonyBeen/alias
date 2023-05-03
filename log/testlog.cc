@@ -13,6 +13,8 @@ void *thread(void *)
         LOGI("thread-%.5d", num++);
         usleep(500000);
     }
+
+    return nullptr;
 }
 
 int main()

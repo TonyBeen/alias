@@ -99,7 +99,15 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     int formatSize = vsnprintf(out, outSize + 7, fmt, ap);
     va_end(ap);
 
-    size_t len = strlen(out);
+    if (formatSize < 0) {
+        perror("vsnprintf error");
+        if (needFree) {
+            free(out);
+        }
+        return;
+    }
+
+    size_t len = formatSize;
     if (len && out[len - 1] != '\n') {
         out[len] = '\n';
     }
@@ -108,6 +116,7 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     if (gLogManager) {
         gLogManager->WriteLog(&ev);
     }
+
     if (needFree) {
         free(out);
     }
