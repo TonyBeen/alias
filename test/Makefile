@@ -1,4 +1,4 @@
-CPP_FLAGS := -std=c++11 -g
+CPP_FLAGS := -std=c++11 -m64 -g
 SHARED_LIB := -lunwind -llog -lutils -lpthread
 STATIC_LIB := /usr/local/lib/libgtest.a
 CC := g++

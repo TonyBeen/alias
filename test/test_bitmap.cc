@@ -10,32 +10,57 @@
 #include <iostream>
 #include <assert.h>
 
-using namespace std;
-using namespace eular;
+TEST(BitMap_Test, test_constructer) {
+    eular::BitMap bitMapObj1;
+    EXPECT_TRUE(0 == bitMapObj1.count());
 
-int main()
+    eular::BitMap bitMapObj2(16);
+    EXPECT_TRUE(16 == bitMapObj2.capacity());
+
+    eular::BitMap fromCopy(bitMapObj2);
+    EXPECT_TRUE(16 == fromCopy.capacity());
+}
+
+TEST(BitMap_Test, test_set_at) {
+    eular::BitMap bitMapObj(16);
+
+    const uint32_t count = 2;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        bitMapObj.set(i, true);
+    }
+
+    EXPECT_TRUE(count == bitMapObj.count());
+    EXPECT_FALSE(bitMapObj.set(16, true));
+
+    for (uint32_t i = 0; i < count; ++i) {
+        EXPECT_TRUE(bitMapObj.at(i));
+    }
+}
+
+TEST(BitMap_Test, test_reserve) {
+    eular::BitMap bitMapObj(16);
+    EXPECT_TRUE(16 == bitMapObj.capacity());
+
+    bitMapObj.reserve(32);
+    EXPECT_TRUE(32 == bitMapObj.capacity());
+}
+
+TEST(BitMap_Test, test_clear) {
+    eular::BitMap bitMapObj(16);
+
+    const uint32_t count = 2;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        bitMapObj.set(i, true);
+    }
+
+    bitMapObj.clear();
+    EXPECT_TRUE(0 == bitMapObj.count());
+}
+
+int main(int argc, char* argv[])
 {
-    BitMap bitmap;
-    int index = 10;
-    bitmap.set(index, true);
-    EXPECT_TRUE(bitmap.at(index));
-    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
-
-    bitmap.resize(100);
-    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
-
-    EXPECT_TRUE(bitmap.at(index));
-    bitmap.set(index, false);
-    EXPECT_FALSE(bitmap.at(index));
-
-    index = 6000;
-    bitmap.set(index, true);
-    EXPECT_FALSE(bitmap.at(index));
-
-    bitmap.set(1, true);
-    EXPECT_TRUE(bitmap.at(1));
-    bitmap.clear();
-    EXPECT_FALSE(bitmap.at(1));
-
-    return 0;
+    testing::InitGoogleTest(&argc, argv); 
+    return RUN_ALL_TESTS();
 }
