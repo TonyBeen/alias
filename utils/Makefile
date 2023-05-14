@@ -1,5 +1,5 @@
 INCLUDE_DIR := -I./include
-cppflags := -std=c++11 -W -Wall -Wextra -Werror -Wno-deprecated -O2 -g
+cppflags := -std=c++11 -W -Wall -Werror -Wextra -Wno-deprecated -Wno-unused-result -O2 -m64 -g
 soflags := -fPIC
 shared_lib := -lpthread
 cc := g++
@@ -28,7 +28,7 @@ install : libutils.so
 	-sudo ldconfig
 	-if [ ! -d "$(destfile)/include/utils/" ]; then sudo mkdir $(destfile)/include/utils/; fi
 	-sudo cp ./include/* $(destfile)/include/utils/
-	-make clean
+
 
 uninstall:
 	-rm -rf $(obj)

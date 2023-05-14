@@ -1,4 +1,4 @@
-cflags := -std=c++11 -O2 -W -Wall -Werror
+cflags := -std=c++11 -W -Wall -Werror -O2 -m64
 soflags := -fPIC
 shared_lib := -lunwind -lpthread
 cc := g++
