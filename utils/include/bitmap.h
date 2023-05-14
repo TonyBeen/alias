@@ -11,28 +11,80 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#define BITS_PEER_BYTE       (8)
+
 namespace eular {
 
 class BitMap final
 {
 public:
     BitMap();
-    BitMap(size_t size);
+    BitMap(uint32_t size);
+    BitMap(const BitMap &other);
     ~BitMap();
 
-    bool set(size_t idx, bool v);
-    bool at(size_t idx) const;
+    BitMap &operator=(const BitMap &other);
+
+    /**
+     * @brief 设置idx位置的值为v
+     * 
+     * @param idx 索引
+     * @param v 值
+     * @return 成功返回true, 失败返回false
+     */
+    bool set(uint32_t idx, bool v);
+
+    /**
+     * @brief 获取idx位置的值
+     * 
+     * @param idx 索引
+     * @return 返回索引位置的值
+     */
+    bool at(uint32_t idx) const;
+
+    /**
+     * @brief 清空所有的值, 重置为0
+     */
     void clear();
-    size_t capacity() const;
-    bool resize(size_t size);
+
+    /**
+     * @brief 统计BitMap中值为1的个数
+     * 
+     * @return 返回值为1的个数
+     */
+    uint32_t count() const;
+
+    /**
+     * @brief 获取BitMap容量
+     * 
+     * @return 返回实际容量
+     */
+    uint32_t capacity() const;
+
+    /**
+     * @brief 对BitMap进行扩容
+     * 
+     * @param size 要扩容的大小, 大于容量时才会进行扩容
+     * @return 成功返回true, 失败返回false
+     */
+    bool reserve(uint32_t size);
+
+public:
+    static bool init();
 
 private:
-    uint8_t *alloc(size_t size);
+    uint8_t *alloc(uint32_t size);
     void release();
+    void nullThrow() const;
 
 private:
     uint8_t*    mBitMap;
-    size_t      mCapacity;
+    uint32_t    mCapacity;
+
+private:
+    static const uint16_t POS_SIZE = sizeof(uint8_t) * BITS_PEER_BYTE;
+    static uint8_t POS[POS_SIZE];
+    static uint8_t NPOS[POS_SIZE];
 };
 
 } // namespace eular

@@ -8,19 +8,37 @@
 #include "bitmap.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdexcept>
 
-#define BIT_LENGTH_PEER_BYTE (8)
-#define DEFAULT_SIZE (1024)
+#define DEFAULT_SIZE    (1024)
 
 namespace eular {
-BitMap::BitMap()
+
+static bool gInit = BitMap::init();
+
+uint8_t BitMap::POS[BitMap::POS_SIZE];
+uint8_t BitMap::NPOS[BitMap::POS_SIZE];
+
+BitMap::BitMap() :
+    mBitMap(nullptr),
+    mCapacity(0)
 {
     mBitMap = alloc(DEFAULT_SIZE);
 }
 
-BitMap::BitMap(size_t size)
+BitMap::BitMap(uint32_t size)
 {
     mBitMap = alloc(size);
+}
+
+BitMap::BitMap(const BitMap &other) :
+    mBitMap(nullptr),
+    mCapacity(0)
+{
+    if (other.mBitMap && other.mCapacity) {
+        mBitMap = alloc(other.mCapacity);
+        memcpy(mBitMap, other.mBitMap, mCapacity);
+    }
 }
 
 BitMap::~BitMap()
@@ -28,80 +46,142 @@ BitMap::~BitMap()
     release();
 }
 
-bool BitMap::set(size_t idx, bool v)
+BitMap &BitMap::operator=(const BitMap &other)
 {
-    if (idx >= mCapacity) {
-        return false;
+    if (this != &other) {
+        mBitMap = nullptr;
+        mCapacity = 0;
+
+        if (other.mBitMap && other.mCapacity) {
+            mBitMap = alloc(other.mCapacity);
+            memcpy(mBitMap, other.mBitMap, mCapacity);
+        }
     }
 
-    size_t index = idx / 8;
-    size_t offset = idx % 8;
-    if (offset) {
-        ++index;
-    }
-
-    uint8_t& value = mBitMap[index];
-    uint8_t temp = 0;
-    if (v) {
-        temp = 1 << offset;
-        value |= temp;
-    }
-    else {
-        temp = ~temp;
-        temp ^= 1 << offset;
-        value &= temp;
-    }
-
-    return at(idx);
+    return *this;
 }
 
-bool BitMap::at(size_t idx) const
+bool BitMap::set(uint32_t idx, bool v)
+{
+    if (idx >= mCapacity) {
+        return false;
+    }
+    nullThrow();
+
+    uint32_t index = idx / BITS_PEER_BYTE;
+    uint32_t pos = idx % BITS_PEER_BYTE;
+
+    uint8_t& value = mBitMap[index];
+    if (v) {
+        value |= POS[pos];
+    } else {
+        value &= NPOS[pos];
+    }
+
+    return true;
+}
+
+bool BitMap::at(uint32_t idx) const
 {
     if (idx >= mCapacity) {
         return false;
     }
 
-    size_t index = idx / 8;
-    size_t offset = idx % 8;
-    if (offset) {
-        ++index;
-    }
+    nullThrow();
 
-    uint8_t value = mBitMap[index];
-    uint8_t temp = 0x01;
+    uint32_t index = idx / BITS_PEER_BYTE;
+    uint32_t pos = idx % BITS_PEER_BYTE;
 
-    value >>= offset;
-    return value & temp;
+    return mBitMap[index] & POS[pos];
 }
 
 void BitMap::clear()
 {
-    memset(mBitMap, 0, mCapacity / 8);
+    memset(mBitMap, 0, mCapacity / BITS_PEER_BYTE);
 }
 
-size_t BitMap::capacity() const
+// https://blog.csdn.net/github_38148039/article/details/109598368
+uint32_t popcount(uint32_t n)
+{
+    n = (n & 0x55555555) + ((n >> 1) & 0x55555555);
+    n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+    n = (n & 0x0F0F0F0F) + ((n >> 4) & 0x0F0F0F0F);
+    n = (n & 0x00FF00FF) + ((n >> 8) & 0x00FF00FF);
+    n = (n & 0x0000FFFF) + ((n >> 16) & 0x0000FFFF);
+    return n;
+}
+
+template<class T>
+T count_bits(const T& v)
+{
+    return popcount(v);
+}
+
+template<>
+uint64_t count_bits(const uint64_t& v)
+{
+    static const uint32_t uintMax = (uint32_t)(~0);
+    return (popcount(v & uintMax) + popcount(v >> 32));
+}
+
+uint32_t BitMap::count() const
+{
+    uint32_t bytes =  mCapacity / BITS_PEER_BYTE;
+    uint32_t len = bytes / sizeof(uint64_t);
+    uint32_t reserveSize = bytes % sizeof(uint64_t);
+    uint32_t count = 0;
+    uint32_t offset = 0;
+
+    for (uint32_t i = 0; i < len; ++i) {
+        uint64_t *pU64Vec = reinterpret_cast<uint64_t *>(mBitMap);
+        uint64_t temp = pU64Vec[i];
+        count += count_bits(temp);
+        offset += sizeof(uint64_t);
+    }
+
+    for (uint32_t i = 0; i < reserveSize; ++i) {
+        if (mBitMap[offset + i]) {
+            count += count_bits(mBitMap[offset + i]);
+        }
+    }
+
+    return count;
+}
+
+uint32_t BitMap::capacity() const
 {
     return mCapacity;
 }
 
-bool BitMap::resize(size_t size)
+bool BitMap::reserve(uint32_t size)
 {
-    if (size == mCapacity) {
+    if (size <= mCapacity) {
         return true;
     }
 
-    size_t cap = mCapacity;
-    uint8_t* temp = alloc(size);
-    if (temp == nullptr) {
-        mCapacity = cap;
+    uint32_t oldCap = mCapacity;
+    uint8_t* newBitMap = alloc(size);
+    if (newBitMap == nullptr) {
+        mCapacity = oldCap;
         return false;
     }
 
-    size_t bytes = (cap > mCapacity) ? (mCapacity / 8) : (cap / 8);
-    memcpy(temp, mBitMap, bytes);
+    uint32_t bytes = (oldCap > mCapacity) ? (mCapacity / BITS_PEER_BYTE) : (oldCap / BITS_PEER_BYTE);
+    memcpy(newBitMap, mBitMap, bytes);
 
     release();
-    mBitMap = temp;
+    mBitMap = newBitMap;
+    return true;
+}
+
+bool BitMap::init()
+{
+    // NOTE 从低位开始排列, 比如索引为1时, 取的是0x02
+    for (uint32_t i = 0; i < POS_SIZE; ++i) {
+        POS[i] = ((uint8_t)1) << i;
+        NPOS[i] = ~POS[i];
+    }
+
     return true;
 }
 
@@ -111,14 +191,18 @@ bool BitMap::resize(size_t size)
  * @param size bitmap容量
  * @return 失败为nullptr
  */
-uint8_t* BitMap::alloc(size_t size)
+uint8_t* BitMap::alloc(uint32_t size)
 {
-    size_t bytes = (size + 8) / 8;
+    uint32_t bytes = (size) / (sizeof(uint8_t) * BITS_PEER_BYTE);
+    if (size % (sizeof(uint8_t) * BITS_PEER_BYTE)) {
+        ++bytes;
+    }
+
     mCapacity = 0;
-    uint8_t* bitMap = (uint8_t*)malloc(bytes);
+    uint8_t* bitMap = (uint8_t *)malloc(bytes);
     if (bitMap != nullptr) {
-        memset(bitMap, 0, bytes);
-        mCapacity = bytes * 8;
+        memset(bitMap, 0x00, bytes);
+        mCapacity = bytes * BITS_PEER_BYTE;
     }
 
     return bitMap;
@@ -129,6 +213,13 @@ void BitMap::release()
     if (mBitMap) {
         free(mBitMap);
         mBitMap = nullptr;
+    }
+}
+
+void BitMap::nullThrow() const
+{
+    if (mBitMap == nullptr) {
+        throw std::runtime_error("using null pointers");
     }
 }
 
