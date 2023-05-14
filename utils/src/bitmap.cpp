@@ -6,6 +6,7 @@
  ************************************************************************/
 
 #include "bitmap.h"
+#include "sysdef.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdexcept>
@@ -86,7 +87,6 @@ bool BitMap::at(uint32_t idx) const
     if (idx >= mCapacity) {
         return false;
     }
-
     nullThrow();
 
     uint32_t index = idx / BITS_PEER_BYTE;
@@ -100,15 +100,19 @@ void BitMap::clear()
     memset(mBitMap, 0, mCapacity / BITS_PEER_BYTE);
 }
 
-// https://blog.csdn.net/github_38148039/article/details/109598368
 uint32_t popcount(uint32_t n)
 {
+#ifdef OS_WINDOWS
+    // https://blog.csdn.net/github_38148039/article/details/109598368
     n = (n & 0x55555555) + ((n >> 1) & 0x55555555);
     n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
     n = (n & 0x0F0F0F0F) + ((n >> 4) & 0x0F0F0F0F);
     n = (n & 0x00FF00FF) + ((n >> 8) & 0x00FF00FF);
     n = (n & 0x0000FFFF) + ((n >> 16) & 0x0000FFFF);
     return n;
+#elif defined(OS_LINUX)
+    return __builtin_popcount(n);
+#endif
 }
 
 template<class T>
