@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "aes.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <utils/exception.h>
 #include <utils/string8.h>
 #include <log/log.h>

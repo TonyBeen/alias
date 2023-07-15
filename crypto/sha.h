@@ -10,7 +10,7 @@
 
 #include "crypto.h"
 #include <utils/exception.h>
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <openssl/sha.h>
 
 using std::bad_exception;

@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "base64.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <assert.h>
 
 namespace eular {

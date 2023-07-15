@@ -13,7 +13,7 @@
  */
 
 #include "rsa.h"
-#include <utils/Errors.h>
+#include <utils/errors.h>
 #include <utils/utils.h>
 #include <log/log.h>
 #include <openssl/pem.h>
