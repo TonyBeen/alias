@@ -20,8 +20,23 @@ public:
 
 TEST_F(BufferTest, testConstructer) {
     {
-        ByteBuffer buffer("Hello", 5);
+        ByteBuffer defaultBuffer;
+        EXPECT_EQ(defaultBuffer.size(), 0);
+        EXPECT_EQ(defaultBuffer.capacity(), 0);
+    }
+
+    {
+        ByteBuffer buffer(128);
+        EXPECT_EQ(buffer.capacity(), 128);
+    }
+
+    {
+        ByteBuffer buffer("Hello");
         EXPECT_EQ(buffer.size(), 5);
+
+        ByteBuffer buf(nullptr);
+        EXPECT_EQ(buf.size(), 0);
+        EXPECT_EQ(buf.capacity(), 0);
     }
 
     {
@@ -32,14 +47,22 @@ TEST_F(BufferTest, testConstructer) {
 
     {
         ByteBuffer buffer(128);
-        EXPECT_EQ(buffer.capacity(), 128);
+        ByteBuffer buf = buffer;
+        EXPECT_EQ(buf.const_data(), buffer.const_data());
+    }
+
+    {
+        ByteBuffer buffer;
+        ByteBuffer buf;
+        buf = buffer;
+        EXPECT_EQ(buf.const_data(), buffer.const_data());
     }
 
     {
         ByteBuffer buffer(128);
         ByteBuffer buf = std::move(buffer);
-        const uint8_t *data = (const uint8_t *)"Hello";
-        buffer.append(data, 5);
+        EXPECT_EQ(buffer.capacity(), 0);
+        buffer.append("Hello");
         EXPECT_EQ(buffer.size(), 5);
     }
 }

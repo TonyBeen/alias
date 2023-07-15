@@ -18,21 +18,23 @@ namespace eular {
 class ByteBuffer final
 {
 public:
-    ByteBuffer();                       // call ByteBuffer(256);
-    ByteBuffer(size_t size);            // size == 0 ? 创建256大小, 内容为空的buf : size
-    ByteBuffer(const char *data, size_t dataLength);  // 如果data为null，则和上面一致
+    ByteBuffer();
+    ByteBuffer(size_t size);
+    ByteBuffer(const char *data, size_t dataLength = SIZE_MAX);
     ByteBuffer(const uint8_t *data, size_t dataLength);
+    ByteBuffer(const ByteBuffer& other);
     ByteBuffer(ByteBuffer&& other);
     ~ByteBuffer();
 
-    ByteBuffer(const ByteBuffer& other);
     ByteBuffer& operator=(const ByteBuffer& other);
     ByteBuffer& operator=(ByteBuffer&& other);
     uint8_t&    operator[](size_t index);
 
     // 在offset之后设为data
     size_t      set(const uint8_t *data, size_t dataSize, size_t offset = 0);
+    void        append(const char *data, size_t dataSize = SIZE_MAX);
     void        append(const uint8_t *data, size_t dataSize);
+    void        append(const ByteBuffer &other);
     // 在offset之后插入数据而不覆盖之后的数据
     size_t      insert(const uint8_t *data, size_t dataSize, size_t offset = 0);
 
@@ -73,7 +75,7 @@ public:
 
 private:
     size_t      calculate(size_t);
-    size_t      getBuffer(size_t size);
+    size_t      allocBuffer(size_t size);
     void        freeBuffer();
     void        moveAssign(ByteBuffer &other);
     void        detach();

@@ -62,7 +62,7 @@ bin/testthread : testthread.cc
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
 
-bin/testbuffer : testbuffer.cc
+bin/testbuffer : test_buffer.cc
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
 
