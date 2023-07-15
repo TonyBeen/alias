@@ -8,7 +8,7 @@
 // #define _DEBUG
 #include "timer.h"
 #include "exception.h"
-#include "Errors.h"
+#include "errors.h"
 #include "debug.h"
 #include <assert.h>
 #include <time.h>

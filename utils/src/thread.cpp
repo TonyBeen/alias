@@ -8,7 +8,7 @@
 // #define _DEBUG
 
 #include "thread.h"
-#include "Errors.h"
+#include "errors.h"
 #include "debug.h"
 #include "exception.h"
 #include <string.h>

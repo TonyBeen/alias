@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "utils.h"
-#include "Errors.h"
+#include "errors.h"
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -85,7 +85,7 @@ int32_t GetFileLength(const eular::String8 &path)
     static struct stat lst;
     int ret = stat(path.c_str(), &lst);
     if (ret != 0) {
-        return eular::status_t::NOT_FOUND;
+        return eular::Status::NOT_FOUND;
     }
     return static_cast<int32_t>(lst.st_size);
 }

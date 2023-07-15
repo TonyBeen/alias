@@ -5,7 +5,8 @@
 #include <errno.h>
 
 namespace eular {
-typedef enum Status {
+typedef int32_t status_t;
+enum Status {
     OK                = 0,
     NO_ERROR          = OK,
 
@@ -25,8 +26,6 @@ typedef enum Status {
     WOULD_BLOCK         = -EWOULDBLOCK, /* Operation would block */
     TIMED_OUT           = -ETIMEDOUT,   /* Something timed out */
 };
-
-typedef int32_t status_t;
 
 } // namespace eular
 

@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "sharedbuffer.h"
 #include "debug.h"
-#include "Errors.h"
+#include "errors.h"
 #include "exception.h"
 #include <error.h>
 #include <assert.h>
