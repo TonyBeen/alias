@@ -21,6 +21,7 @@ all :
 	make bin/testrbtreeapi
 	make bin/testmapnode
 	make bin/testhash
+	make bin/test_func_traits
 
 memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/teststring8 \
 	bin/testthread bin/teststring8_2 bin/testtimer bin/testsingleton bin/testutils bin/testbitmap \
@@ -114,6 +115,10 @@ bin/testsharedbuffer : test_sharedbuffer.cc
 	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
 
 bin/testhash : test_hash.cc
+	$(GEN_BIN)
+	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
+
+bin/test_func_traits : test_func_traits.cc
 	$(GEN_BIN)
 	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
 
