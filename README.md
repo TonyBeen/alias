@@ -3,14 +3,18 @@
     .
     ├── include
     │   ├── alloc.h
+    │   ├── any.hpp
     │   ├── bitmap.h
     │   ├── buffer.h
     │   ├── condition.h
     │   ├── convert.h
     │   ├── debug.h
-    │   ├── Errors.h
+    │   ├── errors.h
     │   ├── exception.h
     │   ├── file.h
+    │   ├── function_traits.h
+    │   ├── gcc.hpp
+    │   ├── hash.h
     │   ├── map.h
     │   ├── map_node.h
     │   ├── mutex.h
@@ -34,6 +38,7 @@
         ├── condition.cpp
         ├── convert.cpp
         ├── file.cpp
+        ├── hash.cpp
         ├── map_node.cpp
         ├── mutex.cpp
         ├── rbtree_api.cpp
@@ -43,7 +48,7 @@
         ├── thread.cpp
         ├── timer.cpp
         └── utils.cpp
-    
+
     utils包含线程、互斥锁、条件变量、信号量、字符串、缓存、函数堆栈、单例、定时器、异常、红黑树Map、共享计数。
     依赖：libpthread
 
