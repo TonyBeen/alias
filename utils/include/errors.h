@@ -1,6 +1,7 @@
 #ifndef __ERRORS_H__
 #define __ERRORS_H__
 
+#include <stdint.h>
 #include <errno.h>
 
 namespace eular {
@@ -23,7 +24,9 @@ typedef enum Status {
     NOT_ENOUGH_DATA     = -ENODATA,     /* No data available */
     WOULD_BLOCK         = -EWOULDBLOCK, /* Operation would block */
     TIMED_OUT           = -ETIMEDOUT,   /* Something timed out */
-} status_t;
+};
+
+typedef int32_t status_t;
 
 } // namespace eular
 
