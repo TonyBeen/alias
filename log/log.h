@@ -36,6 +36,7 @@
 
 namespace eular {
 
+namespace log {
 /**
  * @brief 修改输出日志级别
  * @param lev 最小输出级别
@@ -66,6 +67,7 @@ void addOutputNode(int type);
  * @param type 输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
 void delOutputNode(int type);
+}
 
 void log_write(int level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 void log_write_assert(int level, const char *expr, const char *tag, const char *fmt, ...) __attribute__((format(printf, 4, 5)));

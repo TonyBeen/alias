@@ -16,6 +16,7 @@ static LogManager *gLogManager = nullptr;
 static LogLevel::Level gLevel = LogLevel::LEVEL_DEBUG;
 static volatile bool gEnableLogoutColor = true;
 
+namespace log {
 void getLogManager()
 {
     if (gLogManager == nullptr) {
@@ -60,6 +61,7 @@ void delOutputNode(int type)
         gLogManager->delLogWriteFromList(type);
     }
 }
+} // namespace log
 
 void log_write(int level, const char *tag, const char *fmt, ...)
 {
@@ -112,7 +114,7 @@ void log_write(int level, const char *tag, const char *fmt, ...)
         out[len] = '\n';
     }
     ev.msg = out;
-    getLogManager();
+    log::getLogManager();
     if (gLogManager) {
         gLogManager->WriteLog(&ev);
     }
@@ -152,7 +154,7 @@ void log_write_assert(int level, const char *expr, const char *tag, const char *
 
 void log_write_assertv(const LogEvent *ev)
 {
-    getLogManager();
+    log::getLogManager();
     if (gLogManager != nullptr) {
         std::string msgString = LogFormat::Format(ev);
         std::list<LogWrite*> logWriteList = gLogManager->GetLogWrite();
