@@ -284,6 +284,12 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
         uid_t uid = getuid();
         struct passwd *p = getpwuid(uid);
         if (p != nullptr) {
+            // printf("\tname = %s\n", p->pw_name);
+            // printf("\tpasswd = %s", p->pw_passwd);
+            // printf("\tuid = %u", p->pw_uid);
+            // printf("\tuid = %u", p->pw_gid);
+            // printf("\tdir = %s", p->pw_dir);
+            // printf("\tshell = %s", p->pw_shell);
             realPath = p->pw_dir;
             realPath.append(path.c_str() + 1);
         }

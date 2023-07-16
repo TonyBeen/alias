@@ -47,6 +47,10 @@ public:
 
     void setBasePath(const std::string &path)
     {
+        if (path.length() == 0) {
+            return;
+        }
+
         mBasePath = path;
         if (mBasePath[mBasePath.length() - 1] != '/') {
             mBasePath.append("/");
