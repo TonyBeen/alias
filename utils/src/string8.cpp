@@ -836,7 +836,7 @@ int String8::appendFormatV(const char* fmt, va_list args)
         return n;
     }
 
-    vsnprintf(mString + oldLength, n, fmt, args);
+    vsnprintf(mString + oldLength, n + 1, fmt, args);
     return n;
 }
 
