@@ -178,6 +178,19 @@ TEST_F(String8Test, format) {
         int num_2 = atoi(format.c_str());
         EXPECT_EQ(num, num_2);
     }
+
+    {
+        uint8_t buffer[] = {0x01, 0x02, 0x03, 0x04};
+        String8 format;
+        for (int32_t i = 0; i < sizeof(buffer); ++i) {
+            format.appendFormat("0x%02x ", buffer[i]);
+        }
+
+        format.clear();
+        for (int32_t i = 0; i < sizeof(buffer); ++i) {
+            format.appendFormat("0x%02x ", buffer[i]);
+        }
+    }
 }
 
 int main(int argc, char* argv[])
