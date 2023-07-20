@@ -50,6 +50,8 @@ test/testmd5 : test/test_md5.cc md5.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 test/testbase64 : test/test_base64.cc base64.cpp
 	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
+test/testcrc32 : test/test_crc32.cc crc32.cpp
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 
 %.o : %.cpp
 	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
