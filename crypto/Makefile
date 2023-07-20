@@ -10,6 +10,7 @@ INCLUDEPATH := -I./
 
 LIBPATH := -L/usr/local/lib/
 LIBLIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
+GTEST_LIB := /usr/local/lib/libgtest.a
 
 INCLUDELIST := $(HEADERFILE)
 INCLUDELIST += $(wildcard *.hpp)
@@ -42,13 +43,13 @@ testall:
 	make test/testbase64
 
 test/testrsa : test/test_rsa.cc rsa.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 test/testaes : test/test_aes.cc aes.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 test/testmd5 : test/test_md5.cc md5.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 test/testbase64 : test/test_base64.cc base64.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 
 %.o : %.cpp
 	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
