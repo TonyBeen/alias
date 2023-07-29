@@ -14,12 +14,19 @@
 #define LOG_TAG "AES"
 
 namespace eular {
-
-Aes::Aes(const uint8_t *userKey, Aes::KeyType userKeytype, Aes::EncodeType encodeType)
+Aes::Aes() :
+    mUserKeyType(KeyType::AES128),
+    mEncodeType(EncodeType::AESCBC)
 {
-    memset(mUserKey, 0, MAX_USER_KEY_SIZE);
     memset(vecForCBC, 0, CBC_VECTOR_SIZE);
-    reinit(userKey, userKeytype, encodeType);
+}
+
+Aes::Aes(const uint8_t *userKey, uint32_t userKeyLen, Aes::KeyType userKeytype, Aes::EncodeType encodeType) :
+    mUserKeyType(KeyType::AES128),
+    mEncodeType(EncodeType::AESCBC)
+{
+    memset(vecForCBC, 0, CBC_VECTOR_SIZE);
+    reinit(userKey, userKeyLen, userKeytype, encodeType);
 }
 
 Aes::~Aes()
@@ -27,41 +34,76 @@ Aes::~Aes()
 
 }
 
-bool Aes::reinit(const uint8_t *userKey, Aes::KeyType userKeytype, Aes::EncodeType encodeType)
+bool Aes::reinit(const uint8_t *userKey, uint32_t userKeyLen, Aes::KeyType userKeytype, Aes::EncodeType encodeType)
 {
+    if (userKey == nullptr) {
+        return false;
+    }
+
     switch (userKeytype) {
     case Aes::KeyType::AES128:
     case Aes::KeyType::AES256:
         break;
     default:
-        throw(Exception(String8::format("Invalid AES Type: %d", userKeytype)));
-        break;
+        throw(Exception(String8::format("Invalid AES Key Type: %d", userKeytype)));
     }
-    memcpy(mUserKey, userKey, userKeytype);
+
+    switch (encodeType) {
+    case EncodeType::AESCBC:
+    case EncodeType::AESECB:
+        break;
+    default:
+        throw(Exception(String8::format("Invalid AES Encode Type: %d", encodeType)));
+    }
+
+    if (userKeyLen == 0 || userKeyLen > userKeytype) {
+        return false;
+    }
+
+    memset(mUserKey, 0, MAX_USER_KEY_SIZE);
+    memcpy(mUserKey, userKey, userKeyLen);
     mUserKeyType = userKeytype;
     mEncodeType = encodeType;
+
+    return true;
 }
 
-int Aes::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
+void Aes::setKey(const uint8_t *key, uint32_t len)
 {
-    LOG_ASSERT(out || src || srcLen, "");
+    if (key && (0 < len && len <= MAX_USER_KEY_SIZE)) {
+        memset(mUserKey, 0, MAX_USER_KEY_SIZE);
+        memcpy(mUserKey, key, len);
+    }
+}
+
+int32_t Aes::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
+{
+    if (out == nullptr || src == nullptr || srcLen == 0) {
+        return Status::INVALID_PARAM;
+    }
+
     std::shared_ptr<ByteBuffer> ptr = PKCS7Padding(src, srcLen);
     if (ptr == nullptr) {
-        return NO_MEMORY;
+        return Status::NO_MEMORY;
     }
 
     AES_set_encrypt_key(mUserKey, mUserKeyType * 8, &mAesKey);
-    if (mEncodeType == AESECB) {
+    switch (mEncodeType) {
+    case EncodeType::AESECB:
         AES_ecb_encrypt(ptr->const_data(), out, &mAesKey, AES_ENCRYPT);
-    } else if (mEncodeType == AESCBC) {
+        break;
+    case EncodeType::AESCBC:
         memset(vecForCBC, 0, AES_BLOCK_SIZE);   // 加密和解密时初始vecForCBC内容须一致，一般设置为全0
         AES_cbc_encrypt(ptr->const_data(), out, ptr->size(), &mAesKey, vecForCBC, AES_ENCRYPT);
+        break;
+    default:
+        break;
     }
 
     return ptr->size();
 }
 
-int Aes::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
+int32_t Aes::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
     LOG_ASSERT(out || src || srcLen, "");
 
@@ -86,7 +128,11 @@ int Aes::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 
 std::shared_ptr<ByteBuffer> Aes::PKCS7Padding(const uint8_t *in, uint32_t inLen)
 {
-    std::shared_ptr<ByteBuffer> ptr(new ByteBuffer(in, inLen));
+    std::shared_ptr<ByteBuffer> ptr(new (std::nothrow)ByteBuffer(in, inLen));
+    if (ptr == nullptr) {
+        return nullptr;
+    }
+
     uint8_t remainderSize = inLen % AES_BLOCK_SIZE;
     if (remainderSize == 0) {
         return ptr;
@@ -96,9 +142,7 @@ std::shared_ptr<ByteBuffer> Aes::PKCS7Padding(const uint8_t *in, uint32_t inLen)
     uint8_t paddingSize = AES_BLOCK_SIZE - remainderSize;
 
     memset(buf, paddingSize, paddingSize);
-    if (ptr != nullptr) {
-        ptr->append(buf, paddingSize);
-    }
+    ptr->append(buf, paddingSize);
 
     return ptr;
 }

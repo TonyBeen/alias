@@ -36,16 +36,16 @@ Rsa::~Rsa()
     destroy();
 }
 
-int Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint32_t len)
+int32_t Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint32_t len)
 {
     RSA *rsa = nullptr;
     FILE *fp = nullptr;
-    int ret = OK;
+    int32_t ret = OK;
 
     do {
         rsa = RSA_generate_key(len, RSA_F4, NULL, NULL);
         if (!rsa) {
-            ret = (int)ERR_get_error();
+            ret = (int32_t)ERR_get_error();
             LOGE("RSA_generate_key failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
             ret = UNKNOWN_ERROR;
             break;
@@ -82,13 +82,13 @@ int Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint3
     return ret;
 }
 
-int Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 {
     if (!out || !src || !srcLen) {
         return INVALID_PARAM;
     }
-    int canEncodeLen = getPubRsaSize();
-    int realLen = 0;    // 实际一次可编码最大字节数
+    int32_t canEncodeLen = getPubRsaSize();
+    int32_t realLen = 0;    // 实际一次可编码最大字节数
     switch (defaultPadding) {
     case RSA_PKCS1_PADDING:
         realLen = canEncodeLen - 11;
@@ -103,15 +103,15 @@ int Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
         LOGE("unknow padding type: %d", defaultPadding);
         return UNKNOWN_ERROR;
     }
-    int totalEncodeSize = 0;
-    int encodeLen = 0;  // 一次编码返回值
+    int32_t totalEncodeSize = 0;
+    int32_t encodeLen = 0;  // 一次编码返回值
     const uint8_t *from = src;
     uint8_t *to = out;
 
     while (srcLen > realLen) {
         encodeLen = RSA_public_encrypt(realLen, from, to, mPublicKey, defaultPadding);
         if (encodeLen < 0) {
-            int ret = (int)ERR_get_error();
+            int32_t ret = (int32_t)ERR_get_error();
             LOGE("RSA_public_encrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
             return UNKNOWN_ERROR;
         }
@@ -126,7 +126,7 @@ int Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     // 不足realLen字节
     encodeLen = RSA_public_encrypt(srcLen, from, to, mPublicKey, defaultPadding);
     if (encodeLen < 0) {
-        int ret = (int)ERR_get_error();
+        int32_t ret = (int32_t)ERR_get_error();
         LOGE("RSA_public_encrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
         return UNKNOWN_ERROR;
     }
@@ -142,12 +142,12 @@ Rsa::BufferPtr Rsa::publicEncode(const uint8_t *from, uint32_t fromLen)
     }
     Rsa::BufferPtr ptr(new ByteBuffer);
     ptr->resize(getEncodeSpaceByDataLen(fromLen, false) + 1);
-    int encodeSize = publicEncode(ptr->data(), from, fromLen);
+    int32_t encodeSize = publicEncode(ptr->data(), from, fromLen);
     ptr->setDataSize(encodeSize);
     return encodeSize > 0 ? ptr : nullptr;
 }
 
-int Rsa::publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
     if (!src || !srcLen) {
         return INVALID_PARAM;
@@ -155,27 +155,27 @@ int Rsa::publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 
     out.resize(getEncodeSpaceByDataLen(srcLen, false) + 1);
     uint8_t *outputBuf = out.data();
-    int encodeSize = publicEncode(outputBuf, src, srcLen);
+    int32_t encodeSize = publicEncode(outputBuf, src, srcLen);
     out.setDataSize(encodeSize);
     return encodeSize;
 }
 
-int Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 {
     if (!out || !src || !srcLen) {
         return INVALID_PARAM;
     }
 
-    int canDecodeLen = getPubRsaSize();
+    int32_t canDecodeLen = getPubRsaSize();
     const uint8_t *from = src;
     uint8_t *to = out;
-    int totalDecodeSize = 0;
-    int decodeLen = 0;
+    int32_t totalDecodeSize = 0;
+    int32_t decodeLen = 0;
 
     while (srcLen > canDecodeLen) {
         decodeLen = RSA_public_decrypt(canDecodeLen, from, to, mPublicKey, defaultPadding);
         if (decodeLen < 0) {
-            int ret = (int)ERR_get_error();
+            int32_t ret = (int32_t)ERR_get_error();
             LOGE("RSA_public_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
             return UNKNOWN_ERROR;
         }
@@ -188,7 +188,7 @@ int Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
     decodeLen = RSA_public_decrypt(srcLen, from, to, mPublicKey, defaultPadding);
     if (decodeLen < 0) {
-        int ret = (int)ERR_get_error();
+        int32_t ret = (int32_t)ERR_get_error();
         LOGE("RSA_public_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
         return UNKNOWN_ERROR;
     }
@@ -206,14 +206,14 @@ Rsa::BufferPtr Rsa::publicDecode(const uint8_t *from, uint32_t fromLen)
     BufferPtr ptr(new ByteBuffer());
     if (ptr != nullptr) {
         ptr->resize(getDecodeSpaceByDataLen(fromLen, false) + 1);
-        int decodeSize = publicDecode(ptr->data(), from, fromLen);
+        int32_t decodeSize = publicDecode(ptr->data(), from, fromLen);
         ptr->setDataSize(decodeSize);
     }
 
     return ptr;
 }
 
-int Rsa::publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
     if (!src || !srcLen) {
         return INVALID_PARAM;
@@ -221,21 +221,21 @@ int Rsa::publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 
     out.resize(getDecodeSpaceByDataLen(srcLen, false) + 1);
     uint8_t *outputBuf = out.data();
-    int decodeSize = publicDecode(outputBuf, src, srcLen);
+    int32_t decodeSize = publicDecode(outputBuf, src, srcLen);
     out.setDataSize(decodeSize);
 
     return decodeSize;
 }
 
 
-int Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 {
     if (!out || !src || !srcLen) {
         return INVALID_PARAM;
     }
 
-    int canEncodeSize = getPriRsaSize();
-    int metaSize = 0;   // 实际单元加密数据块大小，受padding影响
+    int32_t canEncodeSize = getPriRsaSize();
+    int32_t metaSize = 0;   // 实际单元加密数据块大小，受padding影响
     switch (defaultPadding) {
     case RSA_PKCS1_PADDING:
         metaSize = canEncodeSize - 11;
@@ -253,13 +253,13 @@ int Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
     const uint8_t *from = src;
     uint8_t *to = out;
-    int totalEncodeSize = 0;
-    int encodeSize = 0;
+    int32_t totalEncodeSize = 0;
+    int32_t encodeSize = 0;
 
     while (srcLen > metaSize) {
         encodeSize = RSA_private_encrypt(metaSize, from, to, mPrivatKey, defaultPadding);
         if (encodeSize < 0) {
-            int ret = (int)ERR_get_error();
+            int32_t ret = (int32_t)ERR_get_error();
             LOGE("RSA_private_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
             return UNKNOWN_ERROR;
         }
@@ -272,7 +272,7 @@ int Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     
     encodeSize = RSA_private_encrypt(metaSize, from, to, mPrivatKey, defaultPadding);
     if (encodeSize < 0) {
-        int ret = (int)ERR_get_error();
+        int32_t ret = (int32_t)ERR_get_error();
         LOGE("RSA_private_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
         return UNKNOWN_ERROR;
     }
@@ -286,26 +286,26 @@ Rsa::BufferPtr Rsa::privateEncode(const uint8_t *from, uint32_t fromLen)
 
 }
 
-int Rsa::privateEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::privateEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
 
 }
 
-int Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 {
     if (!out || !src || !srcLen) {
         return INVALID_PARAM;
     }
-    int canDecodeLen = getPriRsaSize();
+    int32_t canDecodeLen = getPriRsaSize();
 
     const uint8_t *from = src;
     uint8_t *to = out;
-    int totalDecodeSize = 0;
-    int decodeLen = 0;
+    int32_t totalDecodeSize = 0;
+    int32_t decodeLen = 0;
     while (srcLen > canDecodeLen) {
         decodeLen = RSA_private_decrypt(canDecodeLen, from, to, mPrivatKey, defaultPadding);
         if (decodeLen < 0) {
-            int ret = (int)ERR_get_error();
+            int32_t ret = (int32_t)ERR_get_error();
             LOGE("RSA_private_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
             return UNKNOWN_ERROR;
         }
@@ -318,7 +318,7 @@ int Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
     decodeLen = RSA_private_decrypt(srcLen, from, to, mPrivatKey, defaultPadding);
     if (decodeLen < 0) {
-        int ret = (int)ERR_get_error();
+        int32_t ret = (int32_t)ERR_get_error();
         LOGE("RSA_private_decrypt failed. [%d, %s]", ret, ERR_error_string(ret, NULL));
         return UNKNOWN_ERROR;
     }
@@ -332,7 +332,7 @@ Rsa::BufferPtr Rsa::privateDecode(const uint8_t *from, uint32_t fromLen)
 
 }
 
-int Rsa::privateDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
+int32_t Rsa::privateDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
 
 }
@@ -341,7 +341,7 @@ bool Rsa::reinit()
 {
     bool ret = true;
     FILE *fp = nullptr;
-    int err = 0;
+    int32_t err = 0;
 
     mPubKeyStr.clear();
     mPriKeyStr.clear();
@@ -355,12 +355,12 @@ bool Rsa::reinit()
 
         mPublicKey = PEM_read_RSAPublicKey(fp, NULL, NULL, NULL);
         if (!mPublicKey) {
-            err = (int)ERR_get_error();
+            err = (int32_t)ERR_get_error();
             LOGE("RSA_generate_key failed. [%d, %s]", err, ERR_error_string(err, NULL));
             ret = false;
             break;
         }
-        int read = 0;
+        int32_t read = 0;
         char buf[256] = {0};
         fseek(fp, 0, SEEK_SET);
         do {
@@ -372,7 +372,6 @@ bool Rsa::reinit()
             }
             memset(buf, 0, sizeof(buf));
         } while (read > 0);
-        LOGD("public key: \n%s", mPubKeyStr.c_str());
         fclose(fp);
 
         fp = fopen(mPriKeyPath.c_str(), "r");
@@ -384,7 +383,7 @@ bool Rsa::reinit()
 
         mPrivatKey = PEM_read_RSAPrivateKey(fp, NULL, NULL, NULL);
         if (!mPrivatKey) {
-            err = (int)ERR_get_error();
+            err = (int32_t)ERR_get_error();
             LOGE("RSA_generate_key failed. %d %s", err, ERR_error_string(err, NULL));
             ret = false;
             break;
@@ -399,7 +398,6 @@ bool Rsa::reinit()
             }
             memset(buf, 0, sizeof(buf));
         } while (read > 0);
-        LOGD("private key: \n%s", mPriKeyStr.c_str());
     } while(0);
 
     if (fp) {
@@ -422,13 +420,13 @@ void Rsa::destroy()
 
 uint32_t Rsa::getDecodeSpaceByDataLen(uint32_t len, bool priKeyDecode)
 {
-    int metaSize = 0;   // 解密时的单位数据块大小
+    int32_t metaSize = 0;   // 解密时的单位数据块大小
     if (priKeyDecode) {
         metaSize = getPriRsaSize();
     } else {
         metaSize = getPubRsaSize();
     }
-    int realLen = 0;    // 一个单位数据块实际解出来的数据长度
+    int32_t realLen = 0;    // 一个单位数据块实际解出来的数据长度
     switch (defaultPadding) {
     case RSA_PKCS1_PADDING:
         realLen = metaSize - 11;
@@ -443,7 +441,7 @@ uint32_t Rsa::getDecodeSpaceByDataLen(uint32_t len, bool priKeyDecode)
         LOGE("unknow padding type: %d", defaultPadding);
         return 0;
     }
-    int index = len / metaSize; // 存在多少个单位数据
+    int32_t index = len / metaSize; // 存在多少个单位数据
     if (len % metaSize) {
         index++;
     }
@@ -453,14 +451,14 @@ uint32_t Rsa::getDecodeSpaceByDataLen(uint32_t len, bool priKeyDecode)
 
 uint32_t Rsa::getEncodeSpaceByDataLen(uint32_t len, bool priKeyEncode)
 {
-    int metaSize = 0;           // 单位数据块加密后产生的数据块大小
+    int32_t metaSize = 0;           // 单位数据块加密后产生的数据块大小
     if (priKeyEncode) {
         metaSize = getPubRsaSize();
     } else {
         metaSize = getPriRsaSize();
     }
 
-    int realMetaSize = 0;       // 一个单位要加密的数据块大小，受padding影响
+    int32_t realMetaSize = 0;       // 一个单位要加密的数据块大小，受padding影响
     switch (defaultPadding) {
     case RSA_PKCS1_PADDING:
         realMetaSize = metaSize - 11;
@@ -477,7 +475,7 @@ uint32_t Rsa::getEncodeSpaceByDataLen(uint32_t len, bool priKeyEncode)
     }
 
     // 一个realMetaSize大小的数据块加密后产生metaSize大小的数据块
-    int index = len / realMetaSize;
+    int32_t index = len / realMetaSize;
     if (len % realMetaSize) {
         index++;
     }

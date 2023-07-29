@@ -30,13 +30,26 @@ public:
         AESCBC = 1,
     };
 
-    Aes(const uint8_t *userKey, Aes::KeyType userKeytype, Aes::EncodeType encodeType);
+    Aes();
+    Aes(const uint8_t *userKey, uint32_t userKeyLen, Aes::KeyType userKeytype, Aes::EncodeType encodeType);
     virtual ~Aes();
 
-    bool reinit(const uint8_t *userKey, Aes::KeyType userKeytype, Aes::EncodeType encodeType);
+    bool reinit(const uint8_t *userKey, uint32_t userKeyLen, Aes::KeyType userKeytype, Aes::EncodeType encodeType);
 
-    virtual int encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen);
-    virtual int decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen);
+    uint8_t getKeyType() const { return mUserKeyType; }
+    void setKeyType(uint8_t keyType) { mUserKeyType = keyType; }
+
+    uint8_t getEncodeType() const { return mEncodeType; }
+    void setEncodeType(uint8_t encodeType) { mEncodeType = encodeType; }
+
+    const uint8_t *getKey() const { return mUserKey; }
+    void setKey(const uint8_t *key, uint32_t len);
+
+    // int32_t getEncodeLength() const;
+    // int32_t getDecodeLength() const;
+
+    int32_t encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
+    int32_t decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
 
 protected:
     std::shared_ptr<ByteBuffer> PKCS7Padding(const uint8_t *in, uint32_t inLen);

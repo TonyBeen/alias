@@ -6,99 +6,79 @@
  ************************************************************************/
 
 #include "rsa.h"
+#include <gtest/gtest.h>
+#include <stdio.h>
+#include "utils/errors.h"
 
 using namespace eular;
 
-static const char *publicKeyFile = "./test/public.pem";
-static const char *privateKeyFile = "./test/private.pem";
+static const char *publicKeyFile = "public.pem";
+static const char *privateKeyFile = "private.pem";
+
+static const String8 encryptedContent = "This is an encrypted section of content";
+
+class GtestRsa : public testing::Test
+{
+public:
+    void SetUp() override
+    {
+        int32_t nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile);
+        ASSERT_TRUE(Status::OK == nRet);
+        pRsa = new (std::nothrow) Rsa(publicKeyFile, privateKeyFile);
+        ASSERT_TRUE(pRsa != nullptr);
+    }
+
+    void TearDown() override
+    {
+        delete pRsa;
+
+        remove(publicKeyFile);
+        remove(privateKeyFile);
+    }
+
+    Rsa *pRsa;
+};
 
 // 测试公钥加密，私钥解密
-void test_publicEncode_privateDecode()
-{
-    Rsa rsa(publicKeyFile, privateKeyFile);
+TEST_F(GtestRsa, test_publicEncode_privateDecode) {
+    const int32_t bufSize = 1024;
+    const uint8_t *from = (const uint8_t *)(encryptedContent.c_str());
+    size_t fromLen = encryptedContent.length();
 
-    const int bufSize = 1024;
-    unsigned char from[bufSize] = {0};
     unsigned char out[bufSize] = {0};
     unsigned char tmp[bufSize] = {0};
 
-    printf("something you want to encrypt (at most 512, prevent overflow):\n");
-    scanf("%[^\n]", from);
-    printf("the thing you input: [%s]\n", from);
+    // 公钥加密
+    int32_t encodeLen = pRsa->publicEncode(tmp, from, fromLen);
+    ASSERT_TRUE(encodeLen > 0);
+    
+    // 获取解密数据后的长度, 保证解密后的数据不会溢出
+    EXPECT_TRUE(pRsa->getDecodeSpaceByDataLen(encodeLen, true) < sizeof(out));
 
-    printf("pubsize = %d, prisize = %d\n", rsa.getPubRsaSize(), rsa.getPriRsaSize());
-    printf("neededEncodeSize = %u\n", rsa.getEncodeSpaceByDataLen(strlen((char *)from), false));
-    int encodeLen = rsa.publicEncode(out, from, strlen((char *)from));
-    if (encodeLen < 0) {
-        printf("encode failed\n");
-        return;
-    }
-    printf("after encode: encodeLen = %d\n", encodeLen);
-    for (int i = 0; i < encodeLen; ++i) {
-        if (i != 0 && i % 16 == 0) {
-            printf("\n");
-        }
-        printf("%02x ", out[i]);
-    }
-    printf("\n");
-
-    printf("begin decode...\n");
-    printf("neededDecodeSize = %u\n", rsa.getDecodeSpaceByDataLen(encodeLen, true));
-    memset(from, bufSize, 0);
-    memcpy(from, out, encodeLen);
-    memset(out, 0, sizeof(out));
-    int decodeLen = rsa.privateDecode(out, from, encodeLen);
-    printf("decodeLen = %d\n", decodeLen);
-    printf("%s\n", (char *)out);
+    // 私钥解密
+    int32_t decodeLen = pRsa->privateDecode(out, tmp, encodeLen);
+    ASSERT_TRUE(decodeLen > 0);
+    EXPECT_TRUE(encryptedContent == (char *)out);
 }
 
 // 测试私钥加密，公钥解密
-void test_privateEncode_publicDecode()
-{
-    Rsa rsa(publicKeyFile, privateKeyFile);
+TEST_F(GtestRsa, test_privateEncode_publicDecode) {
+    const int32_t bufSize = 1024;
+    const uint8_t *from = (const uint8_t *)(encryptedContent.c_str());
+    size_t fromLen = encryptedContent.length();
 
-    const int bufSize = 1024;
-    unsigned char from[bufSize] = {0};
     unsigned char out[bufSize] = {0};
     unsigned char tmp[bufSize] = {0};
 
-    printf("something you want to encrypt:\n");
-    scanf("%s", from);  // 去除stdin多余的字符
-    scanf("%[^\n]", from + strlen((char *)from)); //fscanf(stdin, "%[^\n]", from);
-    printf("the thing you input: [%s] [len = %zu]\n", from, strlen((char *)from));
+    // 私钥加密
+    int32_t encodeSize = pRsa->privateEncode(tmp, from, fromLen);
+    ASSERT_TRUE(encodeSize > 0);
 
-    printf("pubsize = %d, prisize = %d\n", rsa.getPubRsaSize(), rsa.getPriRsaSize());
+    // 获取解密数据后的长度, 保证解密后的数据不会溢出
+    EXPECT_TRUE(pRsa->getDecodeSpaceByDataLen(encodeSize, false) < sizeof(out));
 
-    int encodeSize = rsa.privateEncode(out, from, strlen((char *)from));
-    if (encodeSize < 0) {
-        printf("encode failed\n");
-        return;
-    }
-    printf("after encode: encodeSize = %d\n", encodeSize);
-    for (int i = 0; i < encodeSize; ++i) {
-        if (i != 0 && i % 16 == 0) {
-            printf("\n");
-        }
-        printf("%02x ", out[i]);
-    }
-    printf("\n");  
-
-    memset(from, 0, bufSize);
-    memcpy(from, out, bufSize);
-    memset(out, 0, bufSize);
-    int decodeSize = rsa.publicDecode(out, from, encodeSize);
-    printf("decodeSize = %d\n", decodeSize);
-    printf("{%s}\n", out);
-}
-
-
-int main()
-{
-    if (Rsa::GenerateKey(publicKeyFile, privateKeyFile) < 0) {
-        return -1;
-    }
-    
-    test_publicEncode_privateDecode();
-    test_privateEncode_publicDecode();
-    return 0;
+    // 公钥解密
+    int32_t decodeSize = pRsa->publicDecode(out, tmp, encodeSize);
+    ASSERT_TRUE(decodeSize > 0);
+    EXPECT_TRUE(encryptedContent == (char *)out);
 }

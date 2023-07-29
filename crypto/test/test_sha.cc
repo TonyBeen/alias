@@ -6,17 +6,5 @@
  ************************************************************************/
 
 #include "sha.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdint.h>
-#include <iostream>
 
 using namespace eular;
-using namespace std;
-
-int main(int argc, char **argv)
-{
-
-    return 0;
-}

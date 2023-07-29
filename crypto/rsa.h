@@ -23,7 +23,7 @@ public:
 
     using BufferPtr = std::shared_ptr<ByteBuffer>;
 
-    static int GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint32_t len = 1024);
+    static int32_t GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, uint32_t len = 1024);
 
     /**
      * @brief 使用公钥加密
@@ -32,8 +32,8 @@ public:
      * @param srcLen src数据的长度
      * @return 成功返回加密的长度，失败返回负值
      */
-    int publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
-    int publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
+    int32_t publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
+    int32_t publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
     BufferPtr publicEncode(const uint8_t *from, uint32_t fromLen);
 
     /**
@@ -43,8 +43,8 @@ public:
      * @param srcLen src数据的长度
      * @return 成功返回解密的长度，失败返回负值
      */
-    int publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
-    int publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
+    int32_t publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
+    int32_t publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
     BufferPtr publicDecode(const uint8_t *from, uint32_t fromLen);
 
     /**
@@ -54,8 +54,8 @@ public:
      * @param srcLen src数据的长度
      * @return 成功返回加密的长度，失败返回负值
      */
-    int privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
-    int privateEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
+    int32_t privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
+    int32_t privateEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
     BufferPtr privateEncode(const uint8_t *from, uint32_t fromLen);
 
     /**
@@ -65,13 +65,13 @@ public:
      * @param srcLen src数据的长度
      * @return 成功返回解密的长度，失败返回负值
      */
-    int privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
-    int privateDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
+    int32_t privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen);
+    int32_t privateDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen);
     BufferPtr privateDecode(const uint8_t *from, uint32_t fromLen);
 
     // 根据秘钥或公钥获得单位加密/解密字节数，受padding影响
-    int getPubRsaSize() const { return RSA_size(mPublicKey); }
-    int getPriRsaSize() const { return RSA_size(mPrivatKey); }
+    int32_t getPubRsaSize() const { return RSA_size(mPublicKey); }
+    int32_t getPriRsaSize() const { return RSA_size(mPrivatKey); }
 
     uint32_t getDecodeSpaceByDataLen(uint32_t len, bool priKeyDecode = true);
     uint32_t getEncodeSpaceByDataLen(uint32_t len, bool priKeyEncode = true);
@@ -88,7 +88,7 @@ protected:
     String8 mPriKeyPath;
     String8 mPubKeyStr;
     String8 mPriKeyStr;
-    static const int defaultPadding = RSA_PKCS1_PADDING;
+    static const int32_t defaultPadding = RSA_PKCS1_PADDING;
 };
 
 } // namespace eular

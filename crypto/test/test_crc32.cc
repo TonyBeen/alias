@@ -44,10 +44,3 @@ uint64_t test_crc32()
     EXPECT_EQ(combinedCrc, CRC32_RESULT);
 }
 #endif
-
-int main(int argc, char* argv[])
-{
-    testing::InitGoogleTest(&argc, argv); 
-    return RUN_ALL_TESTS();
-}
-
