@@ -22,8 +22,17 @@ class GtestRsa : public testing::Test
 public:
     void SetUp() override
     {
-        int32_t nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile);
+        int32_t nRet = Status::OK;
+
+        nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile, 512);
         ASSERT_TRUE(Status::OK == nRet);
+        // nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile, 1024);
+        // ASSERT_TRUE(Status::OK == nRet);
+        // nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile, 4096);
+        // ASSERT_TRUE(Status::OK == nRet);
+        // nRet = Rsa::GenerateKey(publicKeyFile, privateKeyFile, 8012);
+        // ASSERT_TRUE(Status::OK == nRet);
+
         pRsa = new (std::nothrow) Rsa(publicKeyFile, privateKeyFile);
         ASSERT_TRUE(pRsa != nullptr);
     }

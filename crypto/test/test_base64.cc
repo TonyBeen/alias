@@ -17,7 +17,7 @@ using namespace eular;
 using namespace std;
 
 TEST(Base64Test, test_encode_docode) {
-    const char *file = "for_base64_test.txt"; 
+    const char *file = "test/for_base64_test.txt"; 
 
     ByteBuffer buf(4096);
     uint8_t from[2048] = {0};

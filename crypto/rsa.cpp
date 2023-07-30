@@ -42,6 +42,7 @@ int32_t Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, u
     FILE *fp = nullptr;
     int32_t ret = OK;
 
+    LOGD("openssl version: %s", OPENSSL_VERSION_TEXT);
     do {
         rsa = RSA_generate_key(len, RSA_F4, NULL, NULL);
         if (!rsa) {
@@ -85,7 +86,7 @@ int32_t Rsa::GenerateKey(const String8 &pubkeyFile, const String8 &prikeyFile, u
 int32_t Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 {
     if (!out || !src || !srcLen) {
-        return INVALID_PARAM;
+        return Status::INVALID_PARAM;
     }
     int32_t canEncodeLen = getPubRsaSize();
     int32_t realLen = 0;    // 实际一次可编码最大字节数
@@ -101,7 +102,7 @@ int32_t Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
         break;
     default:
         LOGE("unknow padding type: %d", defaultPadding);
-        return UNKNOWN_ERROR;
+        return Status::UNKNOWN_ERROR;
     }
     int32_t totalEncodeSize = 0;
     int32_t encodeLen = 0;  // 一次编码返回值
