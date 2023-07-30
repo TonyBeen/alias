@@ -76,13 +76,27 @@ void Aes::setKey(const uint8_t *key, uint32_t len)
     }
 }
 
+int32_t Aes::getEncodeLength(uint32_t contentLength) const
+{
+    if (contentLength == 0) {
+        return 0;
+    }
+
+    return ((contentLength + AES_BLOCK_SIZE) / AES_BLOCK_SIZE) * AES_BLOCK_SIZE;
+}
+
+int32_t Aes::getDecodeLength(uint32_t contentLength) const
+{
+    return contentLength;
+}
+
 int32_t Aes::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
     if (out == nullptr || src == nullptr || srcLen == 0) {
         return Status::INVALID_PARAM;
     }
 
-    std::shared_ptr<ByteBuffer> ptr = PKCS7Padding(src, srcLen);
+    std::shared_ptr<ByteBuffer> ptr = _pkcs7Padding(src, srcLen);
     if (ptr == nullptr) {
         return Status::NO_MEMORY;
     }
@@ -97,7 +111,7 @@ int32_t Aes::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
         AES_cbc_encrypt(ptr->const_data(), out, ptr->size(), &mAesKey, vecForCBC, AES_ENCRYPT);
         break;
     default:
-        break;
+        return Status::INVALID_PARAM;
     }
 
     return ptr->size();
@@ -126,7 +140,7 @@ int32_t Aes::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
     return srcLen - paddingSize;
 }
 
-std::shared_ptr<ByteBuffer> Aes::PKCS7Padding(const uint8_t *in, uint32_t inLen)
+std::shared_ptr<ByteBuffer> Aes::_pkcs7Padding(const uint8_t *in, uint32_t inLen)
 {
     std::shared_ptr<ByteBuffer> ptr(new (std::nothrow)ByteBuffer(in, inLen));
     if (ptr == nullptr) {

@@ -45,14 +45,31 @@ public:
     const uint8_t *getKey() const { return mUserKey; }
     void setKey(const uint8_t *key, uint32_t len);
 
-    // int32_t getEncodeLength() const;
-    // int32_t getDecodeLength() const;
+    int32_t getEncodeLength(uint32_t contentLength) const;
+    int32_t getDecodeLength(uint32_t contentLength) const;
 
+    /**
+     * @brief 对src的内容进行加密, 输出到out
+     *
+     * @param out 加密数据缓存, 请使用getEncodeLength提前获取加密后数据长度以保证函数不会越界
+     * @param src 未加密数据缓存
+     * @param srcLen 未加密数据长度
+     * @return int32_t 返回加密后的实际长度, 失败返回负值
+     */
     int32_t encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
+
+    /**
+     * @brief 对src的内容进行解密
+     *
+     * @param out 解密数据缓存, 使用getDecodeLength获取解密后数据长度用以分配空间, 此长度大于等于实际解密后的数据长度
+     * @param src 解密的数据缓存
+     * @param srcLen 要解密的数据长度
+     * @return int32_t 返回解密后的实际长度, 失败返回负值
+     */
     int32_t decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen) override;
 
 protected:
-    std::shared_ptr<ByteBuffer> PKCS7Padding(const uint8_t *in, uint32_t inLen);
+    std::shared_ptr<ByteBuffer> _pkcs7Padding(const uint8_t *in, uint32_t inLen);
 
 protected:
     AES_KEY mAesKey;
