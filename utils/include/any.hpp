@@ -10,31 +10,28 @@
 
 #include <typeinfo>
 #include <utility>
+#include <memory>
 #include <assert.h>
 
-// TODO 传递的是指针时需要深拷贝
 namespace eular {
 // NOTE: class Any need the copy structure
 class Any {
 public:
     Any() : m_placeHolder(nullptr) {}
-    ~Any() {
-        if (m_placeHolder) {
-            delete m_placeHolder;
-        }
-    }
+    ~Any() {}
 
     template<typename ValueType>
     explicit Any(const ValueType& value)
         : m_placeHolder(new Holder<ValueType>(value)) {}
 
     Any(const Any& rhs)
-        : m_placeHolder(rhs.m_placeHolder ? rhs.m_placeHolder->clone() : nullptr) {}
+        : m_placeHolder(rhs.m_placeHolder) {}
 
 public:
-    Any& swap(Any& rhs) {
-        std::swap(m_placeHolder, rhs.m_placeHolder);
-        return *this;
+    void swap(Any& rhs) {
+        if (this != &rhs) {
+            std::swap(m_placeHolder, rhs.m_placeHolder);
+        }
     }
 
     template<typename ValueType>
@@ -57,12 +54,21 @@ public:
     }
 
     template<typename ValueType>
-    ValueType operator()() const {
-        if (m_placeHolder->getType() == typeid(ValueType)) {
-            return static_cast<Any::Holder<ValueType>*>(m_placeHolder)->m_valueHolder;
-        } else {
-            return ValueType();
+    ValueType *to() {
+        if (m_placeHolder != nullptr && m_placeHolder->getType() == typeid(ValueType)) {
+            return &(static_cast<Any::Holder<ValueType>*>(m_placeHolder.get())->m_valueHolder);
         }
+
+        return nullptr;
+    }
+
+    template<typename ValueType>
+    const ValueType *to() const {
+        if (m_placeHolder != nullptr && m_placeHolder->getType() == typeid(ValueType)) {
+            return &(static_cast<Any::Holder<ValueType> *>(m_placeHolder.get())->m_valueHolder);
+        }
+
+        return nullptr;
     }
 
 protected:
@@ -92,7 +98,7 @@ protected:
     };
 
 protected:
-    PlaceHolder* m_placeHolder;
+    std::shared_ptr<PlaceHolder> m_placeHolder;
 
     template<typename ValueType>
     friend ValueType* any_cast(Any*);
