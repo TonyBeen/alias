@@ -17,23 +17,23 @@ namespace eular {
 // NOTE: class Any need the copy structure
 class Any {
 public:
-    Any() : content_(nullptr) {}
+    Any() : m_placeHolder(nullptr) {}
     ~Any() {
-        if (content_) {
-            delete content_;
+        if (m_placeHolder) {
+            delete m_placeHolder;
         }
     }
 
     template<typename ValueType>
     explicit Any(const ValueType& value)
-        : content_(new Holder<ValueType>(value)) {}
+        : m_placeHolder(new Holder<ValueType>(value)) {}
 
     Any(const Any& rhs)
-        : content_(rhs.content_ ? rhs.content_->clone() : nullptr) {}
+        : m_placeHolder(rhs.m_placeHolder ? rhs.m_placeHolder->clone() : nullptr) {}
 
 public:
     Any& swap(Any& rhs) {
-        std::swap(content_, rhs.content_);
+        std::swap(m_placeHolder, rhs.m_placeHolder);
         return *this;
     }
 
@@ -49,17 +49,17 @@ public:
     }
 
     bool empty() const {
-        return !content_;
+        return !m_placeHolder;
     }
 
     const std::type_info& type() const {
-        return content_ ? content_->getType() : typeid(void);
+        return m_placeHolder ? m_placeHolder->getType() : typeid(void);
     }
 
     template<typename ValueType>
     ValueType operator()() const {
-        if (content_->getType() == typeid(ValueType)) {
-            return static_cast<Any::Holder<ValueType>*>(content_)->held_;
+        if (m_placeHolder->getType() == typeid(ValueType)) {
+            return static_cast<Any::Holder<ValueType>*>(m_placeHolder)->m_valueHolder;
         } else {
             return ValueType();
         }
@@ -78,21 +78,21 @@ protected:
     class Holder : public PlaceHolder {
     public:
         Holder(const ValueType& value)
-            : held_(value) {}
+            : m_valueHolder(value) {}
 
         virtual const std::type_info& getType() const {
             return typeid(ValueType);
         }
 
         virtual PlaceHolder* clone() const {
-            return new Holder(held_);
+            return new Holder(m_valueHolder);
         }
 
-        ValueType held_;
+        ValueType m_valueHolder;
     };
 
 protected:
-    PlaceHolder* content_;
+    PlaceHolder* m_placeHolder;
 
     template<typename ValueType>
     friend ValueType* any_cast(Any*);
@@ -101,7 +101,7 @@ protected:
 template<typename ValueType>
 ValueType* any_cast(Any* any) {
     if (any && any->type() == typeid(ValueType)) {
-        return &(static_cast<Any::Holder<ValueType>*>(any->content_)->held_);
+        return &(static_cast<Any::Holder<ValueType>*>(any->m_placeHolder)->m_valueHolder);
     }
 
     return nullptr;
