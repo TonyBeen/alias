@@ -11,12 +11,12 @@
 
 using namespace std;
 
-#define CONFIG_FILE_PATH "ini_config.ini"
+#define CONFIG_FILE_PATH "test/ini_config.ini"
 
 int main(int argc, char **argv)
 {
     std::string path = CONFIG_FILE_PATH;
-    if (argc > 0) {
+    if (argc == 2) {
         path = argv[1];
     }
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
         config["host"] = "192.168.20.23";
         assert(config["host"] == "192.168.20.23");
         assert(config.value("node1.host") == "192.168.10.12");
-        config.keep("./ini_out.ini");
+        config.keep("test/ini_out.ini");
     }
 
     return 0;

@@ -38,7 +38,6 @@ class IniConfig
 {
 public:
     IniConfig();
-    IniConfig(const std::string &configPath);
     ~IniConfig();
 
     bool parser(const std::string &configPath);

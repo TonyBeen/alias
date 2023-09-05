@@ -61,13 +61,9 @@ unsigned long type_cast<unsigned long>(const char *src)
 template<>
 bool type_cast<bool>(const char *src)
 {
-    bool flag;
-    if (strcasecmp(src, "true") == 0) {
+    bool flag = false;
+    if (src && strcasecmp(src, "true") == 0) {
         flag = true;
-    } else if (strcasecmp(src, "false") == 0) {
-        flag = false;
-    } else {
-        throw std::bad_cast();
     }
 
     return flag;
