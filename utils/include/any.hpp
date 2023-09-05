@@ -12,6 +12,7 @@
 #include <utility>
 #include <assert.h>
 
+// TODO 传递的是指针时需要深拷贝
 namespace eular {
 // NOTE: class Any need the copy structure
 class Any {
@@ -57,7 +58,7 @@ public:
 
     template<typename ValueType>
     ValueType operator()() const {
-        if (getType() == typeid(ValueType)) {
+        if (content_->getType() == typeid(ValueType)) {
             return static_cast<Any::Holder<ValueType>*>(content_)->held_;
         } else {
             return ValueType();
@@ -99,7 +100,7 @@ protected:
 
 template<typename ValueType>
 ValueType* any_cast(Any* any) {
-    if (any && any->getType() == typeid(ValueType)) {
+    if (any && any->type() == typeid(ValueType)) {
         return &(static_cast<Any::Holder<ValueType>*>(any->content_)->held_);
     }
 
