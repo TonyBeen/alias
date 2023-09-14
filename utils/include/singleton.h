@@ -26,7 +26,6 @@ public:
             mObj(obj),
             mRefPtr(ref)
         {
-            assert(mRefPtr != nullptr);
             mRefPtr->ref();
         }
 

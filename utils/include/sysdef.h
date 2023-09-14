@@ -50,6 +50,8 @@
     #define OS_UNIX
 #endif
 
+// #if defined(__x86_64__) || defined(_M_X64) || defined(__powerpc64__) || defined(__alpha__) ||
+// defined(__ia64__) || defined(__s390__) || defined(__s390x__) || defined(_LP64) || defined(__LP64__)
 // ARCH
 #if defined(__i386) || defined(__i386__) || defined(_M_IX86)
     #define ARCH_X86
@@ -69,9 +71,32 @@
     #error "unsupported hardware architecture!"
 #endif
 
+#define COMPILER_MSVC       1
+#define COMPILER_GNUC       2
+#define COMPILER_CLANG      3
+#define COMPILER_APPLECLANG 4
+
+#if defined( __clang__ )
+#if defined __apple_build_version__
+    #define COMPILER_TYPE       COMPILER_APPLECLANG
+#else
+    #define COMPILER_TYPE       COMPILER_CLANG
+#endif
+    #define COMPILER_VERSION    (((__clang_major__) * 100) + (__clang_minor__ * 10) + __clang_patchlevel__)
+#elif defined( __GNUC__ )
+    #define COMPILER_TYPE       COMPILER_GNUC
+    #define COMPILER_VERSION    (((__GNUC__) * 100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
+#elif defined( _MSC_VER )
+    #define COMPILER_TYPE       COMPILER_MSVC
+    #define COMPILER_VERSION    _MSC_VER
+#else
+    #error "Unknown compiler."
+#endif
+
 // COMPILER
 #if defined (_MSC_VER)
 #define COMPILER_MSVC
+#define COMPILER_VERSION _MSC_VER
 
 #if (_MSC_VER < 1200) // Visual C++ 6.0
 #define MSVS_VERSION    1998
@@ -123,11 +148,9 @@
 #pragma warning (disable: 4819) // Unicode
 #pragma warning (disable: 4996) // _CRT_SECURE_NO_WARNINGS
 
-#elif defined(__MINGW32__) || defined(__MINGW64__)
-#define COMPILER_MINGW
-
 #elif defined(__GNUC__)
 #define COMPILER_GCC
+#define COMPILER_VERSION (((__GNUC__) * 100) + (__GNUC_MINOR__ * 10) + __GNUC_PATCHLEVEL__)
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
@@ -135,7 +158,7 @@
 
 #elif defined(__clang__)
 #define COMPILER_CLANG
-
+#define COMPILER_VERSION (((__clang_major__) * 100) + (__clang_minor__ * 10) + __clang_patchlevel__)
 #else
 #error "unsupported compiler!"
 #endif
