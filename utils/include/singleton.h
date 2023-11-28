@@ -91,7 +91,7 @@ public:
         AutoLock<Mutex> lock(mMutex);
         if (mInstance == nullptr) {
             mInstance = new T(std::forward<Args>(args)...);
-            mDeleter.Register(); // 模板静态成员变量需要使用才会构造
+            mDeleter.registration(); // 模板静态成员变量需要使用才会构造
             // ::atexit(Singleton<T>::free); // 在mian结束后调用free函数
         }
         SObject obj(mInstance, &mRef);
@@ -133,7 +133,7 @@ public:
 private:
     class Deleter {
     public:
-        void Register() { }
+        void registration() { }
         ~Deleter()
         {
             Singleton<T>::free();

@@ -182,6 +182,12 @@
     #include <endian.h>
 #endif
 
+#ifdef __linux__
+#define PRETTY_FUNCTION     __PRETTY_FUNCTION__
+#elif defined(_WIN32) || defined(_WIN64)
+#define PRETTY_FUNCTION     __FUNCSIG__
+#endif
+
 // ENDIAN
 #ifndef BIG_ENDIAN
 #define BIG_ENDIAN      4321

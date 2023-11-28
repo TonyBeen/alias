@@ -40,9 +40,10 @@ bool __lstat(const char *path)
 bool __mkdir(const char *path)
 {
     if(access(path, F_OK) == 0) {
-        return 0;
+        return true;
     }
-    return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    return 0 == mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 bool Mkdir(const std::string &path)
@@ -70,7 +71,7 @@ bool Mkdir(const std::string &path)
         }
         if(ptr != nullptr) {
             break;
-        } else if(__mkdir(filePath) != 0) {
+        } else if(!__mkdir(filePath)) {
             break;
         }
         free(filePath);

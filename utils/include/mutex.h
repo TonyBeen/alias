@@ -44,21 +44,45 @@ private:
     MutexType& mMutex;
 };
 
+typedef enum class __MutexSharedAttr {
+    PRIVATE = 0,    // mutex can only be used within the same process
+    SHARED = 1      // mutex can be used between processes
+} MutexSharedAttr;
+
 class Mutex : public NonCopyAble
 {
 public:
-    enum {
-        PRIVATE = 0,
-        SHARED = 1
-    };
+    Mutex(int32_t type = static_cast<int32_t>(MutexSharedAttr::PRIVATE));
+    ~Mutex();
+
+    int32_t lock();
+    int32_t trylock();
+    void    unlock();
 
     void setMutexName(const String8 &name);
     const String8 &getMutexName() const { return mName; }
-    Mutex(int type = PRIVATE);
-    ~Mutex();
-    int  lock();
-    void unlock();
-    int  trylock();
+
+    operator pthread_mutex_t *() { return &mMutex; }
+    pthread_mutex_t *mutex() { return &mMutex; }
+
+private:
+    friend class Condition;
+    mutable pthread_mutex_t mMutex;
+    String8 mName;
+};
+
+class RecursiveMutex : public NonCopyAble
+{
+public:
+    RecursiveMutex(int32_t type = static_cast<int32_t>(MutexSharedAttr::PRIVATE));
+    ~RecursiveMutex();
+
+    int32_t lock();
+    int32_t trylock();
+    void    unlock();
+
+    void setMutexName(const String8 &name);
+    const String8 &getMutexName() const { return mName; }
 
     operator pthread_mutex_t *() { return &mMutex; }
     pthread_mutex_t *mutex() { return &mMutex; }
@@ -105,7 +129,7 @@ private:
     RDMutexType &mutex;
 };
 
-// 读写锁，读共享，写独享，读上锁无法写，写上锁无法读写
+// 读写锁, 读共享, 写独享, 读上锁无法写, 写上锁无法读写
 class RWMutex : public NonCopyAble {
 public:
     typedef RDAutoLock<RWMutex> ReadAutoLock;
