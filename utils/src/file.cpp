@@ -34,8 +34,12 @@ FileInfo::FileInfo(const FileInfo &other) :
 
 FileInfo &FileInfo::operator=(const FileInfo &other)
 {
-    mFilePath = other.mFilePath;
-    mFileInfo = other.mFileInfo;
+    if (this != &other) {
+        mFilePath = other.mFilePath;
+        mFileInfo = other.mFileInfo;
+    }
+
+    return *this;
 }
 
 bool FileInfo::execGetInfo(const String8 &path)
@@ -156,8 +160,12 @@ File::File(const File &other):
 
 File &File::operator=(const File &other)
 {
-    mFileInfo = other.mFileInfo;
-    open(mFileInfo.mFilePath, other.mOpenMode);
+    if (this != &other) {
+        mFileInfo = other.mFileInfo;
+        open(mFileInfo.mFilePath, other.mOpenMode);
+    }
+
+    return *this;
 }
 
 bool File::open(const String8 &path, const String8 &mode)

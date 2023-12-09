@@ -45,10 +45,14 @@ Timer::~Timer()
 
 Timer &Timer::operator=(const Timer& timer)
 {
-    mUniqueId = timer.mUniqueId;
-    mTime = timer.mTime;
-    mRecycleTime = timer.mRecycleTime;
-    mCb = timer.mCb;
+    if (this != &timer) {
+        mUniqueId = timer.mUniqueId;
+        mTime = timer.mTime;
+        mRecycleTime = timer.mRecycleTime;
+        mCb = timer.mCb;
+    }
+
+    return *this;
 }
 
 /**
