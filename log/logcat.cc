@@ -264,7 +264,7 @@ int32_t _main(int32_t port)
                     epoll_event epEvent;
                     epEvent.data.fd = clientFd;
                     epEvent.events = EPOLLIN;
-                    int32_t nRet = epoll_ctl(epollFd, EPOLL_CTL_ADD, gLocalServerSocket, &epEvent);
+                    int32_t nRet = epoll_ctl(epollFd, EPOLL_CTL_ADD, clientFd, &epEvent);
                     if (0 != nRet) {
                         static const char *errorMsgJson =
                             "{\"id\": \"error\", \"keywords\": [\"msg\"], \"msg\": \"epoll_ctl error: %s\"}";
