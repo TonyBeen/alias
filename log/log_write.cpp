@@ -1,7 +1,10 @@
 #include "log_write.h"
 #include "log_format.h"
 #include "callstack.h"
+#include "nlohmann/json.hpp"
 #include <assert.h>
+#include <string>
+#include <sstream>
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -474,30 +477,33 @@ int32_t ConsoleLogWrite::WriteToFile(std::string msg)
 
 int32_t ConsoleLogWrite::WriteToFile(const LogEvent &ev)
 {
-    static const char *jsonForamt = "{\
-    \"id\": \"data\", \
-    \"time\": %llu, \
-    \"pid\": %u, \
-    \"tid\": %u, \
-    \"level\": %u, \
-    \"tag\": \"%s\", \
-    \"msg\": \"%s\"}";
-
     uint64_t milliSecond = ev.time.tv_sec * 1000 + ev.time.tv_usec / 1000;
 
-    char buf[8192] = {0};
-    int nFormatSize = snprintf(buf, sizeof(buf), jsonForamt, milliSecond, ev.pid, ev.tid, ev.level, ev.tag, ev.msg);
+    nlohmann::json logJsonObj;
+    logJsonObj["id"] = "data";
+    logJsonObj["time"] = milliSecond;
+    logJsonObj["pid"] = ev.pid;
+    logJsonObj["tid"] = ev.tid;
+    logJsonObj["level"] = ev.level;
+    logJsonObj["tag"] = ev.tag;
+    logJsonObj["msg"] = ev.msg;
+
+    std::stringstream ss;
+    ss << logJsonObj;
+    std::string msg = ss.str();
+    msg.append("\r\n\r\n");
+
     pthread_mutex_lock(mMutex);
     InitParams();
 
     int32_t sendSize = 0;
     if (mClientFd > 0) {
-        sendSize = ::send(mClientFd, buf, nFormatSize, 0); 
+        sendSize = ::send(mClientFd, msg.c_str(), msg.length(), 0);
         if (sendSize <= 0) { // 服务端不在线
             Destroy();
         }
     }
-    
+
     pthread_mutex_unlock(mMutex);
     return 0;
 }

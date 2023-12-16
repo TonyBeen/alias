@@ -42,8 +42,16 @@ void LogManager::WriteLog(LogEvent *event)
             if ((*it)->type() != LogWrite::STDOUT) {
                 event->enableColor = false;
             }
-            std::string log = LogFormat::Format(event);
-            (*it)->WriteToFile(log);
+
+            if ((*it)->type() == LogWrite::CONSOLEOUT)
+            {
+                (*it)->WriteToFile(*event);
+            }
+            else
+            {
+                std::string log = LogFormat::Format(event);
+                (*it)->WriteToFile(log);
+            }
         }
     }
     // pthread_mutex_unlock(&mListMutex);

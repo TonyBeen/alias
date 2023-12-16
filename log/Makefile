@@ -23,7 +23,7 @@ liblog.so : $(obj)
 	$(cc) $(obj) -o $@ $(cflags) -shared $(shared_lib)
 
 logcat : logcat.cc liblog.so
-	g++ logcat.cc -o logcat -std=c++11 -O2 -W -Wall -llog
+	g++ logcat.cc -o logcat -std=c++11 -O2 -W -Wall -Werror -llog
 
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cflags) $(soflags)

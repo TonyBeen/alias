@@ -34,7 +34,7 @@
 
 int gLocalServerSocket = -1;    // 本地套接字服务端
 int gLocalClientSocket = -1;    // 本地套接字客户端
-int gNetServerSocket = -1;      // 网络套接字服务端
+int tcpServerSocket = -1;      // 网络套接字服务端
 std::map<int, sockaddr_in> gNetClientMap; // 网络套接字客户端map
 
 typedef nlohmann::json Json;
@@ -99,7 +99,7 @@ void catch_signal(int sig)
         it = gNetClientMap.erase(it);
     }
 
-    close(gNetServerSocket);
+    close(tcpServerSocket);
     close(gLocalClientSocket);
     close(gLocalServerSocket);
     unlink(LOCAL_SOCK_PATH);
@@ -147,11 +147,19 @@ void OnLocalSocketReadEvent(const std::string &jsonContent)
         return;
     }
 
-    printf("json: \n%s\n", jsonContent.c_str());
+    printf("json: %s\n", jsonContent.c_str());
 
-    auto jsonConfig = Json::parse(jsonContent);
-    if (jsonConfig["id"].get<std::string>() == "notice") {
-        gJsonNotice = jsonContent;
+    try
+    {
+        auto jsonConfig = Json::parse(jsonContent);
+        if (jsonConfig["id"].get<std::string>() == "notice") {
+            gJsonNotice = jsonContent;
+        }
+    }
+    catch(const std::exception& e)
+    {
+        printf("json parse error: %s\n", e.what());
+        return;
     }
 
     for (auto it  = gNetClientMap.begin(); it != gNetClientMap.end(); ++it) {
@@ -175,8 +183,8 @@ int32_t _main(int32_t port)
 
     assert(InitSocket() > 0);
 
-    int gNetServerSocket = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (gNetServerSocket < 0) {
+    int tcpServerSocket = ::socket(AF_INET, SOCK_STREAM, 0);
+    if (tcpServerSocket < 0) {
         printf("%s() socket error. %d %s\n", __func__, errno, strerror(errno));
         return -1;
     }
@@ -185,13 +193,13 @@ int32_t _main(int32_t port)
     srvAddr.sin_family = AF_INET;
     srvAddr.sin_port = htons(port > 0 ? port : 8000);
     srvAddr.sin_addr.s_addr = INADDR_ANY;
-    int retCode = ::bind(gNetServerSocket, (sockaddr *)&srvAddr, sizeof(srvAddr));
+    int retCode = ::bind(tcpServerSocket, (sockaddr *)&srvAddr, sizeof(srvAddr));
     if (retCode < 0) {
         printf("%s() bind error. %d %s\n", __func__, errno, strerror(errno));
         return -1;
     }
 
-    ::listen(gNetServerSocket, 128);
+    ::listen(tcpServerSocket, 128);
 
     epoll_event events[EPOLL_SIZE];
     int epollFd = epoll_create(EPOLL_SIZE);
@@ -200,20 +208,20 @@ int32_t _main(int32_t port)
         return -1;
     }
 
-    int flag = fcntl(gNetServerSocket, F_GETFL);
+    int flag = fcntl(tcpServerSocket, F_GETFL);
     flag |= O_NONBLOCK;
-    fcntl(gNetServerSocket, F_SETFL, flag);
+    fcntl(tcpServerSocket, F_SETFL, flag);
 
     epoll_event event;
     event.data.fd = gLocalServerSocket;
     event.events = EPOLLIN;
     assert(epoll_ctl(epollFd, EPOLL_CTL_ADD, gLocalServerSocket, &event) == 0);
 
-    event.data.fd = gNetServerSocket;
+    event.data.fd = tcpServerSocket;
     event.events = EPOLLIN;
-    assert(epoll_ctl(epollFd, EPOLL_CTL_ADD, gNetServerSocket, &event) == 0);
+    assert(epoll_ctl(epollFd, EPOLL_CTL_ADD, tcpServerSocket, &event) == 0);
 
-    printf("LocalServerSocket = %d, NetServerSocket = %d, epollFd = %d, waiting...\n", gLocalServerSocket, gNetServerSocket, epollFd);
+    printf("LocalServerSocket = %d, NetServerSocket = %d, epollFd = %d, waiting...\n", gLocalServerSocket, tcpServerSocket, epollFd);
     while (true) {
         int nev = epoll_wait(epollFd, events, EPOLL_SIZE, -1);
         if (nev < 0) {
@@ -222,6 +230,7 @@ int32_t _main(int32_t port)
         }
         for (int i = 0; i < nev; ++i) {
             epoll_event &ev = events[i];
+
             if (ev.data.fd == gLocalServerSocket && gLocalClientSocket <= 0) {
                 sockaddr_un client;
                 socklen_t len = sizeof(client);
@@ -229,7 +238,7 @@ int32_t _main(int32_t port)
                 if (gLocalClientSocket <= 0) {
                     perror("accept error");
                 } else {
-                    printf("accept client. %d %s\n", gLocalClientSocket, client.sun_path);
+                    printf("accept local socket client. %d %s\n", gLocalClientSocket, client.sun_path);
                     flag = fcntl(gLocalClientSocket, F_GETFL);
                     flag |= O_NONBLOCK;
                     fcntl(gLocalClientSocket, F_SETFL, flag);
@@ -238,14 +247,15 @@ int32_t _main(int32_t port)
                     event.events = EPOLLIN;
                     epoll_ctl(epollFd, EPOLL_CTL_ADD, gLocalClientSocket, &event);
                 }
+
                 continue;
             }
 
-            if (ev.data.fd == gNetServerSocket) {
+            if (ev.data.fd == tcpServerSocket) {
                 sockaddr_in clientAddr;
                 socklen_t addrLen = sizeof(sockaddr_in);
 
-                int clientFd = ::accept(gNetServerSocket, (sockaddr *)&clientAddr, &addrLen);
+                int clientFd = ::accept(tcpServerSocket, (sockaddr *)&clientAddr, &addrLen);
                 if (clientFd > 0) {
                     flag = fcntl(clientFd, F_GETFL);
                     flag |= O_NONBLOCK;
@@ -256,20 +266,20 @@ int32_t _main(int32_t port)
                     epEvent.events = EPOLLIN;
                     int32_t nRet = epoll_ctl(epollFd, EPOLL_CTL_ADD, gLocalServerSocket, &epEvent);
                     if (0 != nRet) {
-                        static const char *errorMsgJson = "{\"id\": \"error\", \"keywords\": [\"msg\"], \"msg\": \"%s\"}";
+                        static const char *errorMsgJson =
+                            "{\"id\": \"error\", \"keywords\": [\"msg\"], \"msg\": \"epoll_ctl error: %s\"}";
                         char msg[256] = { '\0' };
-                        int32_t nFormat = snprintf(msg, sizeof(msg), errorMsgJson, strerror(errno));
-                        if (nFormat > 0) {
-                            ::send(clientFd, msg, nFormat, 0);
-                        } else {
-                            perror("epoll_ctl error");
-                        }
+                        snprintf(msg, sizeof(msg), errorMsgJson, strerror(errno));
+                        ::send(clientFd, msg, strlen(msg), 0);
+                        perror("epoll_ctl error");
                         close(clientFd);
                     } else {
                         gNetClientMap[clientFd] = clientAddr;
                         ::send(clientFd, gJsonNotice.c_str(), gJsonNotice.length(), 0);
                     }
                 }
+
+                continue;
             }
 
             if (ev.events & EPOLLIN) {  // 本地套接字读事件
@@ -286,8 +296,8 @@ int32_t _main(int32_t port)
                         break;
                     }
                     if (nRecv < 0) {
-                        printf("%d, %d, %s\n", ev.data.fd, errno, strerror(errno));
                         if (errno != EAGAIN) {
+                            printf("recv(%d) error: %d, %s\n", ev.data.fd, errno, strerror(errno));
                             close(ev.data.fd);
                             epoll_ctl(epollFd, EPOLL_CTL_DEL, ev.data.fd, nullptr);
                         }
@@ -316,7 +326,7 @@ int32_t _main(int32_t port)
             }
 
             if (ev.events & (EPOLLHUP | EPOLLRDHUP | EPOLLERR)) { // 退出事件
-                printf("EPOLLERR 0x%x client %d exit.\n", ev.events, ev.data.fd);
+                printf("EPOLLERR 0x%X client %d exit.\n", ev.events, ev.data.fd);
                 close(ev.data.fd);
                 epoll_ctl(epollFd, EPOLL_CTL_DEL, ev.data.fd, nullptr);
                 if (ev.data.fd == gLocalClientSocket) {
@@ -354,7 +364,9 @@ int main(int argc, char **argv)
 
     if (isDaemon)
     {
-        daemon(1, 0);
+        int32_t ret = daemon(1, 0);
+        (void)ret;
+
         pid_t pid = fork();
         if (pid == 0) { // 子进程
             printf("子进程开始: %d", getpid());
