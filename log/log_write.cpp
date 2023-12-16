@@ -474,14 +474,14 @@ int32_t ConsoleLogWrite::WriteToFile(std::string msg)
 
 int32_t ConsoleLogWrite::WriteToFile(const LogEvent &ev)
 {
-    static const char *jsonForamt = "\
+    static const char *jsonForamt = "{\
     \"id\": \"data\", \
     \"time\": %llu, \
     \"pid\": %u, \
     \"tid\": %u, \
     \"level\": %u, \
-    \"tag\": %s, \
-    \"msg\": %s";
+    \"tag\": \"%s\", \
+    \"msg\": \"%s\"}";
 
     uint64_t milliSecond = ev.time.tv_sec * 1000 + ev.time.tv_usec / 1000;
 

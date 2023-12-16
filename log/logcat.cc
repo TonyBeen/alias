@@ -5,8 +5,6 @@
     > Created Time: Sun 23 Jan 2022 04:36:06 PM CST
  ************************************************************************/
 
-#include <iostream>
-#include <string>
 #include <error.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -14,30 +12,34 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <map>
+#include <string>
+#include <sstream>
+
 #include <signal.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
+#include <sys/wait.h>
 #include <sys/epoll.h>
-#include <map>
-#include <json/json.h>
+
+#include "nlohmann/json.hpp"
 #include "callstack.h"
-#include "log.h"
 
 #define LOCAL_SOCK_PATH "/tmp/log_sock_server"
 #define EPOLL_SIZE      (1024)
-
-#define LOG_TAG "logcat"
 
 int gLocalServerSocket = -1;    // 本地套接字服务端
 int gLocalClientSocket = -1;    // 本地套接字客户端
 int gNetServerSocket = -1;      // 网络套接字服务端
 std::map<int, sockaddr_in> gNetClientMap; // 网络套接字客户端map
 
-Json::String gJsonNotice;
+typedef nlohmann::json Json;
+
+std::string gJsonNotice;
 
 static char gRecvBuf[1024 * 8];
 
@@ -46,6 +48,7 @@ void print(const char *perfix)
     printf("%s\n", perfix);
     printf("-h get help\n");
     printf("-p port listen on port.(default is 8000)\n");
+    printf("-d Start in daemon mode\n");
     exit(0);
 }
 
@@ -55,7 +58,6 @@ void catch_signal(int sig)
     std::string strCallStack;
     eular::CallStack stack;
     char msgBuf[256] = {0};
-    Json::Value root;
 
     switch (sig) {
         case SIGINT:
@@ -82,11 +84,14 @@ void catch_signal(int sig)
     signalMsg = msgBuf;
     signalMsg.append(strCallStack);
 
+    Json root;
     root["id"] = "error";
     root["keywords"] = "msg";
     root["msg"] = signalMsg;
 
-    const std::string &jsonMsg = Json::FastWriter().write(root);
+    std::stringstream ss;
+    ss << root;
+    const std::string &jsonMsg = ss.str();
 
     for (auto it = gNetClientMap.begin(); it != gNetClientMap.end();) {
         ::send(it->first, jsonMsg.c_str(), jsonMsg.length(), 0);
@@ -144,14 +149,8 @@ void OnLocalSocketReadEvent(const std::string &jsonContent)
 
     printf("json: \n%s\n", jsonContent.c_str());
 
-    Json::Reader jsonReader;
-    Json::Value root;
-    if (jsonReader.parse(jsonContent, root) == false) {
-        return;
-    }
-
-    auto &jsonId = root["id"];
-    if (jsonId.asString() == "notice") {
+    auto jsonConfig = Json::parse(jsonContent);
+    if (jsonConfig["id"].get<std::string>() == "notice") {
         gJsonNotice = jsonContent;
     }
 
@@ -166,23 +165,8 @@ void OnTcpSocketReadEvent(const std::string &jsonContent)
     // TODO 解析json
 }
 
-int main(int argc, char **argv)
+int32_t _main(int32_t port)
 {
-    char c = '\0';
-    int port = 0;
-    std::string path;
-    while ((c = ::getopt(argc, argv, "hs:p:")) != -1) {
-        switch (c) {
-        case 'h':
-            print(argv[0]);
-            break;
-        case 'p':
-            port = atoi(optarg);
-        default:
-            break;
-        }
-    }
-
     signal(SIGINT, catch_signal);
     signal(SIGQUIT, catch_signal);
     signal(SIGABRT, catch_signal);
@@ -322,9 +306,11 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if (ev.data.fd == gLocalClientSocket) { // 将本地套接字发送的数据转发
+                if (ev.data.fd == gLocalClientSocket) {
+                    // 将本地套接字发送的数据转发
                     OnLocalSocketReadEvent(jsonContent);
                 } else {
+                    // 客户端数据
                     OnTcpSocketReadEvent(jsonContent);
                 }
             }
@@ -343,4 +329,50 @@ int main(int argc, char **argv)
     }
 
     return 0;
+}
+
+int main(int argc, char **argv)
+{
+    int32_t cmd = '\0';
+    int32_t port = 8000;
+    bool isDaemon = false;
+    std::string path;
+    while ((cmd = ::getopt(argc, argv, "hdp:")) != -1) {
+        switch (cmd) {
+        case 'h':
+            print(argv[0]);
+            break;
+        case 'd':
+            isDaemon = true;
+            break;
+        case 'p':
+            port = atoi(optarg);
+        default:
+            break;
+        }
+    }
+
+    if (isDaemon)
+    {
+        daemon(1, 0);
+        pid_t pid = fork();
+        if (pid == 0) { // 子进程
+            printf("子进程开始: %d", getpid());
+            return _main(port);
+        } else if (pid < 0) {   // 出错
+            printf("%s() fork error. [%d, %s]", __func__, errno, strerror(errno));
+            _exit(0);
+        } else {    // 父进程
+            int status = 0;
+            waitpid(pid, &status, 0);
+
+            if (status == SIGKILL) {
+                printf("The child process(%d) was killed", pid);
+            }
+        }
+
+        return 0;
+    }
+
+    return _main(port);
 }
