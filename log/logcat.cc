@@ -32,16 +32,20 @@
 #define LOCAL_SOCK_PATH "/tmp/log_sock_server"
 #define EPOLL_SIZE      (1024)
 
+#define SEP_STR "\r\n\r\n"
+static const uint32_t SEP_LEN = strlen(SEP_STR);
+
 int gLocalServerSocket = -1;    // 本地套接字服务端
 int gLocalClientSocket = -1;    // 本地套接字客户端
-int tcpServerSocket = -1;      // 网络套接字服务端
+int tcpServerSocket = -1;       // 网络套接字服务端
 std::map<int, sockaddr_in> gNetClientMap; // 网络套接字客户端map
 
 typedef nlohmann::json Json;
 
-std::string gJsonNotice;
+std::string gJsonNotice; // 已携带分割符
 
-static char gRecvBuf[1024 * 8];
+#define RECV_BUFFER_SIZE    8192
+static char gRecvBuf[RECV_BUFFER_SIZE];
 
 void print(const char *perfix)
 {
@@ -80,6 +84,8 @@ void catch_signal(int sig)
             printf("unhandle signal %d\n", sig);
             return;
     }
+
+    printf("%s, unlink(%s)\n", msgBuf, LOCAL_SOCK_PATH);
 
     signalMsg = msgBuf;
     signalMsg.append(strCallStack);
@@ -141,7 +147,7 @@ error:
     return nRetCode;
 }
 
-void OnLocalSocketReadEvent(const std::string &jsonContent)
+void OnLocalSocketReadEvent(std::string jsonContent)
 {
     if (jsonContent.length() == 0) {
         return;
@@ -154,6 +160,7 @@ void OnLocalSocketReadEvent(const std::string &jsonContent)
         auto jsonConfig = Json::parse(jsonContent);
         if (jsonConfig["id"].get<std::string>() == "notice") {
             gJsonNotice = jsonContent;
+            gJsonNotice.append(SEP_STR);
         }
     }
     catch(const std::exception& e)
@@ -162,6 +169,7 @@ void OnLocalSocketReadEvent(const std::string &jsonContent)
         return;
     }
 
+    jsonContent.append(SEP_STR);
     for (auto it  = gNetClientMap.begin(); it != gNetClientMap.end(); ++it) {
         ::send(it->first, jsonContent.c_str(), jsonContent.length(), 0);
     }
@@ -275,7 +283,9 @@ int32_t _main(int32_t port)
                         close(clientFd);
                     } else {
                         gNetClientMap[clientFd] = clientAddr;
-                        ::send(clientFd, gJsonNotice.c_str(), gJsonNotice.length(), 0);
+                        if (!gJsonNotice.empty()) {
+                            ::send(clientFd, gJsonNotice.c_str(), gJsonNotice.length(), 0);
+                        }
                     }
                 }
 
@@ -283,45 +293,45 @@ int32_t _main(int32_t port)
             }
 
             if (ev.events & EPOLLIN) {  // 本地套接字读事件
-                std::string jsonContent;
-                static const char *strSeparator = "\r\n\r\n";
-                static const uint32_t nSeparatorLen = strlen(strSeparator);
-
-                while (true) {
-                    memset(gRecvBuf, 0, sizeof(gRecvBuf));
-                    int32_t nRecv = ::recv(ev.data.fd, gRecvBuf, sizeof(gRecvBuf), MSG_PEEK);
-                    if (nRecv == 0) { // 没有携带结束符
-                        printf("Invalid data segment\n");
-                        jsonContent.clear();
-                        break;
-                    }
-                    if (nRecv < 0) {
-                        if (errno != EAGAIN) {
-                            printf("recv(%d) error: %d, %s\n", ev.data.fd, errno, strerror(errno));
-                            close(ev.data.fd);
-                            epoll_ctl(epollFd, EPOLL_CTL_DEL, ev.data.fd, nullptr);
-                        }
-                        break;
-                    }
-                    void *pFound = memmem(gRecvBuf, nRecv, strSeparator, nSeparatorLen);
-                    if (pFound) {
-                        nRecv = ((char *)pFound - gRecvBuf);
-                        jsonContent.append(gRecvBuf, nRecv);
-                        ::recv(ev.data.fd, gRecvBuf, nRecv, 0);
-                        ::recv(ev.data.fd, gRecvBuf, nSeparatorLen, 0); // 从缓存中移除分割符
-                        break;
-                    } else {
-                        jsonContent.append(gRecvBuf, nRecv);
-                        ::recv(ev.data.fd, gRecvBuf, nRecv, 0);
-                    }
-                }
-
                 if (ev.data.fd == gLocalClientSocket) {
-                    // 将本地套接字发送的数据转发
-                    OnLocalSocketReadEvent(jsonContent);
+                    static std::string jsonContent;
+                    jsonContent.reserve(RECV_BUFFER_SIZE);
+
+                    while (true) {
+                        memset(gRecvBuf, 0, sizeof(gRecvBuf));
+                        int32_t nRecv = ::recv(ev.data.fd, gRecvBuf, sizeof(gRecvBuf), 0);
+                        if (nRecv == 0) { // 没有携带结束符
+                            break;
+                        }
+
+                        if (nRecv < 0) {
+                            if (errno != EAGAIN) {
+                                printf("recv(%d) error: %d, %s\n", ev.data.fd, errno, strerror(errno));
+                                close(ev.data.fd);
+                                epoll_ctl(epollFd, EPOLL_CTL_DEL, ev.data.fd, nullptr);
+                            }
+                            break;
+                        }
+
+                        jsonContent.append(gRecvBuf);
+                        size_t sepIndex = jsonContent.find(SEP_STR);
+                        if (sepIndex != std::string::npos)
+                        {
+                            std::string jsonConfig(jsonContent.c_str(), sepIndex);
+                            jsonContent.erase(0, sepIndex + SEP_LEN);
+
+                            // 将本地套接字发送的数据转发
+                            OnLocalSocketReadEvent(std::move(jsonConfig));
+                        }
+                    }
                 } else {
-                    // 客户端数据
-                    OnTcpSocketReadEvent(jsonContent);
+                    // FIXME 暂时不知客户端数据怎么处理 TCP 客户端数据
+                    while (true) {
+                        int32_t nRecv = ::recv(ev.data.fd, gRecvBuf, sizeof(gRecvBuf), MSG_PEEK);
+                        if (nRecv <= 0) {
+                            break;
+                        }
+                    }
                 }
             }
 
