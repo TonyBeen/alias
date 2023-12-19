@@ -209,6 +209,9 @@ int32_t _main(int32_t port)
 
     ::listen(tcpServerSocket, 128);
 
+    int reuse = 1;
+    setsockopt(tcpServerSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+
     epoll_event events[EPOLL_SIZE];
     int epollFd = epoll_create(EPOLL_SIZE);
     if (epollFd < 0) {
