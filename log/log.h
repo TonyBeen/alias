@@ -62,15 +62,15 @@ void EnableLogColor(bool flag);
 /**
  * @param type 输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
-void addOutputNode(int type);
+void addOutputNode(int32_t type);
 /**
  * @param type 输出节点类型；STDOUT，FILEOUT，CONSOLEOUT.
  */
-void delOutputNode(int type);
+void delOutputNode(int32_t type);
 }
 
-void log_write(int level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
-void log_write_assert(int level, const char *expr, const char *tag, const char *fmt, ...) __attribute__((format(printf, 4, 5)));
+void log_write(int32_t level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+void log_write_assert(int32_t level, const char *expr, const char *tag, const char *fmt, ...) __attribute__((format(printf, 4, 5)));
 void log_write_assertv(const LogEvent *ev);
 
 }

@@ -85,7 +85,8 @@ std::string CallStack::toString() const
         str += mStackFrame[i];
         str += "\n";
     }
-    return std::move(str);
+
+    return str;
 }
 
 } // namespace eular
