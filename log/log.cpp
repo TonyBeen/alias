@@ -47,21 +47,21 @@ void EnableLogColor(bool flag)
     gEnableLogoutColor = flag;
 }
 
-void addOutputNode(int type)
+void addOutputNode(int32_t type)
 {
     if (gLogManager != nullptr) {
         gLogManager->addLogWriteToList(type);
     }
 }
 
-void delOutputNode(int type)
+void delOutputNode(int32_t type)
 {
     if (gLogManager != nullptr) {
         gLogManager->delLogWriteFromList(type);
     }
 }
 
-void log_write(int level, const char *tag, const char *fmt, ...)
+void log_write(int32_t level, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     char *out = buf;
@@ -81,22 +81,22 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     va_list ap, tmpArgs;
     va_start(ap, fmt);
     va_copy(tmpArgs, ap);
-    int n = vsnprintf(nullptr, 0, fmt, tmpArgs);
+    int32_t n = vsnprintf(nullptr, 0, fmt, tmpArgs);
     va_end(tmpArgs);
 
     uint32_t outSize = MSG_BUF_SIZE;
     if (n > MSG_BUF_SIZE) { // 扩充buffer
-        outSize = n;
-        out = (char *)malloc(n + 8);
+        outSize = n + 8;
+        out = (char *)malloc(outSize);
         if (out == nullptr) {
             out = buf;
             outSize = MSG_BUF_SIZE;
         } else {
             needFree = 1;
         }
-        memset(out, 0, n + 8);
+        out[outSize - 1] = '\0';
     }
-    int formatSize = vsnprintf(out, outSize + 7, fmt, ap);
+    int32_t formatSize = vsnprintf(out, outSize - 1, fmt, ap);
     va_end(ap);
 
     size_t len = strlen(out);
@@ -113,7 +113,7 @@ void log_write(int level, const char *tag, const char *fmt, ...)
     }
 }
 
-void log_write_assert(int level, const char *expr, const char *tag, const char *fmt, ...)
+void log_write_assert(int32_t level, const char *expr, const char *tag, const char *fmt, ...)
 {
     char buf[MSG_BUF_SIZE] = {0};
     LogEvent ev;
