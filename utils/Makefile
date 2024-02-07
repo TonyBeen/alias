@@ -1,39 +1,39 @@
 INCLUDE_DIR := -I./include
-cppflags := -std=c++11 -W -Wall -Werror -Wextra -Wno-deprecated -Wno-unused-result -O2 -m64 -g
-soflags := -fPIC
-shared_lib := -lpthread
-cc := g++
-destfile := /usr/local
+CXX_FLAGS := -std=c++11 -W -Wall -Werror -Wextra  -O2 -m64 -g
+CXX_NO_ERROR_FLAGS := -Wno-deprecated -Wno-unused-result -Wno-class-memaccess -Wno-unused-function -Wno-unused-parameter
+SO_FLAGS := -fPIC
+LIB_LIST := -lpthread
+CC := g++
+DEST_DIR := /usr/local
 
-src := $(wildcard ./src/*.cpp)
-headerfile := $(wildcard ./include/*.h)
-headerfile += $(wildcard ./include/*.hpp)
-obj := $(patsubst %.cpp, %.o, $(src))
+SRC_LIST := $(wildcard ./SRC_LIST/*.cpp)
+HEADER_FILE_LIST := $(wildcard ./include/*.h)
+HEADER_FILE_LIST += $(wildcard ./include/*.hpp)
+OBJ_LIST := $(patsubst %.cpp, %.o, $(SRC_LIST))
 
-libutils.so : $(obj)
-	$(cc) $^ -o $@ -shared $(shared_lib)
+libutils.so : $(OBJ_LIST)
+	$(CC) $^ -o $@ -shared $(LIB_LIST)
 
 %.o : %.cpp
-	$(cc) $^ -c -o $@ $(cppflags) $(soflags) $(INCLUDE_DIR)
+	$(CC) $^ -c -o $@ $(CXX_FLAGS) $(SO_FLAGS) $(INCLUDE_DIR)
 
 debug:
-	@echo $(src)
-	@echo $(obj)
-	@echo $(headerfile)
+	@echo $(SRC_LIST)
+	@echo $(OBJ_LIST)
+	@echo $(HEADER_FILE_LIST)
 
 .PHONY:clean install uninstall
 
 install : libutils.so
-	-sudo mv ./libutils.so $(destfile)/lib
+	-sudo mv ./libutils.so $(DEST_DIR)/lib
 	-sudo ldconfig
-	-if [ ! -d "$(destfile)/include/utils/" ]; then sudo mkdir $(destfile)/include/utils/; fi
-	-sudo cp ./include/* $(destfile)/include/utils/
-
+	-if [ ! -d "$(DEST_DIR)/include/utils/" ]; then sudo mkdir $(DEST_DIR)/include/utils/; fi
+	-sudo cp ./include/* $(DEST_DIR)/include/utils/
 
 uninstall:
-	-rm -rf $(obj)
-	-sudo rm -rf $(destfile)/lib/libutils.so
-	-sudo rm -rf $(destfile)/include/utils
+	-rm -rf $(OBJ_LIST)
+	-sudo rm -rf $(DEST_DIR)/lib/libutils.so
+	-sudo rm -rf $(DEST_DIR)/include/utils
 
 clean:
-	-rm -rf $(obj)
+	-rm -rf $(OBJ_LIST)

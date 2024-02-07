@@ -119,8 +119,6 @@ int32_t Aes::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 
 int32_t Aes::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
-    LOG_ASSERT(out || src || srcLen, "");
-
     AES_set_decrypt_key(mUserKey, mUserKeyType * 8, &mAesKey);
     if (mEncodeType == AESECB) {
         AES_ecb_encrypt(src, out, &mAesKey, AES_DECRYPT);
