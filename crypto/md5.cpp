@@ -34,6 +34,9 @@ int Md5::encode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 
 int Md5::decode(uint8_t *out, const uint8_t *src, const uint32_t &srcLen)
 {
+    (void)out;
+    (void)src;
+    (void)srcLen;
     return -1;
 }
 

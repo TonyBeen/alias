@@ -23,10 +23,10 @@
 
 namespace eular {
 Rsa::Rsa(const String8 &pubkeyFile, const String8 &prikeyFile) :
-    mPubKeyPath(pubkeyFile),
-    mPriKeyPath(prikeyFile),
     mPublicKey(nullptr),
-    mPrivatKey(nullptr)
+    mPrivatKey(nullptr),
+    mPubKeyPath(pubkeyFile),
+    mPriKeyPath(prikeyFile)
 {
     reinit();
 }
@@ -109,7 +109,7 @@ int32_t Rsa::publicEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     const uint8_t *from = src;
     uint8_t *to = out;
 
-    while (srcLen > realLen) {
+    while (srcLen > (uint32_t)realLen) {
         encodeLen = RSA_public_encrypt(realLen, from, to, mPublicKey, defaultPadding);
         if (encodeLen < 0) {
             int32_t ret = (int32_t)ERR_get_error();
@@ -173,7 +173,7 @@ int32_t Rsa::publicDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     int32_t totalDecodeSize = 0;
     int32_t decodeLen = 0;
 
-    while (srcLen > canDecodeLen) {
+    while (srcLen > (uint32_t)canDecodeLen) {
         decodeLen = RSA_public_decrypt(canDecodeLen, from, to, mPublicKey, defaultPadding);
         if (decodeLen < 0) {
             int32_t ret = (int32_t)ERR_get_error();
@@ -257,7 +257,7 @@ int32_t Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     int32_t totalEncodeSize = 0;
     int32_t encodeSize = 0;
 
-    while (srcLen > metaSize) {
+    while (srcLen > (uint32_t)metaSize) {
         encodeSize = RSA_private_encrypt(metaSize, from, to, mPrivatKey, defaultPadding);
         if (encodeSize < 0) {
             int32_t ret = (int32_t)ERR_get_error();
@@ -284,12 +284,12 @@ int32_t Rsa::privateEncode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
 Rsa::BufferPtr Rsa::privateEncode(const uint8_t *from, uint32_t fromLen)
 {
-
+    return nullptr;
 }
 
 int32_t Rsa::privateEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
-
+    return 0;
 }
 
 int32_t Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
@@ -303,7 +303,7 @@ int32_t Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
     uint8_t *to = out;
     int32_t totalDecodeSize = 0;
     int32_t decodeLen = 0;
-    while (srcLen > canDecodeLen) {
+    while (srcLen > (uint32_t)canDecodeLen) {
         decodeLen = RSA_private_decrypt(canDecodeLen, from, to, mPrivatKey, defaultPadding);
         if (decodeLen < 0) {
             int32_t ret = (int32_t)ERR_get_error();
@@ -330,12 +330,12 @@ int32_t Rsa::privateDecode(uint8_t *out, const uint8_t *src, uint32_t srcLen)
 
 Rsa::BufferPtr Rsa::privateDecode(const uint8_t *from, uint32_t fromLen)
 {
-
+    return nullptr;
 }
 
 int32_t Rsa::privateDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
 {
-
+    return 0;
 }
 
 bool Rsa::reinit()

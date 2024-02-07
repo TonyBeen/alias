@@ -33,7 +33,6 @@ TEST(AesTest, test_aes_encode_decode) {
 
     const uint32_t size = 4096;
 
-    uint8_t in[size] = {0};
     uint8_t out[size] = {0};
     uint8_t tmp[size] = {0};
 
@@ -41,6 +40,6 @@ TEST(AesTest, test_aes_encode_decode) {
     EXPECT_TRUE(encodeSize > 0);
 
     int decodeSize = aes.decode(tmp, out, encodeSize);
-    EXPECT_TRUE(decodeSize == strlen(something));
+    EXPECT_TRUE(decodeSize == (int32_t)strlen(something));
     EXPECT_TRUE(memcmp(something, tmp, decodeSize) == 0);
 }

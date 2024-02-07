@@ -1,5 +1,6 @@
 CC := g++
-CXXFLAGS := -std=c++11 -g
+CXXFLAGS := -std=c++11 -W -Wall -Werror -Wextra -O2 -m64 -g
+CXX_NO_ERROR_FLAGS := -Wno-deprecated -Wno-unused-result -Wno-unused-function -Wno-unused-parameter
 NO_DEPRECATED_WARN := -Wno-deprecated-declarations # -Wno-error=deprecated-declarations
 SOFLAGS := -fPIC
 
@@ -41,13 +42,13 @@ uninstall :
 test: test/testmain
 
 test/testmain : $(TESTOBJLIST) $(OBJLIST)
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
 
 %.o : %.cpp
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(SOFLAGS)
 
 %.o : %.cc
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(SOFLAGS)
 
 .PHONY: install uninstall clean $(TARGET) \
 		test test/testmain
