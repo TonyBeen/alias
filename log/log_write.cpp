@@ -230,7 +230,7 @@ static int32_t __lstat(const char *path)
 
 static bool __mkdir(const char *path)
 {
-    if(access(path, F_OK) == 0) {
+    if (access(path, F_OK) == 0) {
         return 0;
     }
     return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
@@ -238,7 +238,7 @@ static bool __mkdir(const char *path)
 
 bool Mkdir(const std::string &path)
 {
-    if(__lstat(path.c_str()) == 0) {
+    if (__lstat(path.c_str()) == 0) {
         return true;
     }
     std::string realPath = path;
