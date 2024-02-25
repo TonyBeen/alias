@@ -6,7 +6,7 @@ LIB_LIST := -lpthread
 CC := g++
 DEST_DIR := /usr/local
 
-SRC_LIST := $(wildcard ./SRC_LIST/*.cpp)
+SRC_LIST := $(wildcard ./src/*.cpp)
 HEADER_FILE_LIST := $(wildcard ./include/*.h)
 HEADER_FILE_LIST += $(wildcard ./include/*.hpp)
 OBJ_LIST := $(patsubst %.cpp, %.o, $(SRC_LIST))
