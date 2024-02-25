@@ -6,6 +6,8 @@
  ************************************************************************/
 
 #include "elapsed_time.h"
+#include "utils.h"
+#include <assert.h>
 
 ElapsedTime::ElapsedTime() :
     mTimeType(ElapsedTimeType::MILLISECOND),
@@ -40,7 +42,8 @@ void ElapsedTime::stop()
     }
 
     uint64_t endTime = getCurrentTime();
-    if (endTime >= mBeginTime)
+    assert(endTime >= mBeginTime);
+    if (eular_likely(endTime >= mBeginTime))
     {
         mElapsedTimeList.push_back(std::make_pair(mBeginTime, endTime));
     }
