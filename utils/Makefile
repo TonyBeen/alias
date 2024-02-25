@@ -15,7 +15,7 @@ libutils.so : $(OBJ_LIST)
 	$(CC) $^ -o $@ -shared $(LIB_LIST)
 
 %.o : %.cpp
-	$(CC) $^ -c -o $@ $(CXX_FLAGS) $(SO_FLAGS) $(INCLUDE_DIR)
+	$(CC) $^ -c -o $@ $(CXX_FLAGS) $(CXX_NO_ERROR_FLAGS) $(SO_FLAGS) $(INCLUDE_DIR)
 
 debug:
 	@echo $(SRC_LIST)

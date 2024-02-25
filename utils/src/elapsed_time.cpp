@@ -82,7 +82,7 @@ uint64_t ElapsedTime::getCurrentTime() const
         currentTime = std::chrono::duration_cast<std::chrono::nanoseconds>(tm.time_since_epoch()).count();
         break;
     default:
-        return;
+        break;
     }
 
     return static_cast<uint64_t>(currentTime);
