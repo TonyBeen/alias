@@ -1,4 +1,4 @@
-#include "chromium_base64.h"
+#include "base64_chromium.h"
 
 #define CHAR62 '+'
 #define CHAR63 '/'

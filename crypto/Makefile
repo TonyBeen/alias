@@ -4,55 +4,58 @@ CXX_NO_ERROR_FLAGS := -Wno-deprecated -Wno-unused-result -Wno-unused-function -W
 NO_DEPRECATED_WARN := -Wno-deprecated-declarations # -Wno-error=deprecated-declarations
 SOFLAGS := -fPIC
 
-DESTPATH := /usr/local
-HEADERFILE := $(wildcard *.h)
+DEST_PATH := /usr/local
+HEADER_LIST = $(wildcard *.h)
+HEADER_LIST += $(wildcard ./detail/*.h)
 
-INCLUDEPATH := -I./
+INCLUDE_PATH := -I./
 
-LIBPATH := -L/usr/local/lib/
-LIBLIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
+LIB_PATH := -L/usr/local/lib/
+LIB_LIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
 GTEST_LIB := /usr/local/lib/libgtest.a
 
-INCLUDELIST := $(HEADERFILE)
-INCLUDELIST += $(wildcard *.hpp)
+INCLUDE_LIST := $(HEADER_LIST)
+INCLUDE_LIST += $(wildcard *.hpp)
 
-SRCLIST := $(wildcard *.cpp)
-OBJLIST := $(patsubst %.cpp, %.o, $(SRCLIST))
+SRC_LIST := $(wildcard *.cpp)
+SRC_LIST += $(wildcard ./detail/*.cpp)
+OBJ_LIST := $(patsubst %.cpp, %.o, $(SRC_LIST))
 
 TESTSRCLIST := $(wildcard ./test/*.cc)
 TESTOBJLIST := $(patsubst %.cc, %.o, $(TESTSRCLIST))
 
 TARGET := libeularcrypto.so
 
-$(TARGET) : $(OBJLIST)
-	$(CC) $^ -o $@ -shared $(LIBPATH) $(LIBLIST)
-	rm -rf $(OBJLIST)
+$(TARGET) : $(OBJ_LIST)
+	$(CC) $^ -o $@ -shared $(LIB_PATH) $(LIB_LIST)
+	rm -rf $(OBJ_LIST)
 
 install : $(TARGET)
-	-(sudo mv $(TARGET) $(DESTPATH)/lib)
+	-(sudo mv $(TARGET) $(DEST_PATH)/lib)
 	-(sudo ldconfig)
-	-(if [ ! -d "$(DESTPATH)/include/crypto/" ]; then sudo mkdir $(DESTPATH)/include/crypto/; fi)
-	-(sudo cp $(HEADERFILE) $(DESTPATH)/include/crypto/)
+	-(sudo rm -rf $(DEST_PATH)/include/crypto/)
+	-(if [ ! -d "$(DEST_PATH)/include/crypto/" ]; then sudo mkdir $(DEST_PATH)/include/crypto/; fi)
+	-(sudo cp $(HEADER_LIST) $(DEST_PATH)/include/crypto/)
 	-(sudo make clean)
 
 uninstall :
-	-(sudo rm -rf $(DESTPATH)/lib/$(TARGET))
-	-(sudo rm -rf $(DESTPATH)/include/crypto)
+	-(sudo rm -rf $(DEST_PATH)/lib/$(TARGET))
+	-(sudo rm -rf $(DEST_PATH)/include/crypto)
 
 test: test/testmain
 
-test/testmain : $(TESTOBJLIST) $(OBJLIST)
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(LIBPATH) $(GTEST_LIB) $(LIBLIST)
+test/testmain : $(TESTOBJLIST) $(OBJ_LIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(LIB_PATH) $(GTEST_LIB) $(LIB_LIST)
 
 %.o : %.cpp
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(SOFLAGS)
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(SOFLAGS)
 
 %.o : %.cc
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDEPATH) $(SOFLAGS)
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(SOFLAGS)
 
 .PHONY: install uninstall clean $(TARGET) \
 		test test/testmain
 
 clean :
-	-rm -rf $(OBJLIST) $(TESTOBJLIST)
+	-rm -rf $(OBJ_LIST) $(TESTOBJLIST)
 	-rm -rf test/testmain

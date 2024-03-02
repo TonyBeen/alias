@@ -12,7 +12,7 @@
  * 但是，公钥所有人都可以获得，那通过秘钥加密的数据岂不是也可以解出来！
  */
 
-#include "rsa.h"
+#include "rsa_openssl.h"
 #include <utils/errors.h>
 #include <utils/utils.h>
 #include <log/log.h>

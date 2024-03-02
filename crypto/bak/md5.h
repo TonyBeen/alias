@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string>
 
-#define DIGEST_SIZE 16
+#define MD5_DIGEST_SIZE 16
 
 class MD5
 {
@@ -14,21 +14,21 @@ public:
 
     MD5(const void *msg, uint32_t msgLen);
 
+    /* Initialization the md5 object, processing another message block,
+     * and updating the context.*/
+    void reset(const void *input, size_t len);
+
     /* Generate md5 digest. */
     const uint8_t *getDigest();
 
     /* Convert digest to string value */
     std::string to_string();
 
-    static void GetDigest(const std::string &message, uint8_t *output);
+    static void GetDigest(const std::string &message, uint8_t output[MD5_DIGEST_SIZE]);
 
-    static void GetDigest(const void *msg, uint32_t msgLen, uint8_t *output);
+    static void GetDigest(const void *msg, uint32_t msgLen, uint8_t output[MD5_DIGEST_SIZE]);
 
 private:
-    /* Initialization the md5 object, processing another message block,
-     * and updating the context.*/
-    void init(const uint8_t *input, size_t len);
-
     /* MD5 basic transformation. Transforms state based on block. */
     void transform(const uint8_t block[64]);
 
@@ -52,7 +52,7 @@ private:
     uint8_t mBuffer[64];
 
     /* message digest. */
-    uint8_t mDigest[DIGEST_SIZE];
+    uint8_t mDigest[MD5_DIGEST_SIZE];
 };
 
 #endif // __MD5_DETAIL_H__

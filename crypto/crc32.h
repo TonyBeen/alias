@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-uint64_t crc32(uint64_t crc, const uint8_t *buf, uint32_t len);
+uint64_t crc32(uint64_t crc, const void *buf, uint32_t len);
 
 uint64_t crc32_combine64(uint64_t crc1, uint64_t crc2, int64_t len2);
 

@@ -8,7 +8,7 @@
  *
  */
 
-#include "md5_detail.h"
+#include "md5.h"
 #include <string.h>
 
 /* Parameters of MD5. */
@@ -106,7 +106,7 @@ MD5::MD5(const std::string &message) :
     mState[3] = 0x10325476;
 
     /* Initialization the object according to message. */
-    init((const uint8_t *)message.c_str(), message.length());
+    reset((const uint8_t *)message.c_str(), message.length());
 }
 
 MD5::MD5(const void *msg, uint32_t msgLen) :
@@ -122,7 +122,7 @@ MD5::MD5(const void *msg, uint32_t msgLen) :
     mState[3] = 0x10325476;
 
     /* Initialization the object according to message. */
-    init((const uint8_t *)msg, msgLen);
+    reset((const uint8_t *)msg, msgLen);
 }
 
 /**
@@ -152,10 +152,10 @@ const uint8_t *MD5::getDigest()
         /* Pad out to 56 mod 64. */
         index = (uint32_t)((mCount[0] >> 3) & 0x3f);
         padLen = (index < 56) ? (56 - index) : (120 - index);
-        init(PADDING, padLen);
+        reset(PADDING, padLen);
 
         /* Append length (before padding) */
-        init(bits, 8);
+        reset(bits, 8);
 
         /* Store state in digest */
         encode(mState, mDigest, 16);
@@ -177,8 +177,9 @@ const uint8_t *MD5::getDigest()
  * @param {len} the number btye of message.
  *
  */
-void MD5::init(const uint8_t *input, size_t len)
+void MD5::reset(const void *pInput, size_t len)
 {
+    const uint8_t *input = (const uint8_t *)pInput;
     uint32_t i, index, partLen;
 
     mFinished = false;
@@ -369,16 +370,16 @@ std::string MD5::to_string()
     return str;
 }
 
-void MD5::GetDigest(const std::string &message, uint8_t *output)
+void MD5::GetDigest(const std::string &message, uint8_t output[MD5_DIGEST_SIZE])
 {
     MD5 md5(message);
     const uint8_t *ptr = md5.getDigest();
-    memcpy(output, ptr, DIGEST_SIZE);
+    memcpy(output, ptr, MD5_DIGEST_SIZE);
 }
 
-void MD5::GetDigest(const void *msg, uint32_t msgLen, uint8_t *output)
+void MD5::GetDigest(const void *msg, uint32_t msgLen, uint8_t output[MD5_DIGEST_SIZE])
 {
     MD5 md5(msg, msgLen);
     const uint8_t *ptr = md5.getDigest();
-    memcpy(output, ptr, DIGEST_SIZE);
+    memcpy(output, ptr, MD5_DIGEST_SIZE);
 }

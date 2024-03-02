@@ -5,7 +5,7 @@
     > Created Time: Tue 21 Dec 2021 02:32:59 PM CST
  ************************************************************************/
 
-#include "base64.h"
+#include "base64_openssl.h"
 #include <utils/errors.h>
 #include <assert.h>
 

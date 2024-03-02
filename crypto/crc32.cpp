@@ -557,9 +557,9 @@ uint64_t crc32_z(uint64_t crc, const uint8_t * buf, size_t len)
 #endif
 
 /* ========================================================================= */
-uint64_t crc32(uint64_t crc, const uint8_t * buf, uint32_t len)
+uint64_t crc32(uint64_t crc, const void * buf, uint32_t len)
 {
-    return crc32_z(crc, buf, len);
+    return crc32_z(crc, static_cast<const uint8_t *>(buf), len);
 }
 
 /* ========================================================================= */
