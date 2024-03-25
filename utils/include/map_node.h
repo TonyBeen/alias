@@ -13,7 +13,7 @@
 #include "refcount.h"
 #include <functional>
 
-namespace map_private {
+namespace detail {
 struct MapNodeBase {
     struct rb_node __rb_node;
     static bool isValidNode(rb_root *root, rb_node *node);
@@ -60,6 +60,7 @@ struct MapNode : public MapNodeBase
     template <typename T>
     static typename std::enable_if<!std::is_integral<T>::value && !std::is_enum<T>::value>::type
     callDestructor(T &t) { (void)t; t.~T(); }
+
     template <typename T>
     static typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value>::type
     callDestructor(T &) {}
@@ -300,6 +301,6 @@ void MapData<Key, Val>::clear()
     node_count = 0;
 }
 
-} // namespace map_private
+} // namespace detail
 
 #endif

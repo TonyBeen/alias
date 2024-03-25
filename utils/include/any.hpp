@@ -11,7 +11,6 @@
 #include <typeinfo>
 #include <utility>
 #include <memory>
-#include <assert.h>
 
 namespace eular {
 // NOTE: class Any need the copy structure
@@ -107,7 +106,7 @@ protected:
 template<typename ValueType>
 ValueType* any_cast(Any* any) {
     if (any && any->type() == typeid(ValueType)) {
-        return &(static_cast<Any::Holder<ValueType>*>(any->m_placeHolder)->m_valueHolder);
+        return &(static_cast<Any::Holder<ValueType>*>(any->m_placeHolder.get())->m_valueHolder);
     }
 
     return nullptr;
@@ -121,7 +120,6 @@ const ValueType *any_cast(const Any* any) {
 template<typename ValueType>
 ValueType any_cast(const Any& any) {
     const ValueType *result = any_cast<ValueType>(&any);
-    assert(result);
 
     if (!result) {
         return ValueType();

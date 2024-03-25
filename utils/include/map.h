@@ -15,8 +15,8 @@ template<typename Key, typename Val>
 class Map {
     typedef Key KeyType;
     typedef Val ValType;
-    using Data = map_private::MapData<KeyType, ValType>;
-    using Node = map_private::MapNode<KeyType, ValType>;
+    using Data = detail::MapData<KeyType, ValType>;
+    using Node = detail::MapNode<KeyType, ValType>;
 public:
     Map() : mRBtree(Data::create()) {}
     Map(std::initializer_list<std::pair<KeyType, ValType>> initList) :
@@ -186,7 +186,7 @@ protected:
     void destroy();
 
 private:
-    map_private::MapData<KeyType, ValType> *mRBtree;
+    detail::MapData<KeyType, ValType> *mRBtree;
 };
 
 template<typename Key, typename Val>
@@ -204,7 +204,7 @@ void Map<Key, Val>::detach_helper()
 {
     Data *data = Data::create();
     mRBtree->reference.deref();
-    map_private::MapNode<Key, Val> *it = nullptr;
+    detail::MapNode<Key, Val> *it = nullptr;
     // QT源码采用自拷贝，但是当节点过多时可能会造成栈溢出，所以在此选择循环
     for (it = mRBtree->begin(); it != mRBtree->end(); it = mRBtree->nextNode(it)) {
         data->insert(it->key, it->value);
@@ -221,7 +221,7 @@ void Map<Key, Val>::destroy()
             mRBtree->reference.deref();
         } else {
             mRBtree->clear();
-            map_private::MapDataBase::FreeData(mRBtree);
+            detail::MapDataBase::FreeData(mRBtree);
         }
     }
     mRBtree = nullptr;
@@ -309,13 +309,13 @@ template<typename Key, typename Val>
 void Map<Key, Val>::clear()
 {
     if (mRBtree == nullptr) {
-        mRBtree = map_private::MapData<Key, Val>::create();
+        mRBtree = detail::MapData<Key, Val>::create();
         return;
     }
 
     if (mRBtree->reference.load() > 0) {
         mRBtree->reference.deref();
-        mRBtree = map_private::MapData<Key, Val>::create();
+        mRBtree = detail::MapData<Key, Val>::create();
     } else {
         mRBtree->clear();
     }

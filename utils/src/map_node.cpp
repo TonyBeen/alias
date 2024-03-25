@@ -9,10 +9,9 @@
 #include "map_node.h"
 #include "sysdef.h"
 #include "alloc.h"
-#include "debug.h"
 #include <assert.h>
 
-namespace map_private {
+namespace detail {
 
 static inline int AlignmentThreshold()
 {

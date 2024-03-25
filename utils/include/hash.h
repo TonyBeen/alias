@@ -328,7 +328,6 @@ template <class Key, class Val>
 typename HashMap<Key, Val>::Node *HashMap<Key, Val>::createNode(uint32_t h, const Key &key, const Val &value, Node **nextNode)
 {
     Node *node = new (data->allocateNode(alignOfNode())) Node(key, value, h, *nextNode);
-    printf("%s(), node = %p, *nextNode = %p\n", __func__, node, *nextNode);
     *nextNode = node;
     ++data->size;
     return node;
@@ -461,7 +460,6 @@ typename HashMap<Key, Val>::iterator HashMap<Key, Val>::insert(const Key &key, c
             node = findNode(key, hash);
         }
 
-        printf("%s() node = %p\n", __func__, node);
         return iterator(createNode(hash, key, value, node));
     }
 
