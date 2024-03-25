@@ -10,3 +10,5 @@ test/bin
 test/bin/*
 test/xml
 test/xml/*
+
+.vscode/

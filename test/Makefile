@@ -1,5 +1,5 @@
 CPP_FLAGS := -std=c++11 -m64 -g
-SHARED_LIB := -lunwind -llog -lutils -lpthread
+SHARED_LIB := -lutils
 STATIC_LIB := /usr/local/lib/libgtest.a
 CC := g++
 
@@ -21,7 +21,6 @@ all :
 	make bin/testrbtreeapi
 	make bin/testmapnode
 	make bin/testhash
-	make bin/test_func_traits
 
 memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/teststring8 \
 	bin/testthread bin/teststring8_2 bin/testtimer bin/testsingleton bin/testutils bin/testbitmap \

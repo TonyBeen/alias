@@ -5,23 +5,23 @@
     > Created Time: 2022-05-23 11:52:14 Monday
  ************************************************************************/
 
-#include <utils/bitmap.h>
-#include <gtest/gtest.h>
-#include <iostream>
-#include <assert.h>
+#define CATCH_CONFIG_MAIN
 
-TEST(BitMap_Test, test_constructer) {
+#include "catch/catch.hpp"
+#include "../utils/include/bitmap.h"
+
+TEST_CASE("test_constructer", "[bitmap]") {
     eular::BitMap bitMapObj1;
-    EXPECT_TRUE(0 == bitMapObj1.count());
+    REQUIRE(0 == bitMapObj1.count());
 
     eular::BitMap bitMapObj2(16);
-    EXPECT_TRUE(16 == bitMapObj2.capacity());
+    REQUIRE(16 == bitMapObj2.capacity());
 
     eular::BitMap fromCopy(bitMapObj2);
-    EXPECT_TRUE(16 == fromCopy.capacity());
+    REQUIRE(16 == fromCopy.capacity());
 }
 
-TEST(BitMap_Test, test_set_at) {
+TEST_CASE("test_set_at", "[bitmap]") {
     eular::BitMap bitMapObj(16);
 
     const uint32_t count = 2;
@@ -30,23 +30,23 @@ TEST(BitMap_Test, test_set_at) {
         bitMapObj.set(i, true);
     }
 
-    EXPECT_TRUE(count == bitMapObj.count());
-    EXPECT_FALSE(bitMapObj.set(16, true));
+    REQUIRE(count == bitMapObj.count());
+    REQUIRE_FALSE(bitMapObj.set(16, true));
 
     for (uint32_t i = 0; i < count; ++i) {
-        EXPECT_TRUE(bitMapObj.at(i));
+        REQUIRE(bitMapObj.at(i));
     }
 }
 
-TEST(BitMap_Test, test_reserve) {
+TEST_CASE("test_reserve", "[bitmap]") {
     eular::BitMap bitMapObj(16);
-    EXPECT_TRUE(16 == bitMapObj.capacity());
+    REQUIRE(16 == bitMapObj.capacity());
 
     bitMapObj.reserve(32);
-    EXPECT_TRUE(32 == bitMapObj.capacity());
+    REQUIRE(32 == bitMapObj.capacity());
 }
 
-TEST(BitMap_Test, test_clear) {
+TEST_CASE("test_clear", "[bitmap]") {
     eular::BitMap bitMapObj(16);
 
     const uint32_t count = 2;
@@ -56,11 +56,5 @@ TEST(BitMap_Test, test_clear) {
     }
 
     bitMapObj.clear();
-    EXPECT_TRUE(0 == bitMapObj.count());
-}
-
-int main(int argc, char* argv[])
-{
-    testing::InitGoogleTest(&argc, argv); 
-    return RUN_ALL_TESTS();
+    REQUIRE(0 == bitMapObj.count());
 }
