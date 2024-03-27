@@ -8,6 +8,7 @@
 #define CATCH_CONFIG_MAIN
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 
+#include <map>
 #include <random>
 
 #include "catch/catch.hpp"
@@ -107,8 +108,13 @@ void test_insert()
     detail::MapDataBase::FreeData(data);
 }
 
-void test_erase()
-{
+TEST_CASE("MapNode Benchmark insert") {
+    BENCHMARK("Map insert performance") {
+        test_insert();
+    };
+}
+
+TEST_CASE("MapNode Benchmark find") {
     detail::MapData<int32_t, int32_t> *data = detail::MapData<int32_t, int32_t>::create();
 
     int32_t insertSize = 500000;
@@ -116,12 +122,49 @@ void test_erase()
         data->insert(i, i);
     }
 
+    BENCHMARK("Map find performance") {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, insertSize - 1);
+        int randomNumber = dis(gen);
+
+        detail::MapNode<int32_t, int32_t> *node = data->find(randomNumber);
+        REQUIRE(node != nullptr);
+    };
+
     data->clear();
     detail::MapDataBase::FreeData(data);
 }
 
-TEST_CASE("MapNode Benchmark") {        
+void test_std_insert()
+{
+    std::map<int32_t, int32_t> data;
+    int32_t insertSize = 500000;
+    for (int32_t i = 0; i < insertSize; i++) {
+        data.insert(std::make_pair(i, i));
+    }
+}
+
+TEST_CASE("std::map Benchmark insert") {
     BENCHMARK("Map insert performance") {
-        test_insert();
+        test_std_insert();
+    };
+}
+
+TEST_CASE("std::map Benchmark find") {
+    std::map<int32_t, int32_t> data;
+    int32_t insertSize = 500000;
+    for (int32_t i = 0; i < insertSize; i++) {
+        data.insert(std::make_pair(i, i));
+    }
+
+    BENCHMARK("Map find performance") {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, insertSize - 1);
+        int randomNumber = dis(gen);
+
+        auto it = data.find(randomNumber);
+        REQUIRE(it != data.end());
     };
 }
