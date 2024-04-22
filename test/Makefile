@@ -7,6 +7,7 @@ GEN_BIN := if [ ! -d "./bin" ]; then mkdir bin; fi
 GEN_XML := if [ ! -d "./xml" ]; then mkdir xml; fi
 
 all : 
+	make bin/testbimap
 	make bin/testbuffer
 	make bin/testmutex
 	make bin/testmutex_2
@@ -40,6 +41,10 @@ memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/tests
 	valgrind --xml=yes --xml-file=./xml/testmap_mem_check.xml  --leak-check=full ./bin/testmap
 	valgrind --xml=yes --xml-file=./xml/testsharedbuffer_mem_check.xml  --leak-check=full ./bin/testsharedbuffer
 	valgrind --xml=yes --xml-file=./xml/testhash_mem_check.xml  --leak-check=full ./bin/testhash
+
+bin/testbimap : test_bimap.cc
+	$(GEN_BIN)
+	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
 
 bin/testmutex : testmutex.cc
 	$(GEN_BIN)

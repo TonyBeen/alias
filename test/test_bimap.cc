@@ -263,3 +263,52 @@ TEST_CASE("test replace", "[bimap]") {
     REQUIRE_THROWS(bimap.replaceKey("Eleven", 11));
     REQUIRE_THROWS(bimap.replaceValue(11, "Eleven"));
 }
+
+TEST_CASE("test move", "[bimap]") {
+    std::initializer_list<std::pair<uint32_t, std::string>> initList = {
+        {1,     "One"},
+        {2,     "Two"},
+        {3,     "Three"},
+        {4,     "Four"},
+        {5,     "Five"},
+        {6,     "Six"},
+        {7,     "Seven"},
+        {8,     "Eight"},
+        {9,     "Nine"},
+        {10,    "Ten"}
+    };
+
+    {
+        eular::BiMap<uint32_t, std::string> bimap = initList;
+        REQUIRE(bimap.size() == initList.size());
+
+        decltype(bimap) otherBiMap(std::move(bimap));
+        REQUIRE(otherBiMap.size() == initList.size());
+        REQUIRE(bimap.size() == 0);
+
+        auto listIt = initList.begin();
+        for (auto it = bimap.begin(); it != bimap.end(); ++it, ++listIt)
+        {
+            REQUIRE(it.key() == listIt->first);
+            REQUIRE(it.value() == listIt->second);
+        }
+    }
+
+    {
+        eular::BiMap<uint32_t, std::string> bimap = initList;
+        REQUIRE(bimap.size() == initList.size());
+
+        decltype(bimap) otherBiMap;
+        otherBiMap = std::move(bimap);
+
+        REQUIRE(bimap.size() == 0);
+        REQUIRE(otherBiMap.size() == initList.size());
+
+        auto listIt = initList.begin();
+        for (auto it = bimap.begin(); it != bimap.end(); ++it, ++listIt)
+        {
+            REQUIRE(it.key() == listIt->first);
+            REQUIRE(it.value() == listIt->second);
+        }
+    }
+}

@@ -14,7 +14,8 @@ namespace eular {
 template <typename K, typename V, typename CompareK, typename HashV>
 BiMap<K, V, CompareK, HashV>::BiMap(const std::initializer_list<std::pair<K, V>> &list)
 {
-    for (const auto &pair : list) {
+    for (const auto &pair : list)
+    {
         if (!this->insert(pair.first, pair.second))
         {
             throw std::logic_error("The same key value pair already exists!");
@@ -34,11 +35,44 @@ inline BiMap<K, V, CompareK, HashV>::BiMap(const BiMap &other) :
     }
 }
 
+template<typename K, typename V, typename CompareK, typename HashV>
+inline BiMap<K, V, CompareK, HashV>::BiMap(BiMap &&other)
+{
+    m_storage.swap(other.m_storage);
+    m_indexMap.swap(other.m_indexMap);
+}
+
 template <typename K, typename V, typename CompareK, typename HashV>
 BiMap<K, V, CompareK, HashV>::~BiMap()
 {
     m_indexMap.clear();
     m_storage.clear();
+}
+
+template <typename K, typename V, typename CompareK, typename HashV>
+BiMap<K, V, CompareK, HashV> &BiMap<K, V, CompareK, HashV>::operator=(const BiMap &other)
+{
+    if (this != std::addressof(other)) {
+        m_storage = other.m_storage;
+        for (auto it = m_storage.begin(); it != m_storage.end(); ++it)
+        {
+            auto hashV = HashFunctionV(it->second);
+            m_indexMap[hashV] = const_cast<K *>(&(it->first));
+        }
+    }
+
+    return *this;
+}
+
+template <typename K, typename V, typename CompareK, typename HashV>
+BiMap<K, V, CompareK, HashV> &BiMap<K, V, CompareK, HashV>::operator=(BiMap &&other)
+{
+    if (this != std::addressof(other)) {
+        m_storage.swap(other.m_storage);
+        m_indexMap.swap(other.m_indexMap);
+    }
+
+    return *this;
 }
 
 template <typename K, typename V, typename CompareK, typename HashV>

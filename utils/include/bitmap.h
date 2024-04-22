@@ -11,7 +11,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define BITS_PEER_BYTE       (8)
+#ifdef __CHAR_BIT__
+#define BITS_PEER_BYTE      __CHAR_BIT__
+#else
+#define BITS_PEER_BYTE      (8)
+#endif
 
 namespace eular {
 

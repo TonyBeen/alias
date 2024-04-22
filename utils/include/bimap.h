@@ -33,7 +33,11 @@ public:
     BiMap() = default;
     BiMap(const std::initializer_list<std::pair<K, V>> &list);
     BiMap(const BiMap &other);
+    BiMap(BiMap &&other);
     ~BiMap();
+
+    BiMap &operator=(const BiMap &other);
+    BiMap &operator=(BiMap &&other);
 
     friend class iterator;
     class iterator {
