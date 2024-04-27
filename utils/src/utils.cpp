@@ -86,7 +86,7 @@ int32_t GetFileLength(const eular::String8 &path)
     static struct stat lst;
     int ret = stat(path.c_str(), &lst);
     if (ret != 0) {
-        return eular::Status::NOT_FOUND;
+        return Status::NOT_FOUND;
     }
     return static_cast<int32_t>(lst.st_size);
 }

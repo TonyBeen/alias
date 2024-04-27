@@ -48,29 +48,6 @@ public:
     void        clear();
     void        setDataSize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
 
-    bool        write(const void *data, size_t size);
-    bool        read(void *data, size_t size);
-
-    bool        writeUint8(uint8_t val) { return write(&val, sizeof(val)); }
-    bool        writeUint16(uint16_t val) { return write(&val, sizeof(val)); }
-    bool        writeUint32(uint32_t val) { return write(&val, sizeof(val)); }
-    bool        writeUint64(uint64_t val) { return write(&val, sizeof(val)); }
-
-    bool        writeInt8(int8_t val) { return write(&val, sizeof(val)); }
-    bool        writeInt16(int16_t val) { return write(&val, sizeof(val)); }
-    bool        writeInt32(int32_t val) { return write(&val, sizeof(val)); }
-    bool        writeInt64(int64_t val) { return write(&val, sizeof(val)); }
-
-    bool        readUint8(uint8_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readUint16(uint16_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readUint32(uint32_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readUint64(uint64_t *pv) { return read(pv, sizeof(*pv)); }
-
-    bool        readInt8(int8_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readInt16(int16_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readInt32(int32_t *pv) { return read(pv, sizeof(*pv)); }
-    bool        readInt64(int64_t *pv) { return read(pv, sizeof(*pv)); }
-
     std::string dump()  const;
 
 private:

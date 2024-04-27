@@ -6,7 +6,7 @@
  ************************************************************************/
 
 #include "buffer.h"
-#include "sharedbuffer.h"
+#include "shared_buffer.h"
 #include "exception.h"
 #include <assert.h>
 
@@ -261,23 +261,6 @@ void ByteBuffer::clear()
     }
     mDataSize = 0;
     mPos = 0;
-}
-
-bool ByteBuffer::write(const void *data, size_t size)
-{
-    return set(static_cast<const uint8_t *>(data), size, mDataSize) == size;
-}
-
-bool ByteBuffer::read(void *data, size_t size)
-{
-    if (mBuffer == nullptr || mPos == mDataSize) {
-        return false;
-    }
-
-    size = size > (mDataSize - mPos) ? (mDataSize - mPos) : size;
-    memcpy(data, mBuffer + mPos, size);
-    mPos += size;
-    return true;
 }
 
 std::string ByteBuffer::dump() const

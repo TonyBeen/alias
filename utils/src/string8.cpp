@@ -7,7 +7,7 @@
 
 #include "string8.h"
 #include "utils.h"
-#include "sharedbuffer.h"
+#include "shared_buffer.h"
 #include "debug.h"
 #include "errors.h"
 #include "exception.h"
