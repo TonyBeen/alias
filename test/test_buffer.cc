@@ -58,8 +58,25 @@ TEST_CASE("test_Constructer", "[ByteBuffer]") {
 
 TEST_CASE("test_apend_insert", "[ByteBuffer]") {
     ByteBuffer buffer(128);
-    const uint8_t *data = (const uint8_t *)"Hello";
-    buffer.append(data, 5);
+    buffer.append("Hello", 5);
     buffer.insert((const uint8_t *)"***", 3, 1);
-    CHECK(std::string((char *)buffer.data()) == "H***ello");
+
+    CHECK(buffer.size() == 8);
+    CHECK(std::string((char *)buffer.data(), buffer.size()) == "H***ello");
+}
+
+TEST_CASE("set_", "[ByteBuffer]") {
+    ByteBuffer buffer(128);
+    buffer.append("Hello");
+    buffer.append("***");
+    
+    auto pBegin = buffer.const_data() + 5;
+    size_t copySize = 3;
+
+    buffer.set(pBegin, copySize);
+    REQUIRE(buffer.size() == 3);
+
+    CHECK(buffer[0] == '*');
+    CHECK(buffer[1] == '*');
+    CHECK(buffer[2] == '*');
 }

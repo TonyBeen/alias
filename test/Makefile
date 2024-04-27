@@ -1,150 +1,46 @@
-CPP_FLAGS := -std=c++11 -m64 -g
-SHARED_LIB := -lutils
+CC := $(shell which g++)
+CURRENT_PATH := $(shell pwd)
+BIN_TARGET_DIR := $(CURRENT_PATH)/bin
+XML_TARGET_DIR := $(CURRENT_PATH)/xml
+
+CXX_FLAGS := -std=c++11 -m64 -O0 -g
+INC_PATH := -I$(CURRENT_PATH)
+
+SRC_LIST := $(wildcard *.cc)
+EXE_LIST := $(patsubst %.cc, $(BIN_TARGET_DIR)/%.out, $(SRC_LIST))
+
+SHARED_LIB := -lutils -llog -lpthread
 STATIC_LIB := /usr/local/lib/libgtest.a
-CC := g++
 
-GEN_BIN := if [ ! -d "./bin" ]; then mkdir bin; fi
-GEN_XML := if [ ! -d "./xml" ]; then mkdir xml; fi
+# 检查Valgrind是否安装
+VALGRIND_INSTALLED := $(shell command -v valgrind 2> /dev/null)
 
-all : 
-	make bin/testbimap
-	make bin/testbuffer
-	make bin/testmutex
-	make bin/testmutex_2
-	make bin/testrwmutex
-	make bin/teststring8
-	make bin/testthread
-	make bin/testtimer
-	make bin/testsingleton
-	make bin/testutils
-	make bin/testbitmap
-	make bin/testtypes
-	make bin/testrbtreeapi
-	make bin/testmapnode
-	make bin/testhash
+all:check_path $(EXE_LIST)
 
-memcheck: bin/testbuffer bin/testmutex bin/testmutex_2 bin/testrwmutex bin/teststring8 \
-	bin/testthread bin/teststring8_2 bin/testtimer bin/testsingleton bin/testutils bin/testbitmap \
-	bin/testmapnode bin/testmap make bin/testhash
-	$(GEN_XML)
-	valgrind --xml=yes --xml-file=./xml/testbuffer_mem_check.xml  --leak-check=full ./bin/testbuffer
-	valgrind --xml=yes --xml-file=./xml/testmutex_mem_check.xml  --leak-check=full ./bin/testmutex
-	valgrind --xml=yes --xml-file=./xml/testmutex_mem_check.xml  --leak-check=full ./bin/testmutex_2
-	valgrind --xml=yes --xml-file=./xml/testrwmutex_mem_check.xml  --leak-check=full ./bin/testrwmutex
-	valgrind --xml=yes --xml-file=./xml/testteststring8_mem_check.xml  --leak-check=full ./bin/teststring8
-	valgrind --xml=yes --xml-file=./xml/testthread_mem_check.xml  --leak-check=full ./bin/testthread
-	valgrind --xml=yes --xml-file=./xml/testtimer_mem_check.xml  --leak-check=full ./bin/testtimer
-	valgrind --xml=yes --xml-file=./xml/testsingleton_mem_check.xml  --leak-check=full ./bin/testsingleton
-	valgrind --xml=yes --xml-file=./xml/testutils_mem_check.xml  --leak-check=full ./bin/testutils
-	valgrind --xml=yes --xml-file=./xml/testbitmap_mem_check.xml  --leak-check=full ./bin/testbitmap
-	valgrind --xml=yes --xml-file=./xml/testmapnode_mem_check.xml  --leak-check=full ./bin/testmapnode
-	valgrind --xml=yes --xml-file=./xml/testmap_mem_check.xml  --leak-check=full ./bin/testmap
-	valgrind --xml=yes --xml-file=./xml/testsharedbuffer_mem_check.xml  --leak-check=full ./bin/testsharedbuffer
-	valgrind --xml=yes --xml-file=./xml/testhash_mem_check.xml  --leak-check=full ./bin/testhash
+check_path:
+	@if [ ! -d $(BIN_TARGET_DIR) ]; then mkdir -p $(BIN_TARGET_DIR); fi
+	@if [ ! -d $(XML_TARGET_DIR) ]; then mkdir -p $(XML_TARGET_DIR); fi
 
-bin/testbimap : test_bimap.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
+memcheck: check_valgrind $(EXE_LIST) execute_with_valgrind
 
-bin/testmutex : testmutex.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
+check_valgrind:
+	@if [ ! "$(VALGRIND_INSTALLED)" ]; then \
+		echo "Valgrind is not installed, please install Valgrind first."; \
+		exit 1; \
+	fi
 
-bin/testmutex_2 : test_mutex_2.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
+execute_with_valgrind:
+	@for executable in $(EXE_LIST); do \
+		echo "Execute Valgrind command for memory check: $$executable"; \
+		valgrind --xml=yes --xml-file=./xml/$$(basename $$executable)_mem_check.xml --leak-check=full $$executable; \
+		echo "$$executable over..."; \
+		echo ""; \
+	done
 
-bin/testrwmutex : test_rwmutex.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
+$(BIN_TARGET_DIR)/%.out: %.cc
+	$(CC) $^ -o $@ $(INC_PATH) $(CXX_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
 
-bin/teststring8 : teststring8.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testthread : testthread.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testbuffer : test_buffer.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testcallstack : testcallstack.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testtimer : test_timer.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testsingleton : test_singleton.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testrbtree : test_rbtree.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testutils : test_utils.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testbitmap : test_bitmap.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testtypes : test_types.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testrbtreeapi : test_rbtree_api.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testmapnode : test_map_node.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testmap : test_map.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testany : test_any.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(SHARED_LIB)
-
-bin/testsharedbuffer : test_sharedbuffer.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/testhash : test_hash.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-bin/test_func_traits : test_func_traits.cc
-	$(GEN_BIN)
-	$(CC) $^ -o $@ $(CPP_FLAGS) $(STATIC_LIB) $(SHARED_LIB)
-
-.PHONY : clean all 		\
-	bin/testbuffer 		\
-	bin/testmutex 		\
-	bin/testmutex_2		\
-	bin/testrwmutex		\
-	bin/teststring8		\
-	bin/teststring8_2 	\
-	bin/testthread 		\
-	bin/testtimer 		\
-	bin/testsingleton 	\
-	bin/testutils 		\
-	bin/testbitmap 		\
-	bin/testrbtree		\
-	bin/testrbtreeapi	\
-	bin/testmapnode 	\
-	bin/testmap			\
-	bin/testsharedbuffer \
-	bin/testhash		\
-
+.PHONY : clean all
 
 clean :
 	-rm -rf bin xml
