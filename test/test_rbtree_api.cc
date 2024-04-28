@@ -5,8 +5,6 @@
     > Created Time: Thu 24 Nov 2022 11:08:34 AM CST
  ************************************************************************/
 
-#define CATCH_CONFIG_MAIN
-#define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,10 +12,6 @@
 #include "catch/catch.hpp"
 
 #include <utils/rbtree_api.h>
-
-TEST_CASE("test_bimap_insert", "[bimap]") {
-
-}
 
 struct RBData {
     rb_node rbNode;
