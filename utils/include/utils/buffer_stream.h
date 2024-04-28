@@ -57,9 +57,10 @@ public:
     BufferStream &operator>>(uint64_t &item);
     BufferStream &operator>>(std::string &item);
 
-private:
     void write(const void *data, uint32_t size);
     bool read(void *data, uint32_t size);
+
+private:
     void checkBuffer() const;
 
 private:

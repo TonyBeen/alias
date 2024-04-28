@@ -21,11 +21,11 @@ BufferStream &operator<<(BufferStream &stream, const T (&item)[size])
     } else {
         for (size_t i = 0; i < size; ++i) {
             // 非基础类型由外部进行重载, 自定义输入
-            ::operator<<(*this, item[i]);
+            ::operator<<(stream, item[i]);
         }
     }
 
-    return *this;
+    return stream;
 }
 
 template<typename T, size_t size>
@@ -39,18 +39,18 @@ BufferStream &operator>>(BufferStream &stream, T (&item)[size])
     } else {
         for (size_t i = 0; i < size; ++i) {
             // 非基础类型由外部进行重载, 自定义输出
-            ::operator>>(*this, item[i]);
+            ::operator>>(stream, item[i]);
         }
     }
 
-    return *this;
+    return stream;
 }
 
 template<size_t size>
 BufferStream &operator<<(BufferStream &stream, const char (&item)[size])
 {
     stream.write(item, size);
-    return *this;
+    return stream;
 }
 
 template<size_t size>
@@ -60,7 +60,7 @@ BufferStream &operator>>(BufferStream &stream, char (&buffer)[size])
         throw Exception(String8::format("Read error, maybe insufficient data. [%s:%d]", __FILE__, __LINE__));
     }
 
-    return *this;
+    return stream;
 }
 
 } // namespace eular
