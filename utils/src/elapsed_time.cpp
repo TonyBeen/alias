@@ -5,9 +5,11 @@
     > Created Time: Sun 25 Feb 2024 03:14:02 PM CST
  ************************************************************************/
 
-#include "elapsed_time.h"
-#include "utils.h"
+#include "utils/elapsed_time.h"
+
 #include <assert.h>
+
+#include "utils/utils.h"
 
 ElapsedTime::ElapsedTime() :
     mTimeType(ElapsedTimeType::MILLISECOND),

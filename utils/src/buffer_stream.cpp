@@ -5,9 +5,8 @@
     > Created Time: 2024年04月25日 星期四 08时58分22秒
  ************************************************************************/
 
-#include "buffer_stream.h"
-#include "exception.h"
-#include "utils.h"
+#include "utils/buffer_stream.h"
+#include "utils/utils.h"
 
 namespace eular {
 BufferStream::BufferStream() :
@@ -121,25 +120,11 @@ BufferStream &BufferStream::operator<<(uint64_t item)
     return *this;
 }
 
-BufferStream &BufferStream::operator<<(const char *item)
-{
-    write(&item, sizeof(item));
-    return *this;
-}
-
 BufferStream &BufferStream::operator<<(const std::string &item)
 {
     if (!item.empty()) {
-        write(item.c_str(), item.length());
-    }
-
-    return *this;
-}
-
-BufferStream &BufferStream::operator<<(const String8 &item)
-{
-    if (!item.isEmpty()) {
-        write(item.c_str(), item.length());
+        // 将\0保存到缓存中
+        write(item.c_str(), item.length() + 1);
     }
 
     return *this;
@@ -249,6 +234,24 @@ BufferStream &BufferStream::operator>>(uint64_t &item)
     if (!read(&item, sizeof(item))) {
         throw Exception(String8::format("Read error, maybe insufficient data. [%s:%d]", __FILE__, __LINE__));
     }
+
+    return *this;
+}
+
+BufferStream &BufferStream::operator>>(std::string &item)
+{
+    checkBuffer();
+    std::string temp = item;
+    char ch = 1;
+    do {
+        if (!read(&ch, sizeof(ch))) {
+            throw Exception(String8::format("Read error, maybe insufficient data. [%s:%d]", __FILE__, __LINE__));
+        }
+        temp.push_back(ch);
+    } while (ch != '\0');
+
+    // 去掉结尾\0
+    item.assign(temp.c_str(), temp.size() - 1);
 
     return *this;
 }

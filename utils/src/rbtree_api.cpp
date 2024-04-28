@@ -5,7 +5,8 @@
     > Created Time: Wed 23 Nov 2022 03:56:21 PM CST
  ************************************************************************/
 
-#include "rbtree_api.h"
+#include "utils/rbtree_api.h"
+
 #include <assert.h>
 
 void rbtree_init(rb_root *root)

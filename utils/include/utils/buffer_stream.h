@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#include "string8.h"
+#include "exception.h"
 #include "buffer.h"
 
 namespace eular {
@@ -41,9 +41,7 @@ public:
     BufferStream &operator<<(double item);
     BufferStream &operator<<(int64_t item);
     BufferStream &operator<<(uint64_t item);
-    BufferStream &operator<<(const char *item);
     BufferStream &operator<<(const std::string &item);
-    BufferStream &operator<<(const String8 &item);
 
     BufferStream &operator>>(bool &item);
     BufferStream &operator>>(int8_t &item);
@@ -57,6 +55,7 @@ public:
     BufferStream &operator>>(double &item);
     BufferStream &operator>>(int64_t &item);
     BufferStream &operator>>(uint64_t &item);
+    BufferStream &operator>>(std::string &item);
 
 private:
     void write(const void *data, uint32_t size);

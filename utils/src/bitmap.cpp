@@ -5,11 +5,13 @@
     > Created Time: 2022-05-23 09:42:46 Monday
  ************************************************************************/
 
-#include "bitmap.h"
-#include "sysdef.h"
+#include "utils/bitmap.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdexcept>
+
+#include "utils/sysdef.h"
 
 #define DEFAULT_SIZE    (1024)
 

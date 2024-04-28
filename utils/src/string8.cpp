@@ -5,15 +5,16 @@
     > Created Time: 2021年04月11日 星期日 12时25分02秒
  ************************************************************************/
 
-#include "string8.h"
-#include "utils.h"
-#include "shared_buffer.h"
-#include "debug.h"
-#include "errors.h"
-#include "exception.h"
+#include "utils/string8.h"
+
 #include <error.h>
 #include <assert.h>
-#include <unistd.h>
+
+#include "utils/utils.h"
+#include "utils/shared_buffer.h"
+#include "utils/debug.h"
+#include "utils/errors.h"
+#include "utils/exception.h"
 
 #define DEFAULT_STRING_SIZE 128
 #define MAXSIZE (1024 * 128)
@@ -298,7 +299,15 @@ void String8::clear()
     }
 }
 
-int String8::append(const String8& other)
+int String8::append(char ch)
+{
+    char arrayTemp[2] = {0};
+    arrayTemp[0] = ch;
+
+    return append(arrayTemp, 1);
+}
+
+int String8::append(const String8 &other)
 {
     return append(other.mString, other.length());
 }
@@ -311,7 +320,7 @@ int String8::append(const char* other)
 int String8::append(const char* other, size_t numChars)
 {
     if (other == nullptr) {
-        return INVALID_PARAM;
+        return 0;
     }
 
     if (numChars == 0) {
@@ -323,6 +332,7 @@ int String8::append(const char* other, size_t numChars)
     }
 
     size_t size = strlen(other);
+    size = (size > numChars) ? numChars : size;
     if (size > numChars) {
         size = numChars;
     }
@@ -349,7 +359,7 @@ int String8::append(const char* other, size_t numChars)
         mCapacity = cap;
         return size;
     }
-    
+
     return 0;
 }
 

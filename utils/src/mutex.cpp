@@ -4,17 +4,19 @@
     > Desc: 
     > Created Time: 2021年04月25日 星期日 21时25分03秒
  ************************************************************************/
-//#define _DEBUG
-#include "debug.h"
-#include "mutex.h"
-#include "exception.h"
-#include "utils.h"
-#include <fcntl.h>
-#include <sys/stat.h>
+
+#include "utils/mutex.h"
+
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
-#include <string.h>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "utils/utils.h"
+#include "utils/exception.h"
 
 namespace eular {
 
@@ -68,7 +70,7 @@ void Mutex::unlock()
 {
     int32_t ret = pthread_mutex_unlock(&mMutex);
     if (ret != 0 && ret != EPERM) { // EPERM: the calling thread does not own the mutex
-        printf("pthread_mutex_unlock error. return %d", ret);
+        throw Exception(String8::format("pthread_mutex_unlock error. return %d", ret));
     }
 }
 
@@ -120,7 +122,7 @@ void RecursiveMutex::unlock()
 {
     int32_t ret = pthread_mutex_unlock(&mMutex);
     if (ret != 0 && ret != EPERM) { // EPERM: the calling thread does not own the mutex
-        printf("pthread_mutex_unlock error. return %d", ret);
+        throw Exception(String8::format("pthread_mutex_unlock error. return %d", ret));
     }
 }
 
@@ -207,7 +209,7 @@ Sem::Sem(uint8_t valBase)
     }
 
     if (sem_init(mSem, false, valBase)) {
-        printf("%s() sem_init error %d, %s", __func__, errno, strerror(errno));
+        throw Exception(String8::format("%s() sem_init error %d, %s", __func__, errno, strerror(errno)));
     }
     isNamedSemaphore = false;
 }

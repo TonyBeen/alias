@@ -45,6 +45,7 @@ public:
     size_t              capacity() const { return mCapacity; }
     void                clear();
 
+    int                 append(char ch);
     int                 append(const String8& other);
     int                 append(const char* other);
     int                 append(const char* other, size_t numChars);
@@ -65,7 +66,7 @@ public:
     int                 compare(const char* other) const;
     int                 ncompare(const String8& other, size_t n) const;
     int                 ncompare(const char* other, size_t n) const;
-    // if == return 0;
+
     int                 StrCaseCmp(const String8& other) const;
     int                 StrCaseCmp(const char* other) const;
 

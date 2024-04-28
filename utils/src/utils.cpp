@@ -5,8 +5,9 @@
     > Created Time: Wed May  5 15:00:59 2021
  ************************************************************************/
 
-#include "utils.h"
-#include "errors.h"
+#include "utils/utils.h"
+#include "utils/errors.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>

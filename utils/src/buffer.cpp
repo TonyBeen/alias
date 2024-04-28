@@ -5,10 +5,9 @@
     > Created Time: Mon Jul  5 13:09:00 2021
  ************************************************************************/
 
-#include "buffer.h"
-#include "shared_buffer.h"
-#include "exception.h"
-#include <assert.h>
+#include "utils/buffer.h"
+#include "utils/shared_buffer.h"
+#include "utils/exception.h"
 
 #define DEFAULT_BUFFER_SIZE (256)
 

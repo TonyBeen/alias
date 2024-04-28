@@ -1,5 +1,5 @@
-INCLUDE_DIR := -I./include
-CXX_FLAGS := -std=c++11 -DNDEBUG -W -Wall -Werror -Wextra  -O2 -m64 -g
+INCLUDE_DIR := -I./include/
+CXX_FLAGS := -std=c++11 -DNDEBUG -W -Wall -Werror -Wextra -O2 -m64 -g
 CXX_NO_ERROR_FLAGS := -Wno-deprecated -Wno-unused-result -Wno-class-memaccess -Wno-unused-function -Wno-unused-parameter
 SO_FLAGS := -fPIC
 LIB_LIST := -lpthread
