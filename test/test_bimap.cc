@@ -12,7 +12,7 @@
 #include <thread>
 
 #include "catch/catch.hpp"
-#include "../utils/include/bimap.h"
+#include "utils/bimap.h"
 
 TEST_CASE("test_bimap_insert", "[bimap]") {
     eular::BiMap<uint32_t, std::string> bimap = {

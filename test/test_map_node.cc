@@ -12,7 +12,7 @@
 #include <random>
 
 #include "catch/catch.hpp"
-#include "../utils/include/map_node.h"
+#include "utils/map_node.h"
 
 TEST_CASE("test_map_data_all", "[MapData]") {
     detail::MapData<int32_t, int32_t> *data = detail::MapData<int32_t, int32_t>::create();
