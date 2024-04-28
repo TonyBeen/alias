@@ -27,11 +27,10 @@ debug:
 install : libutils.so
 	-sudo mv ./libutils.so $(DEST_DIR)/lib
 	-sudo ldconfig
-	-if [ ! -d "$(DEST_DIR)/include/utils/" ]; then sudo mkdir $(DEST_DIR)/include/utils/; fi
-	-sudo cp ./include/* $(DEST_DIR)/include/utils/
+	-sudo rm -rf $(DEST_DIR)/include/utils
+	-sudo cp ./include/* $(DEST_DIR)/include/ -r
 
 uninstall:
-	-rm -rf $(OBJ_LIST)
 	-sudo rm -rf $(DEST_DIR)/lib/libutils.so
 	-sudo rm -rf $(DEST_DIR)/include/utils
 
