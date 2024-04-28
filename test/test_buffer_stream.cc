@@ -9,17 +9,7 @@
 #include <stdio.h>
 #include <iostream>
 
-// NOTE 必须要在buffer_stream之前声明, 否则输入数组类型时编译报错
-struct DeviceInfo;
-namespace eular {
-class BufferStream;
-} // namespace eular
-
-eular::BufferStream &operator<<(eular::BufferStream &stream, const DeviceInfo &info);
-eular::BufferStream &operator>>(eular::BufferStream &stream, DeviceInfo &info);
-
 #include "catch/catch.hpp"
-#include "utils/buffer_stream_utils.h"
 #include "utils/buffer_stream.h"
 
 #define BYTE_64     64
@@ -42,6 +32,12 @@ typedef struct DeviceInfo {
         memset(_path, 0, BYTE_128);
     }
 } DeviceInfo;
+
+// NOTE 必须要在buffer_stream_utils之前声明, 否则输入数组类型时编译报错
+eular::BufferStream &operator<<(eular::BufferStream &stream, const DeviceInfo &info);
+eular::BufferStream &operator>>(eular::BufferStream &stream, DeviceInfo &info);
+
+#include "utils/buffer_stream_utils.h"
 
 eular::BufferStream &operator<<(eular::BufferStream &stream, const DeviceInfo &info)
 {
@@ -145,13 +141,14 @@ TEST_CASE("buffer_stream_char_array_char_pointer_write_read", "[buffer_stream]")
         eular::BufferStream stream(buffer);
 
         const char *ptr = charArray;
-        size_t len = strlen(ptr);
+        std::string str = ptr;
 
-        stream << std::string(ptr);
+        stream << str;
 
         std::string temp;
         stream >> temp;
 
-        REQUIRE(std::string(ptr) == temp);
+        REQUIRE(str == temp);
+        REQUIRE(str.size() == temp.size());
     }
 }
