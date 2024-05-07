@@ -11,7 +11,7 @@ YAML_LIB  := /usr/local/lib/libyaml-cpp.a
 GTEST_LIB := /usr/local/lib/libgtest.a
 
 DEST_PATH := /usr/local
-DEST_INC  := $(DEST_PATH)/include/
+DEST_INC  := $(DEST_PATH)/include
 DEST_LIB  := $(DEST_PATH)/lib/
 
 SRC_LIST = $(wildcard $(PWD)/*.cpp)
@@ -36,11 +36,11 @@ all:
 
 install: all
 	if [ ! -d $(DEST_INC)/config ]; then mkdir $(DEST_INC)/config; fi
-	sudo cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
+	cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
 	mv $(TARGET) $(DEST_LIB)
+	cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
+	cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
 	ldconfig
-	sudo cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
-	sudo cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
 
 uninstall:
 	rm -rf $(DEST_INC)/config

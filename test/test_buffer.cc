@@ -2,8 +2,8 @@
 #include <bits/move.h>
 
 #include "catch/catch.hpp"
-#include "../utils/include/buffer.h"
-#include "../utils/include/utils.h"
+#include "utils/buffer.h"
+#include "utils/utils.h"
 
 using namespace eular;
 

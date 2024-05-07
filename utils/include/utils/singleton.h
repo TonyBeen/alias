@@ -9,8 +9,7 @@
 #define __SINGLETON_H__
 
 #include "mutex.h"
-#include "exception.h"
-#include "refcount.h"
+#include "singleton_object.h"
 #include <bits/move.h>
 
 namespace eular {
@@ -18,73 +17,8 @@ namespace eular {
 template<typename T>
 class Singleton {
 public:
-    struct SObject
-    {
-    private:
-        friend class Singleton<T>;
-        SObject(T *obj, RefCount *ref) :
-            mObj(obj),
-            mRefPtr(ref)
-        {
-            mRefPtr->ref();
-        }
-
-    public:
-        SObject(const SObject &other)
-        {
-            mObj = other.mObj;
-            mRefPtr = other.mRefPtr;
-            mRefPtr->ref();
-        }
-
-        SObject &operator=(const SObject &other)
-        {
-            mObj = other.mObj;
-            mRefPtr = other.mRefPtr;
-            mRefPtr->ref();
-            return *this;
-        }
-
-        ~SObject()
-        {
-            mObj = nullptr;
-            mRefPtr->deref();
-            mRefPtr = nullptr;
-        }
-
-        T *operator->()
-        {
-            if (mObj == nullptr) {
-                throw Exception("nullptr object");
-            }
-            return mObj;
-        }
-
-        T &operator*()
-        {
-            if (mObj == nullptr) {
-                throw Exception("nullptr object");
-            }
-            return *mObj;
-        }
-
-        operator T*()
-        {
-            return mObj;
-        }
-
-        operator const T*() const
-        {
-            return mObj;
-        }
-
-    private:
-        T *mObj;
-        RefCount *mRefPtr;
-    };
-
     template<typename... Args>
-    static SObject get(Args... args)
+    static SObject<T> Get(Args&&... args)
     {
         // 编译期间检测类型完整性
         static_assert(sizeof(T), "incomplete type");
@@ -94,7 +28,7 @@ public:
             mDeleter.registration(); // 模板静态成员变量需要使用才会构造
             // ::atexit(Singleton<T>::free); // 在mian结束后调用free函数
         }
-        SObject obj(mInstance, &mRef);
+        SObject<T> obj(mInstance, &mRef);
         return obj;
     }
 
@@ -102,7 +36,7 @@ public:
      * @brief 重置实例, 会返回一个新的地址，所以原来的会失效，对于单例模式，此方法用的不太多 
      */
     template<typename... Args>
-    static SObject reset(Args... args)
+    static SObject<T> Reset(Args&&... args)
     {
         AutoLock<Mutex> lock(mMutex);
         if (mRef.load() == 0) {
@@ -113,11 +47,11 @@ public:
             mInstance = new T(std::forward<Args>(args)...);
         }
 
-        SObject obj(mInstance, &mRef);
+        SObject<T> obj(mInstance, &mRef);
         return obj;
     }
 
-    static void free()
+    static void Free()
     {
         if (mRef.load() > 0) {
             return;
@@ -136,7 +70,7 @@ private:
         void registration() { }
         ~Deleter()
         {
-            Singleton<T>::free();
+            Singleton<T>::Free();
         }
     };
 

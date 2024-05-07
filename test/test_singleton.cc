@@ -5,56 +5,70 @@
     > Created Time: Fri 19 Nov 2021 04:38:34 PM CST
  ************************************************************************/
 
-#include <utils/singleton.h>
-#include <utils/string8.h>
+#define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_ENABLE_BENCHMARKING
+
 #include <string>
 #include <iostream>
 #include <assert.h>
 
+#include "catch/catch.hpp"
+
+#include <utils/singleton.h>
+#include <utils/string8.h>
+
 using namespace eular;
-using namespace std;
 
-void test_singleton()
-{
+class ClassTest {
+public:
+    ClassTest(bool &isDeconstructionCalled) :
+        refIsDeconstructionCalled(isDeconstructionCalled)
     {
-        Singleton<std::string>::SObject obj = Singleton<std::string>::get("12345");
-        cout << *obj << endl;
-        assert(*obj == std::string("12345"));
-        printf("str addr = %p\n", (std::string *)obj);
+        isDeconstructionCalled = false;
     }
 
+    ~ClassTest() { refIsDeconstructionCalled = true; }
+
+    bool &refIsDeconstructionCalled;
+};
+
+TEST_CASE("test_singleton_ClassTest", "[singleton]") {
+    bool isDeconstructionCalled = false;
+
+    Singleton<ClassTest>::Get(isDeconstructionCalled);
+    bool other = false;
+    Singleton<ClassTest>::Reset(other);
+
+    REQUIRE(isDeconstructionCalled);
+}
+
+TEST_CASE("test_singleton_std_string_Get", "[singleton]") {
+    const char *str = "12345";
+    auto obj = Singleton<std::string>::Get(str);
+
+    REQUIRE(*obj == std::string(str));
+}
+
+TEST_CASE("test_singleton_String8_Get", "[singleton]") {
+    const char *str = "67890";
+
+    SObject<eular::String8> obj = Singleton<eular::String8>::Get(str, 4);
+    REQUIRE(*obj == eular::String8("6789"));
+
+    // 测试当存在引用时无法Reset
+    SObject<eular::String8> obj2 = Singleton<eular::String8>::Reset("-------");
+    REQUIRE(*obj == *obj2);
+}
+
+TEST_CASE("test_singleton_String8_Reset", "[singleton]") {
     {
-        Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::get("67890", 4);
-        cout << *obj << endl;
-        assert(*obj == eular::String8("6789"));
-        printf("str addr = %p\n", (eular::String8 *)obj);
-
-        Singleton<eular::String8>::SObject obj2 = Singleton<eular::String8>::reset("-------");
-        cout << *obj2 << endl;
-        assert(*obj == eular::String8("6789"));
-        printf("str addr = %p\n", (eular::String8 *)obj2);
-
-        assert(*obj == *obj2);
+        SObject<eular::String8> obj = Singleton<eular::String8>::Get("67890", 4);
+        REQUIRE(*obj == eular::String8("6789"));
     }
 
-    Singleton<eular::String8>::SObject obj = Singleton<eular::String8>::reset("-------");
-    assert(*obj == "-------");
-}
-
-void test_free_buffer()
-{
-    class Test {
-    public:
-        Test() { std::cout << __func__ << "()\n"; }
-        ~Test() { std::cout << __func__ << "()\n"; }
-    };
-
-    Singleton<Test>::get();
-}
-
-int main(int argc, char **argv)
-{
-    test_singleton();
-    test_free_buffer();
-    return 0;
+    // 测试当不存在引用时可以Reset
+    const char *str = "-------";
+    SObject<eular::String8> obj2 = Singleton<eular::String8>::Reset(str);
+    REQUIRE(*obj2 == str);
+    
 }

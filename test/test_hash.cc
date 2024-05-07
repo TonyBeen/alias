@@ -7,7 +7,7 @@
 
 #define CATCH_CONFIG_MAIN
 #include "catch/catch.hpp"
-#include "../utils/include/hash.h"
+#include "utils/hash.h"
 
 class Key : public eular::HashCmptBase
 {

@@ -9,7 +9,7 @@
 #include <string>
 
 #include "catch/catch.hpp"
-#include "../utils/include/any.hpp"
+#include "utils/any.hpp"
 
 TEST_CASE("std::string -> any -> std::string", "[any]") {
     eular::Any any(std::string("Hello"));

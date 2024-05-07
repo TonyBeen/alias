@@ -8,7 +8,7 @@
 #define CATCH_CONFIG_MAIN
 
 #include "catch/catch.hpp"
-#include "../utils/include/bitmap.h"
+#include "utils/bitmap.h"
 
 TEST_CASE("test_constructer", "[bitmap]") {
     eular::BitMap bitMapObj1;

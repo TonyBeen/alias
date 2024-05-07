@@ -7,7 +7,7 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include <utils/sharedbuffer.h>
+#include <utils/shared_buffer.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdint.h>
