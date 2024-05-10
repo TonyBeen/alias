@@ -53,7 +53,7 @@ void YamlReader::loadYaml(const std::string &path)
         }
         loadYaml("", mYamlRoot);
         isValid = true;
-    } catch (const std::exception &e){
+    } catch (const std::exception &e) {
         printf("%s() error. %s\n", __func__, e.what());
     }
 
@@ -83,7 +83,7 @@ YamlValue YamlReader::root()
     return node;
 }
 
-void YamlReader::foreach(bool outValue)
+void YamlReader::foreach(std::string &output, bool outValue)
 {
     toMutex(mMutex)->rlock();
     std::stringstream strstream;
@@ -95,7 +95,8 @@ void YamlReader::foreach(bool outValue)
         }
         strstream << std::endl;
     }
-    printf("%s\n", strstream.str().c_str());
+
+    output = strstream.str();
     toMutex(mMutex)->runlock();
 }
 

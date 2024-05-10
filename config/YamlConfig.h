@@ -77,7 +77,7 @@ __unlock:
 
     YamlValue root();
 
-    void foreach(bool outValue = true);
+    void foreach(std::string &output, bool outValue = true);
 
 protected:
     void loadYaml(const std::string &prefix, const YamlValue &node);

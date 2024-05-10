@@ -9,6 +9,7 @@
 #define __SYSDEF_H__
 
 #include <stdint.h>
+#include <string.h>
 
 #if defined(WIN64) || defined(_WIN64)
     #define OS_WIN64
@@ -46,8 +47,17 @@
 #if defined(OS_WIN32) || defined(OS_WIN64)
     #undef  OS_UNIX
     #define OS_WIN
+
+#define DIR_SEPARATOR       '\\'
+#define DIR_SEPARATOR_STR   "\\"
 #else
     #define OS_UNIX
+#define DIR_SEPARATOR       '/'
+#define DIR_SEPARATOR_STR   "/"
+#endif
+
+#ifndef __FILENAME__
+#define __FILENAME__  (strrchr(DIR_SEPARATOR_STR __FILE__, DIR_SEPARATOR) + 1)
 #endif
 
 // #if defined(__x86_64__) || defined(_M_X64) || defined(__powerpc64__) || defined(__alpha__) ||
