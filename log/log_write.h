@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <memory>
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -37,7 +38,7 @@ public:
     virtual ~NonCopyAndAssign() {}
 };
 
-struct cJSON;
+class ProcessMutex;
 
 namespace eular {
 class LogWrite : public NonCopyAndAssign {
@@ -78,8 +79,8 @@ public:
     };
 
 protected:
-    pthread_mutex_t *mMutex;        // 同步状态下保护文件描述符
-    std::string      mBasePath;
+    std::shared_ptr<ProcessMutex>   mMutex;     // 同步状态下保护文件描述符
+    std::string                     mBasePath;
 };
 
 class StdoutLogWrite : public LogWrite {

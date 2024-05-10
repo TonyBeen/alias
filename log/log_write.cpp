@@ -1,4 +1,5 @@
 #include "log_write.h"
+#include "mutex.hpp"
 #include "log_format.h"
 #include "callstack.h"
 #include "nlohmann/json.hpp"
@@ -15,41 +16,19 @@
 namespace eular {
 LogWrite::LogWrite()
 {
-    pthread_mutexattr_t mutexAttr;
-    pthread_mutexattr_init(&mutexAttr);
-#if defined(_POSIX_THREAD_PROCESS_SHARED)
-    pthread_mutexattr_setpshared(&mutexAttr, PTHREAD_PROCESS_SHARED);
-    mMutex = (pthread_mutex_t *)mmap(nullptr, sizeof(pthread_mutex_t),
-        PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-#else
-    mMutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
-#endif
-    assert(mMutex);
-    pthread_mutex_init(mMutex, &mutexAttr);
-    pthread_mutexattr_destroy(&mutexAttr);
+    mMutex = std::make_shared<ProcessMutex>();
 }
 
 LogWrite::~LogWrite()
 {
-    if (!mMutex) {
-        return;
-    }
-    pthread_mutex_destroy(mMutex);
-#if defined(_POSIX_THREAD_PROCESS_SHARED)
-    munmap(mMutex, sizeof(pthread_mutex_t));
-#else
-    free(mMutex);
-#endif
-    mMutex = nullptr;
 }
 
 int32_t StdoutLogWrite::WriteToFile(std::string msg)
 {
     int32_t ret = 0;
     if (msg.length()) {
-        pthread_mutex_lock(mMutex);
+        AutoLock<ProcessMutex> lock(mMutex);
         ret = write(STDOUT_FILENO, msg.c_str(), msg.length());
-        pthread_mutex_unlock(mMutex);
     }
 
     return ret;
@@ -60,9 +39,8 @@ int32_t StdoutLogWrite::WriteToFile(const LogEvent &ev)
     const std::string &format_string = LogFormat::Format(&ev);
     int32_t ret = format_string.length();
     if (ret > 0) {
-        pthread_mutex_lock(mMutex);
+        AutoLock<ProcessMutex> lock(mMutex);;
         ret = ::write(STDOUT_FILENO, format_string.c_str(), ret);
-        pthread_mutex_unlock(mMutex);
     }
 
     return ret;
@@ -147,23 +125,18 @@ std::string FileLogWrite::getFileName()
 
 void FileLogWrite::maintainFile()
 {
-    pthread_mutex_lock(mMutex);
+    AutoLock<ProcessMutex> lock(mMutex);
     if (*mFileDesc <= 0 || *mFileSize > MAX_FILE_SIZE) {
         CloseFile();
-        if (false == CreateNewFile(getFileName())) {
-            goto unlock;
-        }
+        CreateNewFile(getFileName());
     }
-
-unlock:
-    pthread_mutex_unlock(mMutex);
 }
 
 int32_t FileLogWrite::WriteToFile(std::string msg)
 {
     int32_t ret = 0;
     maintainFile();
-    pthread_mutex_lock(mMutex);
+    AutoLock<ProcessMutex> lock(mMutex);
     if (msg.length()) {
         ret = write(*mFileDesc, msg.c_str(), msg.length());
     }
@@ -173,7 +146,6 @@ int32_t FileLogWrite::WriteToFile(std::string msg)
     } else if (ret < 0) {
         perror("write error");
     }
-    pthread_mutex_unlock(mMutex);
     return ret;
 }
 
@@ -183,7 +155,7 @@ int32_t FileLogWrite::WriteToFile(const LogEvent &ev)
     int32_t ret = format_string.length();
     if (ret > 0) {
         maintainFile();
-        pthread_mutex_lock(mMutex);
+        AutoLock<ProcessMutex> lock(mMutex);
         ret = write(*mFileDesc, format_string.c_str(), format_string.length());
         if (ret > 0) {
             fsync(*mFileDesc);
@@ -191,7 +163,6 @@ int32_t FileLogWrite::WriteToFile(const LogEvent &ev)
         } else if (ret < 0) {
             perror("write error");
         }
-        pthread_mutex_unlock(mMutex);
     }
 
     return ret;
@@ -460,7 +431,7 @@ void ConsoleLogWrite::signalHandler(int32_t sig)
 
 int32_t ConsoleLogWrite::WriteToFile(std::string msg)
 {
-    pthread_mutex_lock(mMutex);
+    AutoLock<ProcessMutex> lock(mMutex);
     InitParams();
 
     int32_t sendSize = 0;
@@ -471,7 +442,6 @@ int32_t ConsoleLogWrite::WriteToFile(std::string msg)
         }
     }
 
-    pthread_mutex_unlock(mMutex);
     return sendSize;
 }
 
@@ -493,7 +463,7 @@ int32_t ConsoleLogWrite::WriteToFile(const LogEvent &ev)
     std::string msg = ss.str();
     msg.append("\r\n\r\n");
 
-    pthread_mutex_lock(mMutex);
+    AutoLock<ProcessMutex> lock(mMutex);
     InitParams();
 
     int32_t sendSize = 0;
@@ -504,7 +474,6 @@ int32_t ConsoleLogWrite::WriteToFile(const LogEvent &ev)
         }
     }
 
-    pthread_mutex_unlock(mMutex);
     return 0;
 }
 
