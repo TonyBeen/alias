@@ -88,7 +88,10 @@ class TimerManager : public ThreadBase
 {
     DISALLOW_COPY_AND_ASSIGN(TimerManager);
 public:
+    typedef std::shared_ptr<TimerManager> SP;
+    typedef std::unique_ptr<TimerManager> Ptr;
     typedef std::set<Timer *, Timer::Comparator>::iterator TimerIterator;
+
     TimerManager();
     ~TimerManager();
 

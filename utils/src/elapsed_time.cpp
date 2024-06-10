@@ -35,7 +35,6 @@ void ElapsedTime::start()
     }
 }
 
-
 void ElapsedTime::stop()
 {
     if (0 == mBeginTime)
@@ -64,6 +63,12 @@ uint64_t ElapsedTime::elapsedTime()
 
     mElapsedTimeList.clear();
     return nElapsedTime;
+}
+
+void ElapsedTime::reset()
+{
+    mElapsedTimeList.clear();
+    mBeginTime = 0;
 }
 
 uint64_t ElapsedTime::getCurrentTime() const

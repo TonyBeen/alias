@@ -34,6 +34,9 @@ public:
     // 获取消耗的时间, 失败返回UINT64_MAX
     uint64_t elapsedTime();
 
+    // 重置
+    void reset();
+
 protected:
     uint64_t getCurrentTime() const;
 

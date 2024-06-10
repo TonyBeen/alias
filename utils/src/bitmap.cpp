@@ -29,9 +29,11 @@ BitMap::BitMap() :
     mBitMap = alloc(DEFAULT_SIZE);
 }
 
-BitMap::BitMap(uint32_t size)
+BitMap::BitMap(uint32_t size) :
+    mBitMap(nullptr),
+    mCapacity(0)
 {
-    mBitMap = alloc(size);
+    reserve(size);
 }
 
 BitMap::BitMap(const BitMap &other) :
