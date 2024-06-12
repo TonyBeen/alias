@@ -42,11 +42,11 @@ public:
     const uint8_t *const_data() const { return mBuffer ? mBuffer : nullptr; }
     const uint8_t *begin() const { return mBuffer ? mBuffer : nullptr; }                       // 返回数据开始地址
     const uint8_t *end() const { return mBuffer ? (mBuffer + mDataSize - 1) : nullptr; }       // 返回数据结束地址
-    void        resize(size_t newSize);
+    void        reserve(size_t newSize);
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
     void        clear();
-    void        setDataSize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
+    void        resize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
 
     std::string dump()  const;
 

@@ -231,7 +231,7 @@ size_t ByteBuffer::insert(const uint8_t *data, size_t dataSize, size_t offset)
     return dataSize;
 }
 
-void ByteBuffer::resize(size_t newSize)
+void ByteBuffer::reserve(size_t newSize)
 {
     if (newSize == 0) {
         return;
