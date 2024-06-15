@@ -202,12 +202,12 @@ void call_once(once_flag& __once, _Callable&& __f, _Args&&... __args)
     detail::__once_callable = std::addressof(__callable);
     detail::__once_call = []{ (*(decltype(__callable)*)detail::__once_callable)(); };
 
-    int __e = pthread_once(&__once.m_once, &__once_proxy);
+    int __e = pthread_once(&__once.m_once, &detail::__once_proxy);
     if (__e)
         throw std::runtime_error("");
 
-    __once_callable = nullptr;
-    __once_call = nullptr;
+    detail::__once_callable = nullptr;
+    detail::__once_call = nullptr;
 }
 
 } // namespace eular
