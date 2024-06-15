@@ -8,15 +8,21 @@
 #ifndef __MUTEX_H__
 #define __MUTEX_H__
 
-#include "string8.h"
 #include <stdint.h>
+#include <assert.h>
 #include <atomic>
+#include <functional>
+
+#include <utils/string8.h>
+#include <utils/sysdef.h>
+
+#if defined(OS_LINUX)
 #include <pthread.h>
 #include <semaphore.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#include <assert.h>
+#endif
 
 namespace eular {
 class NonCopyAble
@@ -166,6 +172,43 @@ private:
     String8 mFilePath;  // 有名信号量使用
     bool    isNamedSemaphore;
 };
+
+struct once_flag
+{
+    template<typename _Callable, typename... _Args>
+    friend void call_once(once_flag& __once, _Callable&& __f, _Args&&... __args);
+
+private:
+    pthread_once_t m_once = PTHREAD_ONCE_INIT;
+
+public:
+    constexpr once_flag() noexcept = default;
+    once_flag(const once_flag&) = delete;
+    once_flag& operator=(const once_flag&) = delete;
+};
+
+namespace detail {
+extern __thread void* __once_callable;
+extern __thread void (*__once_call)();
+extern "C" void __once_proxy(void);
+} // namespace detail
+
+template<typename _Callable, typename... _Args>
+void call_once(once_flag& __once, _Callable&& __f, _Args&&... __args)
+{
+    auto __callable = [&] {
+        std::__invoke(std::forward<_Callable>(__f), std::forward<_Args>(__args)...);
+    };
+    detail::__once_callable = std::addressof(__callable);
+    detail::__once_call = []{ (*(decltype(__callable)*)detail::__once_callable)(); };
+
+    int __e = pthread_once(&__once.m_once, &__once_proxy);
+    if (__e)
+        throw std::runtime_error("");
+
+    __once_callable = nullptr;
+    __once_call = nullptr;
+}
 
 } // namespace eular
 

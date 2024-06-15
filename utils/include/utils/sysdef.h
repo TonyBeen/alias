@@ -188,35 +188,12 @@
     #endif
 
     typedef SSIZE_T ssize_t
-#else
-    #include <endian.h>
 #endif
 
 #ifdef __linux__
 #define PRETTY_FUNCTION     __PRETTY_FUNCTION__
 #elif defined(_WIN32) || defined(_WIN64)
 #define PRETTY_FUNCTION     __FUNCSIG__
-#endif
-
-// ENDIAN
-#ifndef BIG_ENDIAN
-#define BIG_ENDIAN      4321
-#endif
-#ifndef LITTLE_ENDIAN
-#define LITTLE_ENDIAN   1234
-#endif
-#ifndef NET_ENDIAN
-#define NET_ENDIAN      BIG_ENDIAN
-#endif
-
-// BYTE_ORDER
-#ifndef BYTE_ORDER
-#if defined(ARCH_X86) || defined(ARCH_X86_64) || \
-    defined(__ARMEL__) || defined(__AARCH64EL__)
-#define BYTE_ORDER      LITTLE_ENDIAN
-#elif defined(__ARMEB__) || defined(__AARCH64EB__)
-#define BYTE_ORDER      BIG_ENDIAN
-#endif
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
@@ -232,5 +209,18 @@
 #define NORETURN
 #define WEAK_FUNCTION
 #endif
+
+#ifdef __has_builtin
+#define EULAR_HAVE_BUILTIN(x) __has_builtin(x)
+#else
+#define EULAR_HAVE_BUILTIN(x) 0
+#endif
+
+#ifdef __has_feature
+#define EULAR_HAVE_FEATURE(f) __has_feature(f)
+#else
+#define EULAR_HAVE_FEATURE(f) 0
+#endif
+
 
 #endif // __SYSDEF_H__

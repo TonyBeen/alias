@@ -10,17 +10,27 @@
  * 测试当某一线程在未解锁情况下异常退出时处理
  */
 
+#include <assert.h>
 #include <utils/thread.h>
 #include <utils/mutex.h>
-#include <pthread.h>
 
 eular::Mutex gMutex;
 int count = 0;
+
+eular::once_flag g_runOnce;
+
+void fnPrint()
+{
+    static uint32_t run_once = 0;
+    ++run_once;
+    assert(run_once == 1);
+}
 
 void thread_1()
 {
     uint32_t circle = 0;
     while (circle++ < 10) {
+        eular::call_once(g_runOnce, fnPrint);
         gMutex.lock();
         ++count;
         printf("tid = %ld, ++count = %d\n", gettid(), count);

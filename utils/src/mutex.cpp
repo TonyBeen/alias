@@ -19,7 +19,6 @@
 #include "utils/exception.h"
 
 namespace eular {
-
 Mutex::Mutex(int32_t type)
 {
     pthread_mutexattr_t attr;
@@ -278,5 +277,15 @@ bool Sem::timedwait(uint32_t ms)
     return false;
 }
 #endif
+
+namespace detail {
+__thread void* __once_callable;
+__thread void (*__once_call)();
+
+extern "C" void __once_proxy(void)
+{
+    detail::__once_call();
+}
+} // namespace detail
 
 }
