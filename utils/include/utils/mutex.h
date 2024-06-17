@@ -13,6 +13,7 @@
 #include <atomic>
 #include <functional>
 
+#include <utils/utils.h>
 #include <utils/string8.h>
 #include <utils/sysdef.h>
 
@@ -35,7 +36,7 @@ public:
 };
 
 template<typename MutexType>
-class AutoLock : public NonCopyAble
+class AutoLock final : public NonCopyAble
 {
 public:
     AutoLock(MutexType& mutex) : mMutex(mutex)
@@ -50,12 +51,36 @@ private:
     MutexType& mMutex;
 };
 
+class SpinLock final : public NonCopyAble
+{
+public:
+    void lock() noexcept {
+        if (eular_likely(try_lock())) {
+        return;
+        }
+
+        LockSlow();
+    }
+
+    bool try_lock() noexcept {
+        return !m_locked.exchange(true, std::memory_order_acquire);
+    }
+
+    void unlock() noexcept { m_locked.store(false, std::memory_order_release); }
+
+private:
+    void LockSlow() noexcept;
+
+private:
+    std::atomic<bool> m_locked{false};
+};
+
 typedef enum class __MutexSharedAttr {
     PRIVATE = 0,    // mutex can only be used within the same process
     SHARED = 1      // mutex can be used between processes
 } MutexSharedAttr;
 
-class Mutex : public NonCopyAble
+class Mutex final : public NonCopyAble
 {
 public:
     Mutex(int32_t type = static_cast<int32_t>(MutexSharedAttr::PRIVATE));
@@ -77,7 +102,7 @@ private:
     String8 mName;
 };
 
-class RecursiveMutex : public NonCopyAble
+class RecursiveMutex final : public NonCopyAble
 {
 public:
     RecursiveMutex(int32_t type = static_cast<int32_t>(MutexSharedAttr::PRIVATE));
@@ -101,7 +126,7 @@ private:
 
 // 局部写锁
 template<typename WRMutexType>
-class WRAutoLock 
+class WRAutoLock final
 {
 public:
     WRAutoLock(WRMutexType& mtx) : mutex(mtx)
@@ -119,7 +144,7 @@ private:
 
 // 局部读锁
 template<typename RDMutexType>
-class RDAutoLock
+class RDAutoLock final
 {
 public:
     RDAutoLock(RDMutexType& mtx) : mutex(mtx)
@@ -136,7 +161,7 @@ private:
 };
 
 // 读写锁, 读共享, 写独享, 读上锁无法写, 写上锁无法读写
-class RWMutex : public NonCopyAble {
+class RWMutex final : public NonCopyAble {
 public:
     typedef RDAutoLock<RWMutex> ReadAutoLock;
     typedef WRAutoLock<RWMutex> WriteAutoLock;
@@ -155,7 +180,7 @@ private:
 #endif
 };
 
-class Sem : public NonCopyAble {
+class Sem final : public NonCopyAble {
 public:
     Sem(const char *semPath, uint8_t val);      // 此种走有名信号量
     Sem(uint8_t valBase);                       // 此种走无名信号量

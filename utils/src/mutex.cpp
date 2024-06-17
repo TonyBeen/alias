@@ -19,6 +19,16 @@
 #include "utils/exception.h"
 
 namespace eular {
+// @see https://codebrowser.dev/glibc/glibc/nptl/pthread_spin_lock.c.html
+void SpinLock::LockSlow() noexcept
+{
+    do {
+        while (m_locked.load(std::memory_order_relaxed)) {
+            CPU_RELAX_NOP();
+        }
+    } while (m_locked.exchange(true, std::memory_order_acquire));
+}
+
 Mutex::Mutex(int32_t type)
 {
     pthread_mutexattr_t attr;
