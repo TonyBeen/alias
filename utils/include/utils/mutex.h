@@ -56,7 +56,7 @@ class SpinLock final : public NonCopyAble
 public:
     void lock() noexcept {
         if (eular_likely(try_lock())) {
-        return;
+            return;
         }
 
         LockSlow();
