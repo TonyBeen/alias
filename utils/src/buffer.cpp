@@ -29,16 +29,14 @@ namespace eular {
 ByteBuffer::ByteBuffer():
     mBuffer(GetEmptyBuffer()),
     mDataSize(0),
-    mCapacity(0),
-    mPos(0)
+    mCapacity(0)
 {
 }
 
 ByteBuffer::ByteBuffer(size_t size) :
     mBuffer(GetEmptyBuffer()),
     mDataSize(0),
-    mCapacity(0),
-    mPos(0)
+    mCapacity(0)
 {
     if (size > 0) {
         SharedBuffer *newBuf = SharedBuffer::bufferFromData(mBuffer)->reset(size);
@@ -52,8 +50,7 @@ ByteBuffer::ByteBuffer(size_t size) :
 ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
     mBuffer(GetEmptyBuffer()),
     mDataSize(0),
-    mCapacity(0),
-    mPos(0)
+    mCapacity(0)
 {
     if (data == nullptr || dataLength == 0) {
         return;
@@ -68,8 +65,7 @@ ByteBuffer::ByteBuffer(const char *data, size_t dataLength) :
 ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
     mBuffer(nullptr),
     mDataSize(0),
-    mCapacity(0),
-    mPos(0)
+    mCapacity(0)
 {
     mCapacity = allocBuffer(dataLength);
     set(data, dataLength);
@@ -78,8 +74,7 @@ ByteBuffer::ByteBuffer(const uint8_t *data, size_t dataLength) :
 ByteBuffer::ByteBuffer(const ByteBuffer& other) :
     mBuffer(other.mBuffer),
     mDataSize(other.mDataSize),
-    mCapacity(other.mCapacity),
-    mPos(other.mPos)
+    mCapacity(other.mCapacity)
 {
     SharedBuffer::bufferFromData(mBuffer)->acquire();
 }
@@ -87,8 +82,7 @@ ByteBuffer::ByteBuffer(const ByteBuffer& other) :
 ByteBuffer::ByteBuffer(ByteBuffer&& other) :
     mBuffer(GetEmptyBuffer()),
     mDataSize(0),
-    mCapacity(0),
-    mPos(0)
+    mCapacity(0)
 {
     if (std::addressof(other) == this) {
         return;
@@ -108,7 +102,6 @@ ByteBuffer& ByteBuffer::operator=(const ByteBuffer& other)
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mDataSize = other.mDataSize;
-        mPos = other.mPos;
         SharedBuffer::bufferFromData(mBuffer)->acquire();
     }
 
@@ -241,7 +234,6 @@ void ByteBuffer::reserve(size_t newSize)
     if (mBuffer == nullptr) {
         mCapacity = allocBuffer(newSize);
         mDataSize = 0;
-        mPos = 0;
         return;
     }
 
@@ -255,11 +247,13 @@ void ByteBuffer::reserve(size_t newSize)
 void ByteBuffer::clear() 
 {
     detach();
+
+#ifdef _DEBUG
     if (mBuffer) {
         memset(mBuffer, 0, mCapacity);
     }
+#endif
     mDataSize = 0;
-    mPos = 0;
 }
 
 std::string ByteBuffer::dump() const
@@ -321,7 +315,6 @@ void ByteBuffer::freeBuffer()
     mBuffer = nullptr;
     mDataSize = 0;
     mCapacity = 0;
-    mPos = 0;
 }
 
 void ByteBuffer::moveAssign(ByteBuffer &other)
@@ -329,7 +322,6 @@ void ByteBuffer::moveAssign(ByteBuffer &other)
     std::swap(mBuffer, other.mBuffer);
     std::swap(mDataSize, other.mDataSize);
     std::swap(mCapacity, other.mCapacity);
-    std::swap(mPos, other.mPos);
 }
 
 void ByteBuffer::detach()

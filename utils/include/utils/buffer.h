@@ -61,7 +61,6 @@ private:
     uint8_t*    mBuffer;
     size_t      mDataSize;
     size_t      mCapacity;
-    size_t      mPos;
 };
 
 } // namespace eular
