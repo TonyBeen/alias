@@ -6,11 +6,10 @@
  ************************************************************************/
 
 #include "utils/elapsed_time.h"
-
 #include <assert.h>
-
 #include "utils/utils.h"
 
+namespace eular {
 ElapsedTime::ElapsedTime() :
     mTimeType(ElapsedTimeType::MILLISECOND),
     mBeginTime(0)
@@ -94,3 +93,5 @@ uint64_t ElapsedTime::getCurrentTime() const
 
     return static_cast<uint64_t>(currentTime);
 }
+
+} // namespace eular

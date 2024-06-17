@@ -18,6 +18,7 @@ enum class ElapsedTimeType {
     NANOSECOND,     // 纳秒
 };
 
+namespace eular {
 class ElapsedTime
 {
 public:
@@ -47,5 +48,7 @@ private:
     uint64_t                mBeginTime;
     std::list<TimePair>     mElapsedTimeList;
 };
+
+} // namespace eular
 
 #endif // __UTILSE_ELAPSED_TIME_H__
