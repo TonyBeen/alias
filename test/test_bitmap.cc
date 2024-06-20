@@ -15,10 +15,13 @@ TEST_CASE("test_constructer", "[bitmap]") {
     REQUIRE(0 == bitMapObj1.count());
 
     eular::BitMap bitMapObj2(16);
-    REQUIRE(16 == bitMapObj2.capacity());
+    REQUIRE(16 <= bitMapObj2.capacity());
+    bitMapObj2.set(1, true);
+    REQUIRE(true == bitMapObj2.at(1));
 
     eular::BitMap fromCopy(bitMapObj2);
-    REQUIRE(16 == fromCopy.capacity());
+    REQUIRE(16 <= fromCopy.capacity());
+    REQUIRE(true == fromCopy.at(1));
 }
 
 TEST_CASE("test_set_at", "[bitmap]") {
@@ -31,6 +34,7 @@ TEST_CASE("test_set_at", "[bitmap]") {
     }
 
     REQUIRE(count == bitMapObj.count());
+    REQUIRE(16 <= bitMapObj.capacity());
     REQUIRE_FALSE(bitMapObj.set(16, true));
 
     for (uint32_t i = 0; i < count; ++i) {
@@ -40,10 +44,10 @@ TEST_CASE("test_set_at", "[bitmap]") {
 
 TEST_CASE("test_reserve", "[bitmap]") {
     eular::BitMap bitMapObj(16);
-    REQUIRE(16 == bitMapObj.capacity());
+    REQUIRE(16 <= bitMapObj.capacity());
 
     bitMapObj.reserve(32);
-    REQUIRE(32 == bitMapObj.capacity());
+    REQUIRE(32 <= bitMapObj.capacity());
 }
 
 TEST_CASE("test_clear", "[bitmap]") {

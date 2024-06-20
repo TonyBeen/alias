@@ -196,12 +196,15 @@ bool BitMap::init()
 /**
  * @brief 申请一块内存
  *
- * @param bitSize bitmap容量
+ * @param size bitmap容量
  * @return 失败为nullptr
  */
 uint8_t* BitMap::alloc(uint32_t bitSize)
 {
-    uint32_t bytes = (bitSize + BITS_PEER_BYTE) / BITS_PEER_BYTE;
+    uint32_t bytes = (bitSize) / (sizeof(uint8_t) * BITS_PEER_BYTE);
+    if (bitSize % (sizeof(uint8_t) * BITS_PEER_BYTE)) {
+        ++bytes;
+    }
 
     mCapacity = 0;
     uint8_t* bitMap = (uint8_t *)malloc(bytes);
