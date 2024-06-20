@@ -29,11 +29,11 @@ BitMap::BitMap() :
     mBitMap = alloc(DEFAULT_SIZE);
 }
 
-BitMap::BitMap(uint32_t size) :
+BitMap::BitMap(uint32_t bitSize) :
     mBitMap(nullptr),
     mCapacity(0)
 {
-    reserve(size);
+    reserve(bitSize);
 }
 
 BitMap::BitMap(const BitMap &other) :
@@ -161,14 +161,14 @@ uint32_t BitMap::capacity() const
     return mCapacity;
 }
 
-bool BitMap::reserve(uint32_t size)
+bool BitMap::reserve(uint32_t bitSize)
 {
-    if (size <= mCapacity) {
+    if (bitSize <= mCapacity) {
         return true;
     }
 
     uint32_t oldCap = mCapacity;
-    uint8_t* newBitMap = alloc(size);
+    uint8_t* newBitMap = alloc(bitSize);
     if (newBitMap == nullptr) {
         mCapacity = oldCap;
         return false;
@@ -196,15 +196,12 @@ bool BitMap::init()
 /**
  * @brief 申请一块内存
  *
- * @param size bitmap容量
+ * @param bitSize bitmap容量
  * @return 失败为nullptr
  */
-uint8_t* BitMap::alloc(uint32_t size)
+uint8_t* BitMap::alloc(uint32_t bitSize)
 {
-    uint32_t bytes = (size) / (sizeof(uint8_t) * BITS_PEER_BYTE);
-    if (size % (sizeof(uint8_t) * BITS_PEER_BYTE)) {
-        ++bytes;
-    }
+    uint32_t bytes = (bitSize + BITS_PEER_BYTE) / BITS_PEER_BYTE;
 
     mCapacity = 0;
     uint8_t* bitMap = (uint8_t *)malloc(bytes);
