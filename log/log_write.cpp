@@ -141,7 +141,6 @@ int32_t FileLogWrite::WriteToFile(std::string msg)
         ret = write(*mFileDesc, msg.c_str(), msg.length());
     }
     if (ret > 0) {
-        fsync(*mFileDesc);
         *mFileSize += ret;
     } else if (ret < 0) {
         perror("write error");
@@ -158,7 +157,6 @@ int32_t FileLogWrite::WriteToFile(const LogEvent &ev)
         AutoLock<ProcessMutex> lock(mMutex);
         ret = write(*mFileDesc, format_string.c_str(), format_string.length());
         if (ret > 0) {
-            fsync(*mFileDesc);
             *mFileSize += ret;
         } else if (ret < 0) {
             perror("write error");
