@@ -15,9 +15,16 @@ obj := $(patsubst %.cpp, %.o, $(src))
 mainsrc := testlog.cc
 mainobj := testlog.o
 
+bench_src := bench_liblog.cc
+bench_obj := bench_liblog.o
+
 testlog.out : $(obj) $(mainobj)
 	$(cc) $^ -o $@ $(cflags) $(shared_lib)
 	-rm -rf $(obj) $(mainobj)
+
+bench_liblog.out : $(obj) $(bench_obj)
+	$(cc) $^ -o $@ $(cflags) $(shared_lib) -lutils
+	-rm -rf $(obj) $(bench_obj)
 
 liblog.so : $(obj)
 	$(cc) $(obj) -o $@ $(cflags) -shared $(shared_lib)
