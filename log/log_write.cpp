@@ -282,6 +282,7 @@ bool FileLogWrite::CreateNewFile(std::string fileName)
 
 bool FileLogWrite::CloseFile()
 {
+    *mFileSize = 0;
     if (*mFileDesc <= 0) {
         return true;
     }

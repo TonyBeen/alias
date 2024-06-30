@@ -31,19 +31,8 @@
 
 
 namespace eular {
-std::atomic<int> LogFormat::mLevel(LogLevel::LEVEL_DEBUG);
-
-void LogFormat::SetLevel(const LogLevel::Level &lev)
-{
-    mLevel.exchange((int)lev, std::memory_order_seq_cst);
-}
-
 std::string LogFormat::Format(const LogEvent *ev)
 {
-    if (ev->level < mLevel) {
-        return std::string("");
-    }
-
     std::string ret;
     char output[PERFIX_SIZE] = {0};
     size_t msglen = strlen(ev->msg);

@@ -1,6 +1,9 @@
 #include "log_main.h"
+#include <mutex>
+#include <memory>
 
-static eular::LogManager *gLogManager = nullptr;
+static std::once_flag       gOnceFlag;
+static eular::LogManager*   gLogManager = nullptr;
 
 namespace eular {
 LogManager::LogManager()
@@ -120,9 +123,10 @@ void LogManager::delLogWriteFromList(int type)
 
 LogManager *LogManager::getInstance()
 {
-    if (gLogManager == nullptr) {
+    std::call_once(gOnceFlag, []() {
         gLogManager = new LogManager();
-    }
+    });
+
     return gLogManager;
 }
 
