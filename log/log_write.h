@@ -107,7 +107,7 @@ private:
 
 class FileLogWrite : public LogWrite {
 public:
-    FileLogWrite(uint32_t fileFlag = O_WRONLY | O_CREAT | O_APPEND | O_DIRECT, uint32_t fileMode = 0664);
+    FileLogWrite(uint32_t fileFlag = O_RDWR | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
     virtual ~FileLogWrite();
 
     void                 maintainFile();

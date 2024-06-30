@@ -15,7 +15,7 @@ obj := $(patsubst %.cpp, %.o, $(src))
 mainsrc := testlog.cc
 mainobj := testlog.o
 
-testlog : $(obj) $(mainobj)
+testlog.out : $(obj) $(mainobj)
 	$(cc) $^ -o $@ $(cflags) $(shared_lib)
 	-rm -rf $(obj) $(mainobj)
 
@@ -47,9 +47,9 @@ install : liblog.so logcat
 	-(sudo mv logcat /usr/bin)
 
 uninstall:
-	-rm -rf $(obj) $(mainobj) testlog
+	-rm -rf $(obj) $(mainobj) testlog.out
 	-(sudo rm -rf /usr/lib/liblog.so)
 	-(sudo rm -rf /usr/include/log/)
 
 clean:
-	-rm -rf $(obj) $(mainobj) testlog
+	-rm -rf $(obj) $(mainobj) testlog.ou
