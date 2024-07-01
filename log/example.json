@@ -1,0 +1,65 @@
+/**
+ * 日志传输协议:
+ *    传输时需要携带id, 分为notice(通知), data(数据), upload(上传)
+ *    1、notice的作用在于告知对面一些关键字及数据
+ *      比如告知对方日志等级，为一个数组, 包含key-value字段. 如下, 后面在传输时想要携带等级信息时必须需要是level字段
+ *      并且将level字段的值设置为下面中key中的字符串值
+ *    2、data的作用在于给对面数据
+ *      比如日志信息
+ * 
+ * 
+ * 
+ * 
+ */
+
+[
+    {
+        "id": "notice",
+        "keywords": [
+            "level"
+        ],
+        "level": [
+            {
+                "key": "DEBUG",
+                "type": "int",
+                "value": 0
+            },
+            {
+                "key": "INFO",
+                "type": "int",
+                "value": 1
+            },
+            {
+                "key": "WARN",
+                "type": "int",
+                "value": 2
+            },
+            {
+                "key": "ERROR",
+                "type": "int",
+                "value": 3
+            },
+            {
+                "key": "FATAL",
+                "type": "int",
+                "value": 4
+            }
+        ]
+    },
+    {
+        "id": "error",
+        "keywords": [
+            "msg"
+        ],
+        "msg": "some error message"
+    },
+    {
+        "id": "data",
+        "time": 0,
+        "pid": 0,
+        "tid": 0,
+        "level": 0,
+        "tag": "",
+        "msg": ""
+    }
+]

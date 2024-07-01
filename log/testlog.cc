@@ -13,14 +13,16 @@ void *thread(void *)
         LOGI("thread-%.5d", num++);
         usleep(500000);
     }
+
+    return nullptr;
 }
 
 int main()
 {
-    eular::InitLog(eular::LogLevel::LEVEL_DEBUG);
-    eular::SetPath("./");
-    eular::EnableLogColor(true);
-    eular::addOutputNode(eular::LogWrite::FILEOUT);
+    eular::log::InitLog(eular::LogLevel::LEVEL_DEBUG);
+    eular::log::SetPath("./");
+    eular::log::EnableLogColor(true);
+    eular::log::addOutputNode(eular::LogWrite::FILEOUT);
 
     LOGD("**************");
     LOGI("**************");

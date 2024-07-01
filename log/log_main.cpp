@@ -1,6 +1,9 @@
 #include "log_main.h"
+#include <mutex>
+#include <memory>
 
-static eular::LogManager *gLogManager = nullptr;
+static std::once_flag       gOnceFlag;
+static eular::LogManager*   gLogManager = nullptr;
 
 namespace eular {
 LogManager::LogManager()
@@ -42,8 +45,16 @@ void LogManager::WriteLog(LogEvent *event)
             if ((*it)->type() != LogWrite::STDOUT) {
                 event->enableColor = false;
             }
-            std::string log = LogFormat::Format(event);
-            (*it)->WriteToFile(log);
+
+            if ((*it)->type() == LogWrite::CONSOLEOUT)
+            {
+                (*it)->WriteToFile(*event);
+            }
+            else
+            {
+                std::string log = LogFormat::Format(event);
+                (*it)->WriteToFile(log);
+            }
         }
     }
     // pthread_mutex_unlock(&mListMutex);
@@ -112,9 +123,10 @@ void LogManager::delLogWriteFromList(int type)
 
 LogManager *LogManager::getInstance()
 {
-    if (gLogManager == nullptr) {
+    std::call_once(gOnceFlag, []() {
         gLogManager = new LogManager();
-    }
+    });
+
     return gLogManager;
 }
 

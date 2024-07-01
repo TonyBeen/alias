@@ -5,37 +5,60 @@
     > Created Time: 2022-05-23 11:52:14 Monday
  ************************************************************************/
 
-#include <utils/bitmap.h>
-#include <gtest/gtest.h>
-#include <iostream>
-#include <assert.h>
+#define CATCH_CONFIG_MAIN
 
-using namespace std;
-using namespace eular;
+#include "catch/catch.hpp"
+#include "utils/bitmap.h"
 
-int main()
-{
-    BitMap bitmap;
-    int index = 10;
-    bitmap.set(index, true);
-    EXPECT_TRUE(bitmap.at(index));
-    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
+TEST_CASE("test_constructer", "[bitmap]") {
+    eular::BitMap bitMapObj1;
+    REQUIRE(0 == bitMapObj1.count());
 
-    bitmap.resize(100);
-    cout << "BitMap Capacity: " << bitmap.capacity() << endl;
+    eular::BitMap bitMapObj2(16);
+    REQUIRE(16 <= bitMapObj2.capacity());
+    bitMapObj2.set(1, true);
+    REQUIRE(true == bitMapObj2.at(1));
 
-    EXPECT_TRUE(bitmap.at(index));
-    bitmap.set(index, false);
-    EXPECT_FALSE(bitmap.at(index));
+    eular::BitMap fromCopy(bitMapObj2);
+    REQUIRE(16 <= fromCopy.capacity());
+    REQUIRE(true == fromCopy.at(1));
+}
 
-    index = 6000;
-    bitmap.set(index, true);
-    EXPECT_FALSE(bitmap.at(index));
+TEST_CASE("test_set_at", "[bitmap]") {
+    eular::BitMap bitMapObj(16);
 
-    bitmap.set(1, true);
-    EXPECT_TRUE(bitmap.at(1));
-    bitmap.clear();
-    EXPECT_FALSE(bitmap.at(1));
+    const uint32_t count = 2;
 
-    return 0;
+    for (uint32_t i = 0; i < count; ++i) {
+        bitMapObj.set(i, true);
+    }
+
+    REQUIRE(count == bitMapObj.count());
+    REQUIRE(16 <= bitMapObj.capacity());
+    REQUIRE_FALSE(bitMapObj.set(16, true));
+
+    for (uint32_t i = 0; i < count; ++i) {
+        REQUIRE(bitMapObj.at(i));
+    }
+}
+
+TEST_CASE("test_reserve", "[bitmap]") {
+    eular::BitMap bitMapObj(16);
+    REQUIRE(16 <= bitMapObj.capacity());
+
+    bitMapObj.reserve(32);
+    REQUIRE(32 <= bitMapObj.capacity());
+}
+
+TEST_CASE("test_clear", "[bitmap]") {
+    eular::BitMap bitMapObj(16);
+
+    const uint32_t count = 2;
+
+    for (uint32_t i = 0; i < count; ++i) {
+        bitMapObj.set(i, true);
+    }
+
+    bitMapObj.clear();
+    REQUIRE(0 == bitMapObj.count());
 }

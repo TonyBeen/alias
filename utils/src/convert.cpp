@@ -5,10 +5,12 @@
     > Created Time: Thu 28 Jul 2022 02:54:16 PM CST
  ************************************************************************/
 
-#include "convert.h"
-#include "utils.h"
+#include "utils/convert.h"
+
 #include <string.h>
 #include <assert.h>
+
+#include "utils/utils.h"
 
 bool convert(const std::string &fromCode, const std::string &toCode, std::string);
 

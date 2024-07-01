@@ -1,4 +1,5 @@
 *.o
+*.log
 
 config/bin
 config/bin/*
@@ -9,3 +10,6 @@ test/bin
 test/bin/*
 test/xml
 test/xml/*
+
+.vscode/
+*.out

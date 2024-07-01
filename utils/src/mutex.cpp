@@ -4,27 +4,38 @@
     > Desc: 
     > Created Time: 2021年04月25日 星期日 21时25分03秒
  ************************************************************************/
-//#define _DEBUG
-#include "debug.h"
-#include "mutex.h"
-#include "exception.h"
-#include "utils.h"
-#include <fcntl.h>
-#include <sys/stat.h>
+
+#include "utils/mutex.h"
+
+#include <string.h>
 #include <stdio.h>
 #include <errno.h>
 #include <assert.h>
-#include <string.h>
+
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include "utils/utils.h"
+#include "utils/exception.h"
 
 namespace eular {
+// @see https://codebrowser.dev/glibc/glibc/nptl/pthread_spin_lock.c.html
+void SpinLock::LockSlow() noexcept
+{
+    do {
+        while (m_locked.load(std::memory_order_relaxed)) {
+            CPU_RELAX_NOP();
+        }
+    } while (m_locked.exchange(true, std::memory_order_acquire));
+}
 
-Mutex::Mutex(int type)
+Mutex::Mutex(int32_t type)
 {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
-    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST); // for pthread_mutex_lock will return EOWNERDEAD
+    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);       // for pthread_mutex_lock will return EOWNERDEAD
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK_NP);  // for EDEADLK
-    if (type == SHARED) {
+    if (type == static_cast<int32_t>(MutexSharedAttr::SHARED)) {
         pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
     }
     pthread_mutex_init(&mMutex, &attr);
@@ -33,7 +44,7 @@ Mutex::Mutex(int type)
 
 Mutex::~Mutex()
 {
-    int ret = 0;
+    int32_t ret = 0;
     do {
         if (ret == EBUSY) {
             unlock();
@@ -48,13 +59,13 @@ void Mutex::setMutexName(const String8 &name)
     mName = name;
 }
 
-int Mutex::lock()
+int32_t Mutex::lock()
 {
-    int ret = 0;
+    int32_t ret = 0;
     do {
         ret = pthread_mutex_lock(&mMutex);
         if (ret == EDEADLK) { // already locked
-            ret = 0;
+            throw Exception(String8::format("deadlock detected: tid = %d mutex: %s", (int32_t)gettid(), mName.c_str()));
         } else if (ret == EOWNERDEAD) { // other threads exited abnormally without unlocking the mutex
             pthread_mutex_consistent(&mMutex); // will lock the mutex
             ret = 0;
@@ -66,15 +77,72 @@ int Mutex::lock()
 
 void Mutex::unlock()
 {
-    int ret = pthread_mutex_unlock(&mMutex);
-    if (ret != 0 && ret != EPERM) { // EPERM the calling thread does not own the mutex
-        printf("pthread_mutex_unlock error. return %d", ret);
+    int32_t ret = pthread_mutex_unlock(&mMutex);
+    if (ret != 0 && ret != EPERM) { // EPERM: the calling thread does not own the mutex
+        throw Exception(String8::format("pthread_mutex_unlock error. return %d", ret));
     }
 }
 
-int Mutex::trylock()
+int32_t Mutex::trylock()
 {
     return pthread_mutex_trylock(&mMutex);
+}
+
+RecursiveMutex::RecursiveMutex(int32_t type)
+{
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST);       // for pthread_mutex_lock will return EOWNERDEAD
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);   // for recursive
+    if (type == static_cast<int32_t>(MutexSharedAttr::SHARED)) {
+        pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
+    }
+    pthread_mutex_init(&mMutex, &attr);
+    pthread_mutexattr_destroy(&attr);
+}
+
+RecursiveMutex::~RecursiveMutex()
+{
+    int32_t ret = 0;
+    do {
+        if (ret == EBUSY) {
+            unlock();
+        }
+        ret = pthread_mutex_destroy(&mMutex);
+    } while (ret == EBUSY);
+    assert(ret == 0);
+}
+
+int32_t RecursiveMutex::lock()
+{
+    int32_t ret = 0;
+    do {
+        ret = pthread_mutex_lock(&mMutex);
+        if (ret == EOWNERDEAD) { // other threads exited abnormally without unlocking the mutex
+            pthread_mutex_consistent(&mMutex); // will lock the mutex
+            ret = 0;
+        }
+    } while (0);
+
+    return ret;
+}
+
+void RecursiveMutex::unlock()
+{
+    int32_t ret = pthread_mutex_unlock(&mMutex);
+    if (ret != 0 && ret != EPERM) { // EPERM: the calling thread does not own the mutex
+        throw Exception(String8::format("pthread_mutex_unlock error. return %d", ret));
+    }
+}
+
+int32_t RecursiveMutex::trylock()
+{
+    return pthread_mutex_trylock(&mMutex);
+}
+
+void RecursiveMutex::setMutexName(const String8 &name)
+{
+    mName = name;
 }
 
 RWMutex::RWMutex()
@@ -89,7 +157,7 @@ RWMutex::~RWMutex()
 
 void RWMutex::rlock()
 {
-    int ret = pthread_rwlock_rdlock(&mRWMutex);
+    int32_t ret = pthread_rwlock_rdlock(&mRWMutex);
     if (ret != 0 && ret != EAGAIN) {
         throw Exception("pthread_rwlock_rdlock error");
     } else {
@@ -118,7 +186,8 @@ void RWMutex::unlock()
 #ifdef DEBUG
         if (mReadLocked) {
             mReadLocked.store(false);
-        } else if (mWritLocked) {
+        }
+        if (mWritLocked) {
             mWritLocked.store(false);
         }
 #endif
@@ -149,7 +218,7 @@ Sem::Sem(uint8_t valBase)
     }
 
     if (sem_init(mSem, false, valBase)) {
-        printf("%s() sem_init error %d, %s", __func__, errno, strerror(errno));
+        throw Exception(String8::format("%s() sem_init error %d, %s", __func__, errno, strerror(errno)));
     }
     isNamedSemaphore = false;
 }
@@ -169,7 +238,7 @@ Sem::~Sem()
 
 bool Sem::post()
 {
-    int rt = 0;
+    int32_t rt = 0;
     do {
         rt = sem_post(mSem);
     } while (rt == -1 && errno == EINTR);
@@ -178,7 +247,7 @@ bool Sem::post()
 
 bool Sem::wait()
 {
-    int rt = 0;
+    int32_t rt = 0;
     do {
         rt = sem_wait(mSem);
     } while (rt == -1 && errno == EINTR);
@@ -187,7 +256,7 @@ bool Sem::wait()
 
 bool Sem::trywait()
 {
-    int rt = 0;
+    int32_t rt = 0;
     do {
         rt = sem_trywait(mSem);
     } while (rt == -1 && errno == EINTR);
@@ -206,7 +275,7 @@ bool Sem::timedwait(uint32_t ms)
         expire.tv_nsec -= 1000 * 1000 * 1000;
     }
 
-    int rt = 0;
+    int32_t rt = 0;
     do {
         rt = sem_timedwait(mSem, &expire);
     } while (rt == -1 && errno == EINTR);
@@ -218,5 +287,15 @@ bool Sem::timedwait(uint32_t ms)
     return false;
 }
 #endif
+
+namespace detail {
+__thread void* __once_callable;
+__thread void (*__once_call)();
+
+extern "C" void __once_proxy(void)
+{
+    detail::__once_call();
+}
+} // namespace detail
 
 }

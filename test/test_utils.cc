@@ -7,14 +7,18 @@
 
 #include <utils/utils.h>
 #include <iostream>
+#include <assert.h>
 
 using namespace std;
 
 int main(int argc, char **argv)
 {
-    std::vector<std::string> fileArray = getdir("./");
-    for (auto tmp : fileArray) {
+    std::list<std::string> fileList;
+    auto ret = ForeachDir(".", fileList);
+    assert(ret == fileList.size());
+    for (const auto &tmp : fileList) {
         printf("%s\n", tmp.c_str());
     }
+
     return 0;
 }

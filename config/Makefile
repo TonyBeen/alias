@@ -6,12 +6,11 @@ INCLUDE_DIR := -I$(PWD) $(YAML_CXX_INCLUDES) $(JSON_CXX_INCLUDES)
 CPPFLAGS  := -std=c++11 # -m64
 LIBFLAGS  := -fPIC
 LIB_LIST  := -lpthread
-JSON_LIB  := /usr/local/lib/libjsoncpp.a
-YAML_LIB  := /usr/local/lib/libyaml-cpp.a
+
 GTEST_LIB := /usr/local/lib/libgtest.a
 
 DEST_PATH := /usr/local
-DEST_INC  := $(DEST_PATH)/include/
+DEST_INC  := $(DEST_PATH)/include
 DEST_LIB  := $(DEST_PATH)/lib/
 
 SRC_LIST = $(wildcard $(PWD)/*.cpp)
@@ -38,9 +37,9 @@ install: all
 	if [ ! -d $(DEST_INC)/config ]; then mkdir $(DEST_INC)/config; fi
 	cp -r $(HEADER_FILE_LIST) $(DEST_INC)/config
 	mv $(TARGET) $(DEST_LIB)
-	ldconfig
 	cp -r $(JSON_CXX_INCLUDE_PATH) $(DEST_INC)
 	cp -r $(YAML_CXX_INCLUDE_PATH) $(DEST_INC)
+	ldconfig
 
 uninstall:
 	rm -rf $(DEST_INC)/config
@@ -55,11 +54,11 @@ $(PWD)/%.o : $(PWD)/%.cpp
 
 bin/test_yaml_config : test/test_yaml_config.cpp YamlConfig.cpp rwmutex.cpp
 	$(GEN_BIN)
-	$(CC) $^ -o $@ $(INCLUDE_DIR) $(YAML_LIB) $(GTEST_LIB) -lpthread
+	$(CC) $^ -o $@ $(INCLUDE_DIR) $(YAML_CXX_OBJ_LIST) $(GTEST_LIB) -lpthread
 
 bin/test_json_config: test/test_json_config.cpp
 	$(GEN_BIN)
-	$(CC) $^ -o $@ $(INCLUDE_DIR) $(JSON_LIB) $(GTEST_LIB) -lpthread
+	$(CC) $^ -o $@ $(INCLUDE_DIR) $(JSON_CXX_OBJ_LIST) $(GTEST_LIB) -lpthread
 
 bin/test_xml_config: test/test_xml_config.cpp XmlConfig.cpp tinyxml2.cpp rwmutex.cpp
 	$(GEN_BIN)

@@ -16,10 +16,10 @@ namespace eular {
 
 /**
  * @brief 解析ini文件类
- * ini由节，键，值组成
- * 节键值都是字符串形式，注释由;表示，且只能注释单行。节禁止重复，但可以不存在，键可以重复
+ * ini由节, 键, 值组成
+ * 节键值都是字符串形式, 注释由;表示, 且只能注释单行. 节禁止重复, 但可以不存在, 键可以重复
  * 
- * 故解析后的键为"节.键"。如
+ * 故解析后的键为"节.键". 如
  * 
  * [node]
  * host = 127.0.0.1
@@ -31,14 +31,13 @@ namespace eular {
  * 
  * 解析后想要获取host的值可以使用node.host来获取,也可以用node2.host获取第二个host的值
  * 
- * 一行最多1024个字符，UTF-8编码
+ * 一行最多1024个字符, UTF-8编码
  */
 
 class IniConfig
 {
 public:
     IniConfig();
-    IniConfig(const std::string &configPath);
     ~IniConfig();
 
     bool parser(const std::string &configPath);

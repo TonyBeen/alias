@@ -1,4 +1,4 @@
-cflags := -std=c++11 -O2
+cflags := -std=c++11 -W -Wall -Werror -O2 -m64
 soflags := -fPIC
 shared_lib := -lunwind -lpthread
 cc := g++
@@ -15,15 +15,22 @@ obj := $(patsubst %.cpp, %.o, $(src))
 mainsrc := testlog.cc
 mainobj := testlog.o
 
-testlog : $(obj) $(mainobj)
+bench_src := bench_liblog.cc
+bench_obj := bench_liblog.o
+
+testlog.out : $(obj) $(mainobj)
 	$(cc) $^ -o $@ $(cflags) $(shared_lib)
 	-rm -rf $(obj) $(mainobj)
+
+bench_liblog.out : $(obj) $(bench_obj)
+	$(cc) $^ -o $@ $(cflags) $(shared_lib) -lutils
+	-rm -rf $(obj) $(bench_obj)
 
 liblog.so : $(obj)
 	$(cc) $(obj) -o $@ $(cflags) -shared $(shared_lib)
 
-logcat : logcat.cc
-	g++ logcat.cc -o logcat -std=c++11
+logcat : logcat.cc liblog.so
+	g++ logcat.cc -o logcat -std=c++11 -O2 -W -Wall -Werror -L./ -llog
 
 %.o : %.cpp
 	$(cc) $^ -c -o $@ $(cflags) $(soflags)
@@ -47,9 +54,9 @@ install : liblog.so logcat
 	-(sudo mv logcat /usr/bin)
 
 uninstall:
-	-rm -rf $(obj) $(mainobj) testlog
+	-rm -rf $(obj) $(mainobj) testlog.out
 	-(sudo rm -rf /usr/lib/liblog.so)
 	-(sudo rm -rf /usr/include/log/)
 
 clean:
-	-rm -rf $(obj) $(mainobj) testlog
+	-rm -rf $(obj) $(mainobj) testlog.ou

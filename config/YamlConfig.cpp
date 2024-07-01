@@ -9,6 +9,7 @@
 #include "rwmutex.h"
 #include <assert.h>
 #include <exception>
+#include <regex>
 #include <fstream>
 
 namespace eular {
@@ -38,6 +39,8 @@ YamlReader::~YamlReader()
     toMutex(mMutex)->wlock();
     mYamlConfigMap.clear();
     toMutex(mMutex)->wunlock();
+
+    delete mMutex;
 }
 
 void YamlReader::loadYaml(const std::string &path)
@@ -52,7 +55,7 @@ void YamlReader::loadYaml(const std::string &path)
         }
         loadYaml("", mYamlRoot);
         isValid = true;
-    } catch (const std::exception &e){
+    } catch (const std::exception &e) {
         printf("%s() error. %s\n", __func__, e.what());
     }
 
@@ -82,7 +85,7 @@ YamlValue YamlReader::root()
     return node;
 }
 
-void YamlReader::foreach(bool outValue)
+void YamlReader::foreach(std::string &output, bool outValue)
 {
     toMutex(mMutex)->rlock();
     std::stringstream strstream;
@@ -94,17 +97,24 @@ void YamlReader::foreach(bool outValue)
         }
         strstream << std::endl;
     }
-    printf("%s\n", strstream.str().c_str());
+
+    output = strstream.str();
     toMutex(mMutex)->runlock();
 }
 
 void YamlReader::loadYaml(const std::string &prefix, const YamlValue &node)
 {
-    static const std::string ext = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._1234567890";
-    if (prefix.find_first_not_of(ext) != std::string::npos) {
+    static const std::regex regex("^[A-Za-z0-9\\s\\._]*$");
+    if (!std::regex_match(prefix, regex)) {
         printf("Config invalid prefix: %s\n", prefix.c_str());
         return;
     }
+
+    // static const std::string ext = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ._1234567890";
+    // if (prefix.find_first_not_of(ext) != std::string::npos) {
+    //     printf("Config invalid prefix: %s\n", prefix.c_str());
+    //     return;
+    // }
 
     mYamlConfigMap.insert(std::make_pair(prefix, node));
     if (node.IsMap()) {

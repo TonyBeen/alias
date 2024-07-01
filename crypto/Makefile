@@ -1,63 +1,61 @@
 CC := g++
-CXXFLAGS := -std=c++11 -g
+CXXFLAGS := -std=c++11 -W -Wall -Werror -Wextra -O2 -m64 -g
+CXX_NO_ERROR_FLAGS := -Wno-deprecated -Wno-unused-result -Wno-unused-function -Wno-unused-parameter
 NO_DEPRECATED_WARN := -Wno-deprecated-declarations # -Wno-error=deprecated-declarations
 SOFLAGS := -fPIC
 
-DESTPATH := /usr/local
-HEADERFILE := $(wildcard *.h)
+DEST_PATH := /usr/local
+HEADER_LIST = $(wildcard *.h)
+HEADER_LIST += $(wildcard ./detail/*.h)
 
-INCLUDEPATH := -I./
+INCLUDE_PATH := -I./
 
-LIBPATH := -L/usr/local/lib/
-LIBLIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
+LIB_PATH := -L/usr/local/lib/
+LIB_LIST := /usr/local/lib/libcrypto.a -lutils -llog -lpthread -ldl
+GTEST_LIB := /usr/local/lib/libgtest.a
 
-INCLUDELIST := $(HEADERFILE)
-INCLUDELIST += $(wildcard *.hpp)
+INCLUDE_LIST := $(HEADER_LIST)
+INCLUDE_LIST += $(wildcard *.hpp)
 
-SRCLIST := $(wildcard *.cpp)
-OBJLIST := $(patsubst %.cpp, %.o, $(SRCLIST))
+SRC_LIST := $(wildcard *.cpp)
+SRC_LIST += $(wildcard ./detail/*.cpp)
+OBJ_LIST := $(patsubst %.cpp, %.o, $(SRC_LIST))
 
 TESTSRCLIST := $(wildcard ./test/*.cc)
 TESTOBJLIST := $(patsubst %.cc, %.o, $(TESTSRCLIST))
 
-install : libeularcrypto.so
-	-(sudo mv ./libeularcrypto.so $(DESTPATH)/lib)
+TARGET := libeularcrypto.so
+
+$(TARGET) : $(OBJ_LIST)
+	$(CC) $^ -o $@ -shared $(LIB_PATH) $(LIB_LIST)
+	rm -rf $(OBJ_LIST)
+
+install : $(TARGET)
+	-(sudo mv $(TARGET) $(DEST_PATH)/lib)
 	-(sudo ldconfig)
-	-(if [ ! -d "$(DESTPATH)/include/crypto/" ]; then sudo mkdir $(DESTPATH)/include/crypto/; fi)
-	-(sudo cp $(HEADERFILE) $(DESTPATH)/include/crypto/)
+	-(sudo rm -rf $(DEST_PATH)/include/crypto/)
+	-(if [ ! -d "$(DEST_PATH)/include/crypto/" ]; then sudo mkdir $(DEST_PATH)/include/crypto/; fi)
+	-(sudo cp $(HEADER_LIST) $(DEST_PATH)/include/crypto/)
 	-(sudo make clean)
 
 uninstall :
-	-(sudo rm -rf $(DESTPATH)/lib/libeularcrypto.so)
-	-(sudo rm -rf $(DESTPATH)/include/crypto)
+	-(sudo rm -rf $(DEST_PATH)/lib/$(TARGET))
+	-(sudo rm -rf $(DEST_PATH)/include/crypto)
 
-libeularcrypto.so : $(OBJLIST)
-	$(CC) $^ -o $@ -shared $(LIBPATH) $(LIBLIST)
-	rm -rf $(OBJLIST)
+test: test/testmain
 
-testall:
-	make test/testrsa
-	make test/testaes
-	make test/testmd5
-	make test/testbase64
-
-test/testrsa : test/test_rsa.cc rsa.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
-test/testaes : test/test_aes.cc aes.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
-test/testmd5 : test/test_md5.cc md5.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
-test/testbase64 : test/test_base64.cc base64.cpp
-	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(LIBPATH) $(LIBLIST)
+test/testmain : $(TESTOBJLIST) $(OBJ_LIST)
+	$(CC) $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(LIB_PATH) $(GTEST_LIB) $(LIB_LIST)
 
 %.o : %.cpp
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
-%.o : %.cc
-	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(INCLUDEPATH) $(SOFLAGS)
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(SOFLAGS)
 
-.PHONY: install uninstall clean testrsa libeularcrypto.so \
-		testall test/testrsa test/testaes test/testaes
+%.o : %.cc
+	$(CC) -c $^ -o $@ $(CXXFLAGS) $(NO_DEPRECATED_WARN) $(CXX_NO_ERROR_FLAGS) $(INCLUDE_PATH) $(SOFLAGS)
+
+.PHONY: install uninstall clean $(TARGET) \
+		test test/testmain
 
 clean :
-	-rm -rf $(OBJLIST) $(TESTOBJLIST)
-	-rm -rf test/testrsa test/testaes test/testmd5 test/testbase64
+	-rm -rf $(OBJ_LIST) $(TESTOBJLIST)
+	-rm -rf test/testmain

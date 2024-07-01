@@ -5,10 +5,12 @@
     > Created Time: Fri 03 Feb 2023 10:35:35 AM CST
  ************************************************************************/
 
-#include "hash.h"
-#include "alloc.h"
+#include "utils/hash.h"
+
 #include <string>
 #include <exception>
+
+#include "utils/alloc.h"
 
 #define ERROR_MSG(msg) \
     (std::string(__func__) + "() " + (msg)).c_str()

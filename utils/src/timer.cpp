@@ -6,14 +6,16 @@
  ************************************************************************/
 
 // #define _DEBUG
-#include "timer.h"
-#include "exception.h"
-#include "Errors.h"
-#include "debug.h"
+#include "utils/timer.h"
+
 #include <assert.h>
 #include <time.h>
-#include <unistd.h>
 #include <atomic>
+
+#include <unistd.h>
+
+#include "utils/exception.h"
+#include "utils/errors.h"
 
 namespace eular {
 static std::atomic<uint64_t> gTimerCount = {0};
@@ -26,7 +28,6 @@ Timer::Timer(uint64_t ms, CallBack cb, uint32_t recycle) :
     mUniqueId(++gTimerCount)
 {
     mTime = getCurrentTime() + ms;
-    LOG("%s(uint64_t ms, CallBack cb, uint32_t recycle)\n", __func__);
 }
 
 Timer::Timer(const Timer& timer) :
@@ -36,12 +37,10 @@ Timer::Timer(const Timer& timer) :
     mCb(timer.mCb),
     mUniqueId(timer.mUniqueId)
 {
-    LOG("%s(const Timer& timer)\n", __func__);
 }
 
 Timer::~Timer()
 {
-    LOG("%s()\n", __func__);
 }
 
 Timer &Timer::operator=(const Timer& timer)
@@ -128,8 +127,6 @@ int TimerManager::startTimer(bool useCallerThread)
         return UNKNOWN_ERROR;
     }
 
-    LOG("epoll fd = %d\n", mEpollFd);
-
     if (useCallerThread) {
         return threadWorkFunction(this);
     }
@@ -206,7 +203,6 @@ void TimerManager::ListExpireTimer()
             ++it;
         }
     }
-    LOG("mExpireTimerVec size = %zu\n", mExpireTimerVec.size());
 }
 
 int TimerManager::threadWorkFunction(void *arg)
@@ -218,13 +214,10 @@ int TimerManager::threadWorkFunction(void *arg)
     epoll_event ev[gMaxEpollEvents];
     int n = 0;
 
-    LOG("timer thread loop begin\n");
     while (mShouldExit == false) {
         {
             RDAutoLock<RWMutex> lock(mRWMutex);
-            LOG("timers size %zu\n", mTimers.size());
             if (mTimers.size() == 0) {
-                LOG("timer wait\n");
                 mRWMutex.unlock();
                 mSignal.wait();
                 mRWMutex.rlock();
@@ -234,21 +227,17 @@ int TimerManager::threadWorkFunction(void *arg)
         assert(it != mTimers.end());
 
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
-        LOG("nextTime = %d\n", nextTime);
         if (nextTime > 0) {
             n = epoll_wait(mEpollFd, ev, gMaxEpollEvents, nextTime);
         }
-        LOG("epoll_wait return\n");
+
         if (n == 0 || nextTime < 0) {
             ListExpireTimer();
             for (auto &vecIt : mExpireTimerVec) {
                 if (vecIt->mCb != nullptr) {
                     try {
                         vecIt->mCb();
-                    } catch (const Exception &e) {
-                        LOG("%s\n", e.what());
                     } catch (...) {
-                        LOG("timer callback execute error\n");
                     }
                 }
                 if (vecIt->mRecycleTime > 0 && vecIt->mCb) {
@@ -260,8 +249,9 @@ int TimerManager::threadWorkFunction(void *arg)
             }
             mExpireTimerVec.clear();
         }
+
         if (n < 0) {
-            LOG("epoll_wait error. [%d, %s]", errno, strerror(errno));
+            throw Exception(String8::format("epoll_wait error. [%d, %s]", errno, strerror(errno)));
             break;
         }
     }

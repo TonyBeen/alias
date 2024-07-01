@@ -7,7 +7,7 @@
 
 #define __STDC_LIMIT_MACROS
 
-#include <utils/sharedbuffer.h>
+#include <utils/shared_buffer.h>
 #include <gtest/gtest.h>
 #include <memory>
 #include <stdint.h>
@@ -78,6 +78,6 @@ TEST(SharedBufferTest, editResize_zero_size) {
 
 int main(int argc, char* argv[])
 {
-	testing::InitGoogleTest(&argc, argv); 
-	return RUN_ALL_TESTS();
+    testing::InitGoogleTest(&argc, argv); 
+    return RUN_ALL_TESTS();
 }

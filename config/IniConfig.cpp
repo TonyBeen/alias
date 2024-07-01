@@ -45,22 +45,17 @@ bool trim(std::string &str, const char *c = " \t\r\n")
 
 IniConfig::IniConfig()
 {
-    
-}
 
-IniConfig::IniConfig(const std::string &configPath)
-{
-    
 }
 
 IniConfig::~IniConfig()
 {
-    
+
 }
 
 bool IniConfig::parser(const std::string &configPath)
 {
-    static const std::string escape_string = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    static const std::string escapeString = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     reset();
     mConfigFilePath = configPath;
     FILE *filePtr = fopen(configPath.c_str(), "r");
@@ -101,7 +96,7 @@ bool IniConfig::parser(const std::string &configPath)
             nodeName = std::string(left + 1, right - left - 1);
             trim(nodeName);
             // printf("node name = \"%s\"\n", nodeName.c_str());
-            if (nodeName.find_first_not_of(escape_string) != std::string::npos) {
+            if (nodeName.find_first_not_of(escapeString) != std::string::npos) {
                 throw std::logic_error("node name contains invalid charactor!");
             }
             continue;
@@ -117,7 +112,7 @@ bool IniConfig::parser(const std::string &configPath)
         trim(key);
         trim(val);
         // printf("key - value: [%s = %s]\n", key.c_str(), val.c_str());
-        if (key.find_first_not_of(escape_string) != std::string::npos) {
+        if (key.find_first_not_of(escapeString) != std::string::npos) {
             throw std::logic_error("key name contains invalid charactor!");
         }
 

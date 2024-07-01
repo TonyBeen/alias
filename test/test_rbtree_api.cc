@@ -5,12 +5,13 @@
     > Created Time: Thu 24 Nov 2022 11:08:34 AM CST
  ************************************************************************/
 
-#include <utils/rbtree_api.h>
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 
-using namespace std;
+#include "catch/catch.hpp"
+
+#include <utils/rbtree_api.h>
 
 struct RBData {
     rb_node rbNode;
@@ -108,7 +109,8 @@ int main(int argc, char **argv)
 
     int num = 3;
     printf("\nerase %d from rbtree(%p)\n", num, &root);
-    rbtree_erase(&root, &num, compare_key);
+    rb_node *nodeErase = rbtree_erase(&root, &num, compare_key);
+    free_node(nodeErase);
 
     printf("\nforeach rbtree(%p)\n", &root);
     rbtree_foreach(&root, processData);

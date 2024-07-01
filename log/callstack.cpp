@@ -7,6 +7,7 @@
 
 #define UNW_LOCAL_ONLY
 #include "callstack.h"
+#include "log.h"
 #include <cxxabi.h>
 #include <libunwind/libunwind.h>
 #include <stdlib.h>

@@ -14,11 +14,11 @@ using namespace eular;
 
 eular::YamlReader reader;
 
-static std::string file = "./yaml_config.yaml";
+static std::string file = "./test/yaml_config.yaml";
 
 TEST(YamlConfigTest, test_loadYaml) {
     reader.loadYaml(file);
-    EXPECT_TRUE(reader.valid());
+    ASSERT_TRUE(reader.valid());
 }
 
 TEST(YamlConfigTest, test_lookup) {

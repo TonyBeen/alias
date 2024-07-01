@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <memory>
 #include <signal.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -25,7 +26,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
-#define MAX_FILE_SIZE       (1024 * 1024)  // one file' max size is 5mb
+#define MAX_FILE_SIZE       (5 * 1024 * 1024)  // one file' max size is 5mb
 #define DEFAULT_NAME_SIZE   (64)
 
 class NonCopyAndAssign
@@ -37,6 +38,8 @@ public:
     virtual ~NonCopyAndAssign() {}
 };
 
+class ProcessMutex;
+
 namespace eular {
 class LogWrite : public NonCopyAndAssign {
 public:
@@ -45,15 +48,19 @@ public:
 
     void setBasePath(const std::string &path)
     {
+        if (path.length() == 0) {
+            return;
+        }
+
         mBasePath = path;
         if (mBasePath[mBasePath.length() - 1] != '/') {
             mBasePath.append("/");
         }
     }
-    virtual ssize_t      WriteToFile(std::string msg) = 0;
-    virtual ssize_t      WriteToFile(const LogEvent &ev) = 0;
+    virtual int32_t      WriteToFile(std::string msg) = 0;
+    virtual int32_t      WriteToFile(const LogEvent &ev) = 0;
     virtual std::string  getFileName() = 0;
-    virtual size_t       getFileSize() = 0;
+    virtual uint32_t     getFileSize() = 0;
     virtual uint32_t     getFileMode() = 0;
     virtual bool         setFileMode(uint32_t mode) = 0;
     virtual uint32_t     getFileFlag() = 0;
@@ -65,15 +72,15 @@ public:
 
 public:
     enum Type {
-        UNKNOW = -1,
         STDOUT = 0,
         FILEOUT = 1,
-        CONSOLEOUT = 2
+        CONSOLEOUT = 2,
+        UNKNOW
     };
 
 protected:
-    pthread_mutex_t *mMutex;        // 同步状态下保护文件描述符
-    std::string      mBasePath;
+    std::shared_ptr<ProcessMutex>   mMutex;     // 同步状态下保护文件描述符
+    std::string                     mBasePath;
 };
 
 class StdoutLogWrite : public LogWrite {
@@ -81,10 +88,10 @@ public:
     StdoutLogWrite() {}
     ~StdoutLogWrite() {}
 
-    virtual ssize_t      WriteToFile(std::string msg) override;
-    virtual ssize_t      WriteToFile(const LogEvent &ev) override;
+    virtual int32_t      WriteToFile(std::string msg) override;
+    virtual int32_t      WriteToFile(const LogEvent &ev) override;
     virtual std::string  getFileName();
-    virtual size_t       getFileSize();
+    virtual uint32_t     getFileSize();
     virtual uint32_t     getFileMode();
     virtual bool         setFileMode(uint32_t mode);
     virtual uint32_t     getFileFlag();
@@ -100,14 +107,14 @@ private:
 
 class FileLogWrite : public LogWrite {
 public:
-    FileLogWrite(uint32_t fileFlag = O_WRONLY | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
+    FileLogWrite(uint32_t fileFlag = O_RDWR | O_CREAT | O_APPEND, uint32_t fileMode = 0664);
     virtual ~FileLogWrite();
 
     void                 maintainFile();
-    virtual ssize_t      WriteToFile(std::string msg) override;
-    virtual ssize_t      WriteToFile(const LogEvent &ev) override;
+    virtual int32_t      WriteToFile(std::string msg) override;
+    virtual int32_t      WriteToFile(const LogEvent &ev) override;
     virtual std::string  getFileName();
-    virtual size_t       getFileSize();
+    virtual uint32_t     getFileSize();
     virtual uint32_t     getFileMode();
     virtual bool         setFileMode(uint32_t mode);
     virtual uint32_t     getFileFlag();
@@ -119,11 +126,12 @@ public:
 
 private:
     bool        isInterrupt;
-    int*        mFileDesc;
+    int32_t*    mFileDesc;
     uint32_t    mFileMode;
     uint32_t    mFileFlag;
     uint64_t*   mFileSize;
 };
+
 
 class ConsoleLogWrite : public LogWrite
 {
@@ -131,10 +139,10 @@ public:
     ConsoleLogWrite();
     ~ConsoleLogWrite();
 
-    ssize_t      WriteToFile(std::string msg) override;
-    ssize_t      WriteToFile(const LogEvent &ev) override;
+    int32_t      WriteToFile(std::string msg) override;
+    int32_t      WriteToFile(const LogEvent &ev) override;
     std::string  getFileName();
-    size_t       getFileSize();
+    uint32_t     getFileSize();
     uint32_t     getFileMode();
     bool         setFileMode(uint32_t mode);
     uint32_t     getFileFlag();
@@ -147,7 +155,7 @@ public:
 protected:
     void         InitParams();
     void         Destroy();
-    static void  signalHandler(int sig);        // 信号捕获处理函数
+    static void  signalHandler(int32_t sig);        // 信号捕获处理函数
 
 private:
     std::string         mLocalClientSockPath;
@@ -155,7 +163,7 @@ private:
 
     struct sockaddr_un  mServerSockAddr;
     struct sockaddr_un  mClientSockAddr;
-    int                 mClientFd;
+    int32_t             mClientFd;
 };
 
 } // namespace eular

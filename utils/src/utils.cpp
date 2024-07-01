@@ -5,8 +5,9 @@
     > Created Time: Wed May  5 15:00:59 2021
  ************************************************************************/
 
-#include "utils.h"
-#include "Errors.h"
+#include "utils/utils.h"
+#include "utils/errors.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -40,9 +41,10 @@ bool __lstat(const char *path)
 bool __mkdir(const char *path)
 {
     if(access(path, F_OK) == 0) {
-        return 0;
+        return true;
     }
-    return mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+
+    return 0 == mkdir(path, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 }
 
 bool Mkdir(const std::string &path)
@@ -70,7 +72,7 @@ bool Mkdir(const std::string &path)
         }
         if(ptr != nullptr) {
             break;
-        } else if(__mkdir(filePath) != 0) {
+        } else if(!__mkdir(filePath)) {
             break;
         }
         free(filePath);
@@ -85,7 +87,7 @@ int32_t GetFileLength(const eular::String8 &path)
     static struct stat lst;
     int ret = stat(path.c_str(), &lst);
     if (ret != 0) {
-        return eular::status_t::NOT_FOUND;
+        return Status::NOT_FOUND;
     }
     return static_cast<int32_t>(lst.st_size);
 }
@@ -234,6 +236,7 @@ std::vector<std::string> getdir(const std::string &path)
         while ((ptr = readdir(dir)) != nullptr) {
             if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0))
                 continue;
+
             if (ptr->d_type == DT_REG) {
                 ret.push_back(ptr->d_name);
             }
@@ -243,6 +246,33 @@ std::vector<std::string> getdir(const std::string &path)
     }
 
     return ret;
+}
+
+int32_t ForeachDir(const std::string &path, std::list<std::string> &fileList)
+{
+    DIR *dir = nullptr;
+    struct dirent *ptr = nullptr;
+
+    int32_t count = 0;
+    dir = opendir(path.c_str());
+    if (dir != nullptr) {
+        while ((ptr = readdir(dir)) != nullptr) {
+            if ((strcmp(ptr->d_name, ".") == 0) || (strcmp(ptr->d_name, "..") == 0)) {
+                continue;
+            }
+
+            if (ptr->d_type == DT_REG) {
+                fileList.push_back(path + "/" + ptr->d_name);
+                ++count;
+            } else if (ptr->d_type == DT_DIR) {
+                count += ForeachDir(path + "/" + ptr->d_name, fileList);
+            }
+        }
+
+        closedir(dir);
+    }
+
+    return count;
 }
 
 pid_t GetThreadId()
@@ -366,58 +396,58 @@ static pthread_once_t __once_control2 = PTHREAD_ONCE_INIT;
 
 static inline unsigned long long rte_rdtsc(void)
 {
-	union {
-		unsigned long long tsc_64;
+    union {
+        unsigned long long tsc_64;
         #if BYTE_ORDER == LITTLE_ENDIAN
         struct {
-			unsigned lo_32;
-			unsigned hi_32;
-		};
+            unsigned lo_32;
+            unsigned hi_32;
+        };
         #elif BYTE_ORDER == BIG_ENDIAN
         struct {
-			unsigned hi_32;
-			unsigned lo_32;
-		};
+            unsigned hi_32;
+            unsigned lo_32;
+        };
         #endif
-	} tsc;
+    } tsc;
 
-	asm volatile("rdtsc" :
-			"=a" (tsc.lo_32),
-			"=d" (tsc.hi_32));
-	return tsc.tsc_64;
+    asm volatile("rdtsc" :
+            "=a" (tsc.lo_32),
+            "=d" (tsc.hi_32));
+    return tsc.tsc_64;
 }
 
 void set_time_metric()
 {
-	unsigned long long now, startup, end;
-	unsigned long long begin = rte_rdtsc();
-	usleep(1000);
-	end        = rte_rdtsc();
-	__one_msec = end - begin;
-	__one_sec  = __one_msec * 1000;     // 获取CPU频率
+    unsigned long long now, startup, end;
+    unsigned long long begin = rte_rdtsc();
+    usleep(1000);
+    end        = rte_rdtsc();
+    __one_msec = end - begin;
+    __one_sec  = __one_msec * 1000;     // 获取CPU频率
 
-	startup    = rte_rdtsc();           // 获取当前cpu时间戳
+    startup    = rte_rdtsc();           // 获取当前cpu时间戳
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
-	now        = tp.tv_sec * __one_sec; // 获取系统绝对时间
+    now        = tp.tv_sec * __one_sec; // 获取系统绝对时间
     // now = time(NULL) * __one_sec;    // 获取系统实时时间
-	if (now > startup) {
-		__metric_diff = now - startup;
-	} else {
-		__metric_diff = 0;
-	}
+    if (now > startup) {
+        __metric_diff = now - startup;
+    } else {
+        __metric_diff = 0;
+    }
 }
 
 uint64_t asm_gettimeofday()
 {
-	if (__metric_diff == 0) {
-		if (pthread_once(&__once_control2, set_time_metric) != 0) {
-			abort();
-		}
-	}
+    if (__metric_diff == 0) {
+        if (pthread_once(&__once_control2, set_time_metric) != 0) {
+            abort();
+        }
+    }
 
-	uint64_t now = rte_rdtsc() + __metric_diff;
-	return now / __one_sec + (now % __one_sec) / __one_msec;
+    uint64_t now = rte_rdtsc() + __metric_diff;
+    return now / __one_sec + (now % __one_sec) / __one_msec;
 }
 
 uint64_t Abstime(bool useAsm)
