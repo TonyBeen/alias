@@ -11,7 +11,7 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include "utils/sysdef.h"
+#include <utils/sysdef.h>
 
 #if defined(OS_WIN)
 #define UINT_IDENTIFY(X) (X)
