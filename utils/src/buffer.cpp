@@ -280,6 +280,11 @@ std::string ByteBuffer::dump() const
     return ret;
 }
 
+size_t ByteBuffer::hash(const ByteBuffer &buf)
+{
+    return std::_Hash_impl::hash(buf.const_data(), buf.size());
+}
+
 size_t ByteBuffer::calculate(size_t dataSize)
 {
     if (dataSize >= DEFAULT_BUFFER_SIZE) {

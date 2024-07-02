@@ -40,7 +40,7 @@ public:
     void                resize(size_t size);
     std::string         toStdString() const;            // String8 -> std::string
 
-    bool                isEmpty() const;
+    bool                empty() const;
     size_t              length() const;
     size_t              capacity() const { return mCapacity; }
     void                clear();
@@ -50,8 +50,8 @@ public:
     int                 append(const char* other);
     int                 append(const char* other, size_t numChars);
 
-    static String8      format(const char* fmt, ...) __attribute__((format(printf, 1, 2)));         // this只能用于非静态成员函数，所以第一个参数就是fmt
-    int                 appendFormat(const char* fmt, ...) __attribute__((format (printf, 2, 3)));  // 类成员函数第一个参数是隐藏的this指针
+    static String8      format(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
+    int                 appendFormat(const char* fmt, ...) __attribute__((format (printf, 2, 3)));
 
     String8&            operator=(const String8& other);
     String8&            operator=(const char* other);
@@ -67,8 +67,8 @@ public:
     int                 ncompare(const String8& other, size_t n) const;
     int                 ncompare(const char* other, size_t n) const;
 
-    int                 StrCaseCmp(const String8& other) const;
-    int                 StrCaseCmp(const char* other) const;
+    int                 strcasecmp(const String8& other) const;
+    int                 strcasecmp(const char* other) const;
 
     bool                operator<(const String8& other) const;
     bool                operator<=(const String8& other) const;
@@ -117,7 +117,7 @@ public:
     void                toUpper(size_t start, size_t numChars);
     // 未匹配到或参数错误返回负值，否则返回匹配到的字符串位置
     static int32_t      kmp_strstr(const char *val, const char *key);
-
+    static size_t       hash(const String8 &obj);
 private:
     friend std::ostream&   operator<<(std::ostream &out, const String8& in);
     char*               getBuffer(size_t numChars = 0);
@@ -142,5 +142,14 @@ private:
 std::ostream&   operator<<(std::ostream &out, const String8& in);
 
 } // namespace eular
+
+namespace std {
+    template<>
+    struct hash<eular::String8> : public __hash_base<size_t, eular::String8> {
+        size_t operator()(const eular::String8 &obj) const {
+            return eular::String8::hash(obj);
+        }
+    };
+}
 
 #endif // __STRING8_H__

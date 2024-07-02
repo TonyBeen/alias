@@ -17,7 +17,7 @@
 #include "utils/exception.h"
 
 #define DEFAULT_STRING_SIZE 128
-#define MAXSIZE (1024 * 128)
+#define MAXSIZE (1024 * 1024) // 1Mb
 
 namespace eular {
 
@@ -114,6 +114,7 @@ String8::String8(const String8& other) :
     if (mString == nullptr) {
         throw Exception("invalid String8");
     }
+
     SharedBuffer::bufferFromData(mString)->acquire();
 }
 
@@ -211,40 +212,66 @@ String8 String8::right(uint32_t n) const
 void String8::trim(char c)
 {
     detach();
-    int begin = 0;
-    int end = 0;
+    int begin = -1;
+    int end = -1;
     findNotChar(begin, end, c);
-    String8 tmp(mString + begin, end - begin + 1);
 
-    *this = std::move(tmp);
+    // 全是c字符
+    if (begin < 0 && end < 0) {
+        mString[0] = '\0';
+        return;
+    }
+
+    // 全不为c
+    if (0 == begin && (size_t)end == length()) {
+        return;
+    }
+
+    memmove(mString, mString + begin, end - begin + 1);
+    mString[end - begin + 1] = '\0';
 }
 
 void String8::trimLeft(char c)
 {
     detach();
-    int begin = 0;
-    int end = 0;
+    int begin = -1;
+    int end = -1;
     findNotChar(begin, end, c);
-    String8 tmp(mString + begin);
+    // 全是c字符
+    if (begin < 0 && end < 0) {
+        mString[0] = '\0';
+        return;
+    }
 
-    char *swap = nullptr;
-    swap = tmp.mString;
-    tmp.mString = this->mString;
-    this->mString = swap;
+    // 左侧无c字符
+    if (begin == 0) {
+        return;
+    }
+
+    size_t len = length();
+    memmove(mString, mString + begin, len - begin);
+    mString[len - begin] = '\0';
 }
 
 void String8::trimRight(char c)
 {
     detach();
-    int begin = 0;
-    int end = 0;
+    int begin = -1;
+    int end = -1;
     findNotChar(begin, end, c);
-    String8 tmp(mString, end + 1);
 
-    char *swap = nullptr;
-    swap = tmp.mString;
-    tmp.mString = this->mString;
-    this->mString = swap;
+    // 全是c字符
+    if (begin < 0 && end < 0) {
+        mString[0] = '\0';
+        return;
+    }
+
+    size_t len = length();
+    // 右侧无c字符
+    if ((size_t)end == (len - 1)) {
+        return;
+    }
+    mString[end + 1] = '\0';
 }
 
 String8 String8::reverse()
@@ -277,9 +304,9 @@ std::string String8::toStdString() const
     return std::string(mString);
 }
 
-bool String8::isEmpty() const
+bool String8::empty() const
 {
-    return length() == 0;
+    return mString[0] == '\0';
 }
 
 size_t String8::length() const
@@ -437,18 +464,19 @@ int String8::ncompare(const char* other, size_t n) const
     return strncmp(mString, other, n);
 }
 
-int String8::StrCaseCmp(const String8& other) const
+int String8::strcasecmp(const String8& other) const
 {
     if (mString) {
-        return strcasecmp(mString, other.mString);
+        return ::strcasecmp(mString, other.mString);
     }
+
     return -EPERM;
 }
 
-int String8::StrCaseCmp(const char* other) const
+int String8::strcasecmp(const char* other) const
 {
     if (mString) {
-        return strcasecmp(mString, other);
+        return ::strcasecmp(mString, other);
     }
     return -EPERM;
 }
@@ -758,6 +786,11 @@ int32_t String8::kmp_strstr(const char *val, const char *key)
         }
     }
     return -1;
+}
+
+size_t String8::hash(const String8 &obj)
+{
+    return std::_Hash_impl::hash(obj.c_str(), obj.length());
 }
 
 String8 String8::format(const char* fmt, ...)

@@ -49,6 +49,7 @@ public:
     void        resize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
 
     std::string dump()  const;
+    static size_t hash(const ByteBuffer &buf);
 
 private:
     size_t      calculate(size_t);
@@ -64,5 +65,14 @@ private:
 };
 
 } // namespace eular
+
+namespace std {
+    template<>
+    struct hash<eular::ByteBuffer> : public __hash_base<size_t, eular::ByteBuffer> {
+        size_t operator()(const eular::ByteBuffer &obj) const {
+            return eular::ByteBuffer::hash(obj);
+        }
+    };
+}
 
 #endif // __EULAR_BUFFER_H__
