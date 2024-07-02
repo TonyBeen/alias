@@ -50,6 +50,7 @@ public:
 
     std::string dump()  const;
     static size_t hash(const ByteBuffer &buf);
+    bool        operator==(const ByteBuffer &other) const;
 
 private:
     size_t      calculate(size_t);

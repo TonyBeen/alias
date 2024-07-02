@@ -161,7 +161,7 @@ Thread::~Thread()
 
 void Thread::SetName(eular::String8 name)
 {
-    if (name.isEmpty()) {
+    if (name.empty()) {
         return;
     }
     if (gLocalThread) {
