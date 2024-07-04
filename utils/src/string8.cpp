@@ -731,7 +731,7 @@ ssize_t String8::replaceAll(char o, char n)
 
 void String8::toLower()
 {
-    toLower(0, length());
+    toLower(0, SIZE_MAX);
 }
 
 void String8::toLower(size_t start, size_t numChars)
@@ -739,14 +739,14 @@ void String8::toLower(size_t start, size_t numChars)
     size_t size = length();
     if (size > start) {
         for (size_t i = start; i < numChars && i < size; ++i) { // i < size -> anti overflow
-            mString[i] = static_cast<char>(tolower(mString[i]));
+            mString[i] = static_cast<char>(::tolower(mString[i]));
         }
     }
 }
 
 void String8::toUpper()
 {
-    toUpper(0, length());
+    toUpper(0, SIZE_MAX);
 }
 
 void String8::toUpper(size_t start, size_t numChars)
@@ -754,7 +754,7 @@ void String8::toUpper(size_t start, size_t numChars)
     size_t size = length();
     if (size > start) {
         for (size_t i = start; i < numChars && i < size; ++i) { // i < size -> anti overflow
-            mString[i] = static_cast<char>(toupper(mString[i]));
+            mString[i] = static_cast<char>(::toupper(mString[i]));
         }
     }
 }

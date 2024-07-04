@@ -52,6 +52,8 @@ public:
     static size_t hash(const ByteBuffer &buf);
     bool        operator==(const ByteBuffer &other) const;
 
+    static void *glibc_memmem(const void *haystack, size_t hs_len, const void *needle, size_t ne_len);
+
 private:
     size_t      calculate(size_t);
     size_t      allocBuffer(size_t size);
