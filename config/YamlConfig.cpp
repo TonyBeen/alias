@@ -39,6 +39,8 @@ YamlReader::~YamlReader()
     toMutex(mMutex)->wlock();
     mYamlConfigMap.clear();
     toMutex(mMutex)->wunlock();
+
+    delete mMutex;
 }
 
 void YamlReader::loadYaml(const std::string &path)

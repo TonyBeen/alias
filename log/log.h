@@ -71,7 +71,6 @@ void delOutputNode(int32_t type);
 
 void log_write(int32_t level, const char *tag, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 void log_write_assert(int32_t level, const char *expr, const char *tag, const char *fmt, ...) __attribute__((format(printf, 4, 5)));
-void log_write_assertv(const LogEvent *ev);
 
 }
 

@@ -1,42 +1,53 @@
 **utils：**
 
-    .
+    utils/
     ├── include
-    │   ├── alloc.h
-    │   ├── any.hpp
-    │   ├── bitmap.h
-    │   ├── buffer.h
-    │   ├── condition.h
-    │   ├── convert.h
-    │   ├── debug.h
-    │   ├── errors.h
-    │   ├── exception.h
-    │   ├── file.h
-    │   ├── function_traits.h
-    │   ├── gcc.hpp
-    │   ├── hash.h
-    │   ├── map.h
-    │   ├── map_node.h
-    │   ├── mutex.h
-    │   ├── rbtree_api.h
-    │   ├── rbtree_base.h
-    │   ├── refcount.h
-    │   ├── sharedbuffer.h
-    │   ├── singleton.h
-    │   ├── string8.h
-    │   ├── sysdef.h
-    │   ├── thread.h
-    │   ├── timer.h
-    │   ├── types.hpp
-    │   └── utils.h
+    │   └── utils
+    │       ├── alloc.h
+    │       ├── any.hpp
+    │       ├── auto_clean.hpp
+    │       ├── bimap.h
+    │       ├── bimap.hpp
+    │       ├── bitmap.h
+    │       ├── buffer.h
+    │       ├── buffer_stream.h
+    │       ├── buffer_stream_utils.h
+    │       ├── condition.h
+    │       ├── convert.h
+    │       ├── debug.h
+    │       ├── elapsed_time.h
+    │       ├── endian.hpp
+    │       ├── errors.h
+    │       ├── exception.h
+    │       ├── file.h
+    │       ├── gcc.hpp
+    │       ├── hash.h
+    │       ├── map.h
+    │       ├── map_node.h
+    │       ├── mutex.h
+    │       ├── rbtree_api.h
+    │       ├── rbtree_base.h
+    │       ├── refcount.h
+    │       ├── shared_buffer.h
+    │       ├── singleton.h
+    │       ├── singleton_object.h
+    │       ├── string8.h
+    │       ├── sysdef.h
+    │       ├── thread.h
+    │       ├── timer.h
+    │       ├── types.hpp
+    │       └── utils.h
     ├── Makefile
     ├── Readme.md
     └── src
         ├── alloc.cpp
         ├── bitmap.cpp
         ├── buffer.cpp
+        ├── buffer_stream.cpp
         ├── condition.cpp
         ├── convert.cpp
+        ├── elapsed_time.cpp
+        ├── endian.cpp
         ├── file.cpp
         ├── hash.cpp
         ├── map_node.cpp
@@ -49,14 +60,16 @@
         ├── timer.cpp
         └── utils.cpp
 
-    utils包含线程、互斥锁、条件变量、信号量、字符串、缓存、函数堆栈、单例、定时器、异常、红黑树Map、共享计数。
+    utils包含线程、互斥锁、条件变量、信号量、线程、字符串、缓存、单例、定时器、异常、红黑树、HashMap、共享计数。
     依赖：libpthread
 
 **log:**
 
-    .
+    log/
+    ├── bench_liblog.cc
     ├── callstack.cpp
     ├── callstack.h
+    ├── example.json
     ├── logcat.cc
     ├── log.cpp
     ├── log_event.h
@@ -69,7 +82,11 @@
     ├── log_write.cpp
     ├── log_write.h
     ├── Makefile
-    ├── readme.md
+    ├── mutex.hpp
+    ├── nlohmann
+    │   └── json.hpp
+    ├── README
+    ├── test_callstack.cc
     └── testlog.cc
 
     日志类
@@ -85,30 +102,53 @@
 
 **crypto:**
 
-    .
-    ├── aes.cpp
-    ├── aes.h
-    ├── base64.cpp
-    ├── base64.h
+    crypto/
+    ├── aes_openssl.cpp
+    ├── aes_openssl.h
+    ├── bak
+    │   ├── md5.cpp
+    │   └── md5.h
+    ├── base64_chromium.cpp
+    ├── base64_chromium.h
+    ├── base64_openssl.cpp
+    ├── base64_openssl.h
+    ├── crc32.cpp
+    ├── crc32.h
+    ├── crc32_table.hh
     ├── crypto.h
+    ├── detail
+    │   ├── hmac.h
+    │   ├── keccak.cpp
+    │   ├── keccak.h
+    │   ├── LICENSE
+    │   ├── md5.cpp
+    │   ├── md5.h
+    │   ├── readme.md
+    │   ├── sha1.cpp
+    │   ├── sha1.h
+    │   ├── sha256.cpp
+    │   ├── sha256.h
+    │   ├── sha3.cpp
+    │   └── sha3.h
     ├── Makefile
-    ├── md5.cpp
-    ├── md5.h
-    ├── rsa.cpp
-    ├── rsa.h
-    ├── sha.cpp
-    ├── sha.h
+    ├── md5_openssl.cpp
+    ├── md5_openssl.h
+    ├── rsa_openssl.cpp
+    ├── rsa_openssl.h
+    ├── sha_openssl.cpp
+    ├── sha_openssl.h
     └── test
         ├── for_base64_test.txt
         ├── for_md5_test.jpg
-        ├── private.key
-        ├── public.key
         ├── test_aes.cc
         ├── test_base64.cc
+        ├── test_chromium_base64.cc
+        ├── test_crc32.cc
+        ├── test_main.cc
         ├── test_md5.cc
         ├── test_rsa.cc
         └── test_sha.cc
-    
+
     加解密类
     包含对应的头文件，编译时加上 -leularcrypto
     依赖于openssl

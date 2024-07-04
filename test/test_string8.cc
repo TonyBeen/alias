@@ -1,5 +1,9 @@
-#include <iostream>
 #include <stdio.h>
+
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+
 #include <log/log.h>
 #include <utils/string8.h>
 #include <gtest/gtest.h>
@@ -103,10 +107,64 @@ TEST_F(String8Test, otherFunction) {
     EXPECT_EQ(str1[str1.length()], '\0');
     EXPECT_EQ(str1[1000], str1[str1.capacity()]);
 
+    // 测试去除\t
     {
         String8 str2 = "\t\t12345\t\t\t";
         str2.trim('\t');
         EXPECT_STREQ(str2.c_str(), "12345");
+    }
+
+    // 测试中间存在\t情况下trim
+    {
+        String8 str2 = "He\tllo";
+        str2.trim('\t');
+        EXPECT_TRUE(6 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "He\tllo");
+
+        str2 = "\t\tHe\tllo\t\t\t";
+        str2.trim('\t');
+        EXPECT_TRUE(6 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "He\tllo");
+    }
+
+    // 测试全部不为\t情况下trim
+    {
+        String8 str2 = "Hello";
+        str2.trim('\t');
+        EXPECT_TRUE(5 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "Hello");
+    }
+
+    // 测试全部为\t情况下trim
+    {
+        String8 str2 = "\t\t\t\t\t";
+        str2.trim('\t');
+        EXPECT_TRUE(0 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "");
+    }
+
+    // 测试只有一个不为\t情况下trim
+    {
+        String8 str2 = "\t\tc\t\t";
+        str2.trim('\t');
+        EXPECT_TRUE(1 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "c");
+    }
+
+    // 测试只有左侧存在\t情况下trim
+    {
+        String8 str2 = "\t\tHello";
+        str2.trim('\t');
+        EXPECT_TRUE(5 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "Hello");
+    }
+
+    // 测试只有右侧存在\t情况下trim
+    {
+        String8 str2 = "Hello\t\t";
+        str2.trim('\t');
+        EXPECT_TRUE(5 == str2.length());
+        EXPECT_STREQ(str2.c_str(), "Hello");
     }
 
     {
@@ -135,7 +193,7 @@ TEST_F(String8Test, otherFunction) {
 
     {
         String8 str2 = "abcDEF";
-        EXPECT_EQ(str2.StrCaseCmp("abcDef"), 0);
+        EXPECT_EQ(str2.strcasecmp("abcDef"), 0);
         str2.toUpper();
         EXPECT_STREQ(str2.c_str(), "ABCDEF");
         str2.toLower();
@@ -191,6 +249,26 @@ TEST_F(String8Test, format) {
             format.appendFormat("0x%02x ", buffer[i]);
         }
     }
+}
+
+TEST_F(String8Test, support_unordered_map_set) {
+    const char *hello = "Hello";
+    const char *world = "World";
+
+    String8 h = hello;
+    String8 w = world;
+
+    std::unordered_map<eular::String8, size_t> hashMap;
+    hashMap.insert(std::make_pair(h, String8::hash(h)));
+    hashMap.insert(std::make_pair(w, String8::hash(w)));
+
+    EXPECT_EQ(hashMap.size(), 2);
+
+    std::unordered_set<eular::String8> hashSet;
+    hashSet.insert(h);
+    hashSet.insert(w);
+
+    EXPECT_EQ(hashSet.size(), 2);
 }
 
 int main(int argc, char* argv[])

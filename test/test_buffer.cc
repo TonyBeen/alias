@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include <bits/move.h>
 
+#include <unordered_map>
+
 #include "catch/catch.hpp"
 #include "utils/buffer.h"
 #include "utils/utils.h"
@@ -69,7 +71,7 @@ TEST_CASE("set_", "[ByteBuffer]") {
     ByteBuffer buffer(128);
     buffer.append("Hello");
     buffer.append("***");
-    
+
     auto pBegin = buffer.const_data() + 5;
     size_t copySize = 3;
 
@@ -79,4 +81,18 @@ TEST_CASE("set_", "[ByteBuffer]") {
     CHECK(buffer[0] == '*');
     CHECK(buffer[1] == '*');
     CHECK(buffer[2] == '*');
+}
+
+TEST_CASE("std_hash_", "support_std_hash") {
+    ByteBuffer buffer(128);
+    buffer.append("Hello");
+
+    std::unordered_map<ByteBuffer, size_t> hashMap;
+
+    hashMap.insert(std::make_pair(buffer, ByteBuffer::hash(buffer)));
+
+    buffer.append("***");
+    hashMap.insert(std::make_pair(buffer, ByteBuffer::hash(buffer)));
+
+    CHECK(2 == hashMap.size());
 }

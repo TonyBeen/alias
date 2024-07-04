@@ -280,6 +280,25 @@ std::string ByteBuffer::dump() const
     return ret;
 }
 
+size_t ByteBuffer::hash(const ByteBuffer &buf)
+{
+    return std::_Hash_impl::hash(buf.const_data(), buf.size());
+}
+
+bool ByteBuffer::operator==(const ByteBuffer &other) const
+{
+    // 共享状态下一定是同一份数据
+    if (mBuffer == other.mBuffer) {
+        return true;
+    }
+
+    if (mDataSize != other.mDataSize) {
+        return false;
+    }
+
+    return 0 == memcmp(mBuffer, other.mBuffer, mDataSize);
+}
+
 size_t ByteBuffer::calculate(size_t dataSize)
 {
     if (dataSize >= DEFAULT_BUFFER_SIZE) {

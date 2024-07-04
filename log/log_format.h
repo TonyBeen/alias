@@ -30,10 +30,8 @@ public:
     LogFormat& operator=(const LogFormat&) = delete;
 
     static std::string Format(const LogEvent *ev);
-    static void SetLevel(const LogLevel::Level &lev);
 
 private:
-    static std::atomic<int> mLevel;     // 可以输出的最小level
 };
 
 } // namespace eular

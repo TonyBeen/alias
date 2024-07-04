@@ -8,8 +8,9 @@
 #ifndef __EULAR_CODE_CONVERT_H__
 #define __EULAR_CODE_CONVERT_H__
 
-#include <iconv.h>
+#include <stdint.h>
 #include <string>
+#include <iconv.h>
 
 namespace eular {
 

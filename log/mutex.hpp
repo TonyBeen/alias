@@ -21,18 +21,18 @@ class ProcessMutex : public NonCopyAndAssign
 public:
     ProcessMutex()
     {
-        pthread_mutexattr_t mutexAttr;
-        pthread_mutexattr_init(&mutexAttr);
+        pthread_mutexattr_t attr;
+        pthread_mutexattr_init(&attr);
 #if defined(_POSIX_THREAD_PROCESS_SHARED)
-        pthread_mutexattr_setpshared(&mutexAttr, PTHREAD_PROCESS_SHARED);
+        pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
         _mutex = (pthread_mutex_t *)mmap(nullptr, sizeof(pthread_mutex_t),
                                          PROT_WRITE|PROT_READ, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 #else
         _mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
 #endif
         assert(_mutex);
-        pthread_mutex_init(_mutex, &mutexAttr);
-        pthread_mutexattr_destroy(&mutexAttr);
+        pthread_mutex_init(_mutex, &attr);
+        pthread_mutexattr_destroy(&attr);
     }
 
     ~ProcessMutex()

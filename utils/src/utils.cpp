@@ -109,7 +109,7 @@ std::vector<int> getPidByName(const char *procName)
 {
     std::vector<int> pidVec;
     if (procName == nullptr) {
-        return std::move(pidVec);
+        return pidVec;
     }
     DIR *dir = nullptr;
     struct dirent *ptr = nullptr;
@@ -148,7 +148,7 @@ std::vector<int> getPidByName(const char *procName)
         }
         closedir(dir);
     }
-    return std::move(pidVec);
+    return pidVec;
 }
 
 std::string getNameByPid(pid_t pid)
