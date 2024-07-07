@@ -2,7 +2,7 @@
 #include <mutex>
 #include <memory>
 
-static std::once_flag       gOnceFlag;
+static pthread_once_t gOnceFlag = PTHREAD_ONCE_INIT;
 static eular::LogManager*   gLogManager = nullptr;
 
 namespace eular {
@@ -121,12 +121,14 @@ void LogManager::delLogWriteFromList(int type)
     pthread_mutex_unlock(&mListMutex);
 }
 
+void LogManager::once_entry()
+{
+    gLogManager = new (std::nothrow) LogManager();
+}
+
 LogManager *LogManager::getInstance()
 {
-    std::call_once(gOnceFlag, []() {
-        gLogManager = new LogManager();
-    });
-
+    pthread_once(&gOnceFlag, once_entry);
     return gLogManager;
 }
 
