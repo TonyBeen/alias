@@ -40,8 +40,8 @@ public:
 
     uint8_t *   data() { return mBuffer ? mBuffer : nullptr; }
     const uint8_t *const_data() const { return mBuffer ? mBuffer : nullptr; }
-    const uint8_t *begin() const { return mBuffer ? mBuffer : nullptr; }                       // 返回数据开始地址
-    const uint8_t *end() const { return mBuffer ? (mBuffer + mDataSize - 1) : nullptr; }       // 返回数据结束地址
+    const uint8_t *begin() const { return mBuffer ? mBuffer : nullptr; }
+    const uint8_t *end() const { return mBuffer ? (mBuffer + mDataSize) : nullptr; }
     void        reserve(size_t newSize);
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }

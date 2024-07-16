@@ -83,7 +83,19 @@ TEST_CASE("set_", "[ByteBuffer]") {
     CHECK(buffer[2] == '*');
 }
 
-TEST_CASE("std_hash_", "support_std_hash") {
+TEST_CASE("begin_end", "[ByteBuffer]") {
+    ByteBuffer buffer(128);
+    buffer.append("Hello");
+
+    uint32_t count = 0;
+    for (auto it = buffer.begin(); it != buffer.end(); ++it)
+    {
+        ++count;
+    }
+    CHECK(count == buffer.size());
+}
+
+TEST_CASE("std_hash_", "[ByteBuffer]") {
     ByteBuffer buffer(128);
     buffer.append("Hello");
 
