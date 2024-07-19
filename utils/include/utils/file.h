@@ -8,16 +8,20 @@
 #ifndef __EULAR_FILE_H__
 #define __EULAR_FILE_H__
 
-#include "string8.h"
-#include "buffer.h"
-#include <sys/stat.h>
 #include <stdio.h>
+#include <memory>
+
+#include <sys/stat.h>
+
+#include <utils/string8.h>
+#include <utils/buffer.h>
 
 namespace eular {
 
-class FileInfo
+class FileInfo final
 {
     friend class File;
+
 public:
     FileInfo();
     FileInfo(const String8 &path);
@@ -30,21 +34,21 @@ public:
     ssize_t getFileSize() const;
     time_t  getModifyTime() const;
     time_t  getCreateTime() const;
-    ssize_t getFileUid() const;
+    int32_t getFileUid() const;
     const struct stat &getFileStat() const { return mFileInfo; }
 
     static bool     GetFileStat(const String8 &path, struct stat *fileStat);
-    static ssize_t  GetFileSize(const String8 &path);
+    static int64_t  GetFileSize(const String8 &path);
     static time_t   GetFileCreateTime(const String8 &path);
     static time_t   GetFileModifyTime(const String8 &path);
-    static ssize_t  GetFileUid(const String8 &path);
+    static int32_t  GetFileUid(const String8 &path);
 
 private:
     String8     mFilePath;
     struct stat mFileInfo;
 };
 
-class File
+class File final
 {
 public:
     File();

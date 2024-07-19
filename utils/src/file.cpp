@@ -71,9 +71,9 @@ time_t FileInfo::getCreateTime() const
     return mFileInfo.st_ctim.tv_sec;
 }
 
-ssize_t FileInfo::getFileUid() const
+int32_t FileInfo::getFileUid() const
 {
-    return static_cast<ssize_t>(mFileInfo.st_uid);
+    return static_cast<int32_t>(mFileInfo.st_uid);
 }
 
 bool FileInfo::GetFileStat(const String8 &path, struct stat *fileStat)
@@ -86,7 +86,7 @@ bool FileInfo::GetFileStat(const String8 &path, struct stat *fileStat)
     return ret == 0;
 }
 
-ssize_t FileInfo::GetFileSize(const String8 &path)
+int64_t FileInfo::GetFileSize(const String8 &path)
 {
     struct stat fileStat;
     if (GetFileStat(path, &fileStat)) {
@@ -116,11 +116,11 @@ time_t FileInfo::GetFileModifyTime(const String8 &path)
     return -1;
 }
 
-ssize_t FileInfo::GetFileUid(const String8 &path)
+int32_t FileInfo::GetFileUid(const String8 &path)
 {
     struct stat fileStat;
     if (GetFileStat(path, &fileStat)) {
-        return fileStat.st_uid;
+        return static_cast<int32_t>(fileStat.st_uid);
     }
 
     return -1;
