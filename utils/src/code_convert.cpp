@@ -30,7 +30,7 @@ CodeConvert::CodeConvert() :
 
 bool CodeConvert::convertBegin(CodeFlag from, CodeFlag to)
 {
-    iconv_t cd = iconv_open(_flag2str(to), _flag2str(from));
+    iconv_t cd = iconv_open(_Flag2str(to), _Flag2str(from));
     if (cd == INVALID_ICONV_HANDLE) {
         perror("iconv_open");
         return false;
@@ -42,19 +42,19 @@ bool CodeConvert::convertBegin(CodeFlag from, CodeFlag to)
     return true;
 }
 
-bool CodeConvert::convert(const std::string &from, std::string &to)
+int32_t CodeConvert::convert(const std::string &from, std::string &to)
 {
     if (from.empty()) {
-        return false;
+        return Status::INVALID_PARAM;
     }
 
     char *pBegin = const_cast<char *>(from.c_str());
     size_t fromSize = from.size();
     std::string output;
-    output.reserve(_computeOutSize(m_codeFrom, m_codeTo, from.size()));
+    output.reserve(_ComputeOutSize(m_codeFrom, m_codeTo, from.size()));
     char outputBuf[CACHE_SIZE] = {0};
 
-    bool result = true;
+    int32_t result = Status::OK;
     do {
         char *pOutputBuf = outputBuf;
         size_t leftOutputLen = CACHE_SIZE;
@@ -64,11 +64,11 @@ bool CodeConvert::convert(const std::string &from, std::string &to)
             switch (errno) {
             case EINVAL:
                 printf("An incomplete multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EINVAL;
                 break;
             case EILSEQ:
                 printf("An invalid multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EILSEQ;
                 break;
             case E2BIG:
                 break;
@@ -77,7 +77,7 @@ bool CodeConvert::convert(const std::string &from, std::string &to)
             }
         }
 
-        if (!result) {
+        if (result < 0) {
             output.clear();
             break;
         }
@@ -113,9 +113,9 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
     size_t inputSize = u8String.size();
 
     std::string gbkResult;
-    gbkResult.reserve(_computeOutSize(UTF8, GBK, u8String.size()));
+    gbkResult.reserve(_ComputeOutSize(UTF8, GBK, u8String.size()));
 
-    bool result = true;
+    int32_t result = Status::OK;
     do {
         char outputBuf[CACHE_SIZE] = {0};
         char *pOutputBuf = outputBuf;
@@ -128,11 +128,11 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
             switch (errno) {
             case EINVAL:
                 printf("An incomplete multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EINVAL;
                 break;
             case EILSEQ:
                 printf("An invalid multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EILSEQ;
                 break;
             case E2BIG:
                 break;
@@ -141,7 +141,7 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
             }
         }
 
-        if (!result) {
+        if (result < 0) {
             gbkResult.clear();
             break;
         }
@@ -152,7 +152,7 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
 
     gbkString.append(gbkResult);
     iconv_close(iconvHandle);
-    return Status::OK;
+    return result;
 }
 
 int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8String)
@@ -171,9 +171,9 @@ int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8Stri
     size_t inputSize = gbkString.size();
 
     std::string u8Result;
-    u8Result.reserve(_computeOutSize(GBK, UTF8, gbkString.size()));
+    u8Result.reserve(_ComputeOutSize(GBK, UTF8, gbkString.size()));
 
-    bool result = true;
+    int32_t result = Status::OK;
     do {
         char outputBuf[CACHE_SIZE] = {0};
         char *pOutputBuf = outputBuf;
@@ -186,11 +186,11 @@ int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8Stri
             switch (errno) {
             case EINVAL:
                 printf("An incomplete multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EINVAL;
                 break;
             case EILSEQ:
                 printf("An invalid multibyte sequence has been encountered in the input.\n");
-                result = false;
+                result = -EILSEQ;
                 break;
             case E2BIG:
                 break;
@@ -199,7 +199,7 @@ int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8Stri
             }
         }
 
-        if (!result) {
+        if (result < 0) {
             u8Result.clear();
             break;
         }
@@ -210,10 +210,124 @@ int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8Stri
 
     u8String.append(u8Result);
     iconv_close(iconvHandle);
-    return Status::OK;
+    return result;
 }
 
-const char *CodeConvert::_flag2str(CodeFlag flag)
+int32_t CodeConvert::UTF8ToUTF16LE(const std::string &u8String, std::string &u16String)
+{
+    if (u8String.empty()) {
+        return Status::INVALID_PARAM;
+    }
+
+    char *pU8Begin = (char *)u8String.c_str();
+    size_t inputSize = u8String.size();
+
+    std::string outU16String;
+    outU16String.reserve(_ComputeOutSize(CodeFlag::UTF8, CodeFlag::UTF16LE, u8String.length()));
+
+    iconv_t iconvHandle = iconv_open("UTF-16LE", "UTF-8");
+    if (INVALID_ICONV_HANDLE == iconvHandle) {
+        perror("iconv_open");
+        return -errno;
+    }
+
+    int32_t result = Status::OK;
+    while (inputSize > 0) {
+        char outputBuf[CACHE_SIZE] = {0};
+
+        char *pOutputBuf = outputBuf;
+        size_t outputLen = CACHE_SIZE;
+        size_t leftOutputLen = CACHE_SIZE;
+
+        size_t nRet = iconv(iconvHandle, &pU8Begin, &inputSize, &pOutputBuf, &leftOutputLen);
+        if (INVALID_ICONV_RETURN == nRet) {
+            switch (errno) {
+            case EINVAL:
+                printf("An incomplete multibyte sequence has been encountered in the input.\n");
+                result = -EINVAL;
+                break;
+            case EILSEQ:
+                printf("An invalid multibyte sequence has been encountered in the input.\n");
+                result = -EILSEQ;
+                break;
+            case E2BIG:
+                break;
+            default:
+                throw std::runtime_error("unknown error");
+            }
+        }
+
+        if (result < 0) {
+            outU16String.clear();
+            break;
+        }
+
+        outU16String.append(outputBuf, (outputLen - leftOutputLen));
+    }
+
+    u16String.append(outU16String);
+    iconv_close(iconvHandle);
+    return result;
+}
+
+int32_t CodeConvert::UTF16LEToUTF8(const std::string &u16String, std::string &u8String)
+{
+    if (u16String.empty()) {
+        return Status::INVALID_PARAM;
+    }
+
+    char *pU8Begin = (char *)u16String.c_str();
+    size_t inputSize = u16String.size();
+
+    std::string outU8String;
+    outU8String.reserve(_ComputeOutSize(CodeFlag::UTF16LE, CodeFlag::UTF8, u16String.size()));
+
+    iconv_t iconvHandle = iconv_open("UTF-8", "UTF-16LE");
+    if (INVALID_ICONV_HANDLE == iconvHandle) {
+        perror("iconv_open");
+        return -errno;
+    }
+
+    int32_t result = Status::OK;
+    while (inputSize > 0) {
+        char outputBuf[CACHE_SIZE] = {0};
+
+        char *pOutputBuf = outputBuf;
+        size_t outputLen = CACHE_SIZE;
+        size_t leftOutputLen = CACHE_SIZE;
+
+        size_t nRet = iconv(iconvHandle, &pU8Begin, &inputSize, &pOutputBuf, &leftOutputLen);
+        if (INVALID_ICONV_RETURN == nRet) {
+            switch (errno) {
+            case EINVAL:
+                printf("An incomplete multibyte sequence has been encountered in the input.\n");
+                result = -EINVAL;
+                break;
+            case EILSEQ:
+                printf("An invalid multibyte sequence has been encountered in the input.\n");
+                result = -EILSEQ;
+                break;
+            case E2BIG:
+                break;
+            default:
+                throw std::runtime_error("unknown error");
+            }
+        }
+
+        if (result < 0) {
+            outU8String.clear();
+            break;
+        }
+
+        outU8String.append(outputBuf, (outputLen - leftOutputLen));
+    }
+
+    u8String.append(outU8String);
+    iconv_close(iconvHandle);
+    return result;
+}
+
+const char *CodeConvert::_Flag2str(CodeFlag flag)
 {
     const char *str = CODE_UNSUPPORT;
     switch (flag) {
@@ -239,7 +353,7 @@ const char *CodeConvert::_flag2str(CodeFlag flag)
     return str;
 }
 
-uint32_t CodeConvert::_computeOutSize(CodeFlag from, CodeFlag to, uint32_t inputSize)
+uint32_t CodeConvert::_ComputeOutSize(CodeFlag from, CodeFlag to, uint32_t inputSize)
 {
     if (from == to) {
         return inputSize;
@@ -251,9 +365,9 @@ uint32_t CodeConvert::_computeOutSize(CodeFlag from, CodeFlag to, uint32_t input
     case CodeFlag::GB2312:
     case CodeFlag::UTF16LE:
     case CodeFlag::UTF16BE:
-        return _computeOutSizeToGBK_UTF16(from, to, inputSize);
+        return _ComputeOutSizeToGBK_UTF16(from, to, inputSize);
     case CodeFlag::UTF8:
-        return _computeOutSizeToUTF8(from, to, inputSize);
+        return _ComputeOutSizeToUTF8(from, to, inputSize);
     default:
         break;
     }
@@ -261,7 +375,7 @@ uint32_t CodeConvert::_computeOutSize(CodeFlag from, CodeFlag to, uint32_t input
     return 0;
 }
 
-uint32_t CodeConvert::_computeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uint32_t inputSize)
+uint32_t CodeConvert::_ComputeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uint32_t inputSize)
 {
     switch (from) {
     case CodeFlag::UTF8:
@@ -273,7 +387,7 @@ uint32_t CodeConvert::_computeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uin
     return 0;
 }
 
-uint32_t CodeConvert::_computeOutSizeToUTF8(CodeFlag from, CodeFlag to, uint32_t inputSize)
+uint32_t CodeConvert::_ComputeOutSizeToUTF8(CodeFlag from, CodeFlag to, uint32_t inputSize)
 {
     return 2 * inputSize; // 按照最大size计算, 4 * inputSize / 2
 }
