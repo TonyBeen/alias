@@ -144,7 +144,7 @@ Rsa::BufferPtr Rsa::publicEncode(const uint8_t *from, uint32_t fromLen)
     Rsa::BufferPtr ptr(new ByteBuffer);
     ptr->resize(getEncodeSpaceByDataLen(fromLen, false) + 1);
     int32_t encodeSize = publicEncode(ptr->data(), from, fromLen);
-    ptr->setDataSize(encodeSize);
+    ptr->resize(encodeSize);
     return encodeSize > 0 ? ptr : nullptr;
 }
 
@@ -157,7 +157,7 @@ int32_t Rsa::publicEncode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
     out.resize(getEncodeSpaceByDataLen(srcLen, false) + 1);
     uint8_t *outputBuf = out.data();
     int32_t encodeSize = publicEncode(outputBuf, src, srcLen);
-    out.setDataSize(encodeSize);
+    out.resize(encodeSize);
     return encodeSize;
 }
 
@@ -208,7 +208,7 @@ Rsa::BufferPtr Rsa::publicDecode(const uint8_t *from, uint32_t fromLen)
     if (ptr != nullptr) {
         ptr->resize(getDecodeSpaceByDataLen(fromLen, false) + 1);
         int32_t decodeSize = publicDecode(ptr->data(), from, fromLen);
-        ptr->setDataSize(decodeSize);
+        ptr->resize(decodeSize);
     }
 
     return ptr;
@@ -223,7 +223,7 @@ int32_t Rsa::publicDecode(ByteBuffer &out, const uint8_t *src, uint32_t srcLen)
     out.resize(getDecodeSpaceByDataLen(srcLen, false) + 1);
     uint8_t *outputBuf = out.data();
     int32_t decodeSize = publicDecode(outputBuf, src, srcLen);
-    out.setDataSize(decodeSize);
+    out.resize(decodeSize);
 
     return decodeSize;
 }

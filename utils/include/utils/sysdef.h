@@ -46,18 +46,21 @@
 
 #if defined(OS_WIN32) || defined(OS_WIN64)
     #undef  OS_UNIX
-    #define OS_WIN
+    #define OS_WINDOWS
 
 #define DIR_SEPARATOR       '\\'
 #define DIR_SEPARATOR_STR   "\\"
+
 #else
-    #define OS_UNIX
+
+#define OS_UNIX
 #define DIR_SEPARATOR       '/'
 #define DIR_SEPARATOR_STR   "/"
+
 #endif
 
-#ifndef __FILENAME__
-#define __FILENAME__  (strrchr(DIR_SEPARATOR_STR __FILE__, DIR_SEPARATOR) + 1)
+#ifndef __FILE_NAME__
+#define __FILE_NAME__  (strrchr(DIR_SEPARATOR_STR __FILE__, DIR_SEPARATOR) + 1)
 #endif
 
 // #if defined(__x86_64__) || defined(_M_X64) || defined(__powerpc64__) || defined(__alpha__) ||
@@ -173,7 +176,7 @@
 #error "unsupported compiler!"
 #endif
 
-#ifdef OS_WIN
+#ifdef OS_WINDOWS
     #ifndef WIN32_LEAN_AND_MEAN
     #define WIN32_LEAN_AND_MEAN
     #endif

@@ -23,7 +23,6 @@ FileInfo::FileInfo(const String8 &path)
 
 FileInfo::~FileInfo()
 {
-    
 }
 
 FileInfo::FileInfo(const FileInfo &other) :
@@ -45,7 +44,7 @@ FileInfo &FileInfo::operator=(const FileInfo &other)
 bool FileInfo::execGetInfo(const String8 &path)
 {
     mFilePath = path;
-    int ret = stat(mFilePath.c_str(), &mFileInfo);
+    int32_t ret = stat(mFilePath.c_str(), &mFileInfo);
     if (ret) {
         char buf[128];
         sprintf(buf, "get file(%s) state error", mFilePath.c_str());
@@ -56,7 +55,7 @@ bool FileInfo::execGetInfo(const String8 &path)
     return true;
 }
 
-ssize_t FileInfo::getFileSize() const
+int64_t FileInfo::getFileSize() const
 {
     return mFileInfo.st_size;
 }
@@ -76,13 +75,24 @@ int32_t FileInfo::getFileUid() const
     return static_cast<int32_t>(mFileInfo.st_uid);
 }
 
-bool FileInfo::GetFileStat(const String8 &path, struct stat *fileStat)
+bool FileInfo::FileExist(const String8 &path)
 {
-    struct stat localStat;
-    int ret = stat(path.c_str(), &localStat);
-    if (!ret && fileStat) {
-        memcpy(fileStat, &localStat, sizeof(localStat));
+    if (path.empty()) {
+        return false;
     }
+
+    file_stat_t fileStat;
+    int32_t ret = ::stat(path.c_str(), &fileStat);
+    return ret == 0;
+}
+
+bool FileInfo::GetFileStat(const String8 &path, file_stat_t *fileStat)
+{
+    if (path.empty() || fileStat == nullptr) {
+        return false;
+    }
+
+    int32_t ret = ::stat(path.c_str(), fileStat);
     return ret == 0;
 }
 
@@ -149,23 +159,6 @@ File::File(const FileInfo &fileInfo, const String8 &mode) :
 File::~File()
 {
     close();
-}
-
-File::File(const File &other):
-    mFileDesc(nullptr)
-{
-    mFileInfo = other.mFileInfo;
-    open(mFileInfo.mFilePath, other.mOpenMode);
-}
-
-File &File::operator=(const File &other)
-{
-    if (this != &other) {
-        mFileInfo = other.mFileInfo;
-        open(mFileInfo.mFilePath, other.mOpenMode);
-    }
-
-    return *this;
 }
 
 bool File::open(const String8 &path, const String8 &mode)
@@ -236,7 +229,7 @@ bool File::eof() const
     return true;
 }
 
-ssize_t File::tell() const
+int64_t File::tell() const
 {
     if (opened()) {
         return ftell(mFileDesc);
@@ -245,7 +238,7 @@ ssize_t File::tell() const
     return -1;
 }
 
-bool File::seek(size_t offset, int whence)
+bool File::seek(size_t offset, int32_t whence)
 {
     return ::fseek(mFileDesc, offset, whence) == 0;
 }
@@ -255,7 +248,7 @@ bool File::flush()
     return 0 == ::fflush(mFileDesc);
 }
 
-ssize_t File::size() const
+int64_t File::size() const
 {
     if (opened()) {
         return mFileInfo.getFileSize();
@@ -265,7 +258,7 @@ ssize_t File::size() const
 }
 
 
-ssize_t File::read(void *buf, size_t size)
+int64_t File::read(void *buf, size_t size)
 {
     if (opened()) {
         return fread(buf, 1, size, mFileDesc);
@@ -274,7 +267,7 @@ ssize_t File::read(void *buf, size_t size)
     return -1;
 }
 
-ssize_t File::readall(ByteBuffer &buf)
+int64_t File::readall(ByteBuffer &buf)
 {
     if (opened() == false) {
         return -1;
@@ -291,7 +284,7 @@ ssize_t File::readall(ByteBuffer &buf)
 
     uint8_t cache[1024] = {0};
     size_t ret = 0;
-    ssize_t count = 0;
+    int64_t count = 0;
     while (!feof(mFileDesc)) {
         ret = fread(cache, 1, sizeof(cache), mFileDesc);
         if (ret) {
@@ -303,7 +296,7 @@ ssize_t File::readall(ByteBuffer &buf)
     return count;
 }
 
-ssize_t File::readline(ByteBuffer &buf)
+int64_t File::readline(ByteBuffer &buf)
 {
     if (opened() == false) {
         return -1;
@@ -331,7 +324,7 @@ ssize_t File::readline(ByteBuffer &buf)
     return count;
 }
 
-ssize_t File::readline(String8 &buf)
+int64_t File::readline(String8 &buf)
 {
     if (opened() == false) {
         return -1;
@@ -359,7 +352,7 @@ ssize_t File::readline(String8 &buf)
     return count;
 }
 
-ssize_t File::write(const void *buf, size_t size)
+int64_t File::write(const void *buf, size_t size)
 {
     if (opened()) {
         return fwrite(buf, 1, size, mFileDesc);
@@ -368,7 +361,7 @@ ssize_t File::write(const void *buf, size_t size)
     return -1;
 }
 
-ssize_t File::write(const ByteBuffer &buf)
+int64_t File::write(const ByteBuffer &buf)
 {
     if (opened()) {
         return fwrite(buf.const_data(), 1, buf.size(), mFileDesc);
@@ -377,7 +370,7 @@ ssize_t File::write(const ByteBuffer &buf)
     return -1;
 }
 
-ssize_t File::write(const String8 &buf)
+int64_t File::write(const String8 &buf)
 {
     if (opened()) {
         return fwrite(buf.c_str(), 1, buf.length(), mFileDesc);
