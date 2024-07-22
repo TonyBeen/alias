@@ -59,17 +59,44 @@ public:
     /**
      * @brief 将utf8转为gbk
      * 
-     * @param utf8Str
-     * @param gbkStr 
+     * @param u8String [in] utf8编码字符串
+     * @param gbkString [out] 输出gbk编码
      * @return int32_t
      */
     static int32_t UTF8ToGBK(const std::string &u8String, std::string &gbkString);
 
+    /**
+     * @brief 将utf8转为gbk
+     * 
+     * @param gbkString
+     * @param u8String 
+     * @return int32_t
+     */
+    static int32_t GBKToUTF8(const std::string &gbkString, std::string &u8String);
+
+    /**
+     * @brief 将utf8转为gbk
+     * 
+     * @param u8String
+     * @param u16String 
+     * @return int32_t
+     */
+    static int32_t UTF8ToUTF16LE(const std::string &u8String, std::string &u16String);
+
+    /**
+     * @brief 将utf8转为gbk
+     * 
+     * @param u16String
+     * @param u8String 
+     * @return int32_t
+     */
+    static int32_t UTF16LEToUTF8(const std::string &u16String, std::string &u8String);
+
 protected:
     const char *_flag2str(CodeFlag flag);
-    uint32_t _computeOutSize(CodeFlag from, CodeFlag to, uint32_t inputSize);
-    uint32_t _computeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uint32_t inputSize);
-    uint32_t _computeOutSizeToUTF8(CodeFlag from, CodeFlag to, uint32_t inputSize);
+    static uint32_t _computeOutSize(CodeFlag from, CodeFlag to, uint32_t inputSize);
+    static uint32_t _computeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uint32_t inputSize);
+    static uint32_t _computeOutSizeToUTF8(CodeFlag from, CodeFlag to, uint32_t inputSize);
 
 private:
     typedef void * iconv_t;

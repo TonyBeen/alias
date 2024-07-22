@@ -12,6 +12,7 @@
 #include <iconv.h>
 
 #include "utils/exception.h"
+#include "utils/errors.h"
 
 #define CODE_UNSUPPORT "UNSUPPORT"
 
@@ -81,6 +82,7 @@ bool CodeConvert::convert(const std::string &from, std::string &to)
             break;
         }
 
+        // printf("nRet: %zu left: %zu leftOutputLen: %zu\n", nRet, fromSize, leftOutputLen);
         output.append(outputBuf, CACHE_SIZE - leftOutputLen);
     } while (fromSize > 0);
 
@@ -98,20 +100,20 @@ void CodeConvert::convertEnd()
 int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkString)
 {
     if (u8String.empty()) {
-        return 0;
+        return Status::INVALID_PARAM;
     }
 
     iconv_t iconvHandle = iconv_open("GBK", "UTF-8");
     if (iconvHandle == INVALID_ICONV_HANDLE) {
         perror("iconv_open");
-        return -1;
+        return -errno;
     }
 
     char *pU8Begin = (char *)u8String.c_str();
     size_t inputSize = u8String.size();
 
     std::string gbkResult;
-    gbkResult.reserve(u8String.size());
+    gbkResult.reserve(_computeOutSize(UTF8, GBK, u8String.size()));
 
     bool result = true;
     do {
@@ -133,15 +135,13 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
                 result = false;
                 break;
             case E2BIG:
-                printf("buffer is small\n");
                 break;
             default:
-                break;
+                throw std::runtime_error("unknown error");
             }
         }
 
-        if (!result)
-        {
+        if (!result) {
             gbkResult.clear();
             break;
         }
@@ -152,7 +152,65 @@ int32_t CodeConvert::UTF8ToGBK(const std::string &u8String, std::string &gbkStri
 
     gbkString.append(gbkResult);
     iconv_close(iconvHandle);
-    return 0;
+    return Status::OK;
+}
+
+int32_t CodeConvert::GBKToUTF8(const std::string &gbkString, std::string &u8String)
+{
+    if (gbkString.empty()) {
+        return Status::INVALID_PARAM;
+    }
+
+    iconv_t iconvHandle = iconv_open("UTF-8", "GBK");
+    if (iconvHandle == INVALID_ICONV_HANDLE) {
+        perror("iconv_open");
+        return -errno;
+    }
+
+    char *pBegin = (char *)gbkString.c_str();
+    size_t inputSize = gbkString.size();
+
+    std::string u8Result;
+    u8Result.reserve(_computeOutSize(GBK, UTF8, gbkString.size()));
+
+    bool result = true;
+    do {
+        char outputBuf[CACHE_SIZE] = {0};
+        char *pOutputBuf = outputBuf;
+
+        size_t outputLen = CACHE_SIZE;
+        size_t leftOutputLen = CACHE_SIZE;
+
+        size_t nRet = iconv(iconvHandle, &pBegin, &inputSize, &pOutputBuf, &leftOutputLen);
+        if (INVALID_ICONV_RETURN == nRet) {
+            switch (errno) {
+            case EINVAL:
+                printf("An incomplete multibyte sequence has been encountered in the input.\n");
+                result = false;
+                break;
+            case EILSEQ:
+                printf("An invalid multibyte sequence has been encountered in the input.\n");
+                result = false;
+                break;
+            case E2BIG:
+                break;
+            default:
+                throw std::runtime_error("unknown error");
+            }
+        }
+
+        if (!result) {
+            u8Result.clear();
+            break;
+        }
+
+        // printf("nRet: %zu left: %zu leftOutputLen: %zu\n", nRet, inputSize, leftOutputLen);
+        u8Result.append(outputBuf, (outputLen - leftOutputLen));
+    } while (inputSize > 0);
+
+    u8String.append(u8Result);
+    iconv_close(iconvHandle);
+    return Status::OK;
 }
 
 const char *CodeConvert::_flag2str(CodeFlag flag)
@@ -169,10 +227,10 @@ const char *CodeConvert::_flag2str(CodeFlag flag)
         str = "UTF-8";
         break;
     case CodeFlag::UTF16LE:
-        str = "UTF16-LE";
+        str = "UTF-16LE";
         break;
     case CodeFlag::UTF16BE:
-        str = "UTF16-BE";
+        str = "UTF-16BE";
         break;
     default:
         break;
@@ -217,7 +275,7 @@ uint32_t CodeConvert::_computeOutSizeToGBK_UTF16(CodeFlag from, CodeFlag to, uin
 
 uint32_t CodeConvert::_computeOutSizeToUTF8(CodeFlag from, CodeFlag to, uint32_t inputSize)
 {
-    return 4 * inputSize; // 按照最大size计算
+    return 2 * inputSize; // 按照最大size计算, 4 * inputSize / 2
 }
 
 } // namespace eular
