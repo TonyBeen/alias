@@ -6,7 +6,6 @@
  ************************************************************************/
 
 #include "YamlConfig.h"
-#include "rwmutex.h"
 #include <assert.h>
 #include <exception>
 #include <regex>
@@ -23,7 +22,6 @@ YamlReader::YamlReader() :
     isValid(false),
     mMutex(new RWMutex)
 {
-
 }
 
 YamlReader::YamlReader(const std::string &path) :
@@ -38,9 +36,9 @@ YamlReader::~YamlReader()
     isValid = false;
     toMutex(mMutex)->wlock();
     mYamlConfigMap.clear();
-    toMutex(mMutex)->wunlock();
+    toMutex(mMutex)->unlock();
 
-    delete mMutex;
+    delete (RWMutex *)mMutex;
 }
 
 void YamlReader::loadYaml(const std::string &path)
@@ -60,7 +58,7 @@ void YamlReader::loadYaml(const std::string &path)
     }
 
 _unlock:
-    toMutex(mMutex)->wunlock();
+    toMutex(mMutex)->unlock();
 }
 
 YamlValue YamlReader::at(const std::string &key)
@@ -71,7 +69,7 @@ YamlValue YamlReader::at(const std::string &key)
     if (it != mYamlConfigMap.end()) {
         node = it->second;
     }
-    toMutex(mMutex)->runlock();
+    toMutex(mMutex)->unlock();
 
     return node;
 }
@@ -80,7 +78,7 @@ YamlValue YamlReader::root()
 {
     toMutex(mMutex)->rlock();
     YamlValue node = mYamlConfigMap[""];
-    toMutex(mMutex)->runlock();
+    toMutex(mMutex)->unlock();
 
     return node;
 }
@@ -99,7 +97,7 @@ void YamlReader::foreach(std::string &output, bool outValue)
     }
 
     output = strstream.str();
-    toMutex(mMutex)->runlock();
+    toMutex(mMutex)->unlock();
 }
 
 void YamlReader::loadYaml(const std::string &prefix, const YamlValue &node)
@@ -141,8 +139,7 @@ void YamlReader::rlock()
 
 void YamlReader::runlock()
 {
-    toMutex(mMutex)->runlock();
+    toMutex(mMutex)->unlock();
 }
-
 
 } // namespace eular

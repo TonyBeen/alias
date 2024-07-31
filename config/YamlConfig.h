@@ -8,9 +8,12 @@
 #ifndef __CONFIG_YAML_CONFIG_H__
 #define __CONFIG_YAML_CONFIG_H__
 
-#include <yaml-cpp/yaml.h>
-#include <map>
 #include <string>
+#include <map>
+
+#include <yaml-cpp/yaml.h>
+
+#include <utils/singleton.h>
 
 /**
  * @brief Yaml文件解析类
@@ -92,6 +95,7 @@ private:
     bool isValid;
 };
 
+using YamlReaderInstance = Singleton<YamlReader>;
 } // namespace eular
 
 #endif // __CONFIG_YAML_CONFIG_H__
