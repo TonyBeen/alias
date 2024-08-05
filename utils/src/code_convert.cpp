@@ -21,6 +21,21 @@
 
 #define CACHE_SIZE  1024
 
+/**
+ * UTF-8是一种多字节编码的字符集，表示一个Unicode字符时，它可以是1个至多个字节
+ * 除了一字节外，左边1的个数表示当前编码字节数，utf8最多可以扩展到6个字节,中文字符占三个字节
+ * 1字节：0xxxxxxx
+ * 2字节：110xxxxx 10xxxxxx
+ * 3字节：1110xxxx 10xxxxxx 10xxxxxx
+ * 4字节：11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+ */
+
+#define IS_UTF8_ANSII(code) (0x00 < (uint8_t)(code) && (uint8_t)(code) < 0x80)  // ansii字符集
+#define IS_UTF8_2BYTE(code) (0xc0 < (uint8_t)(code) && (uint8_t)(code) < 0xe0)  // 此范围内为2字节UTF-8字符
+#define IS_UTF8_3BYTE(code) (0xe0 < (uint8_t)(code) && (uint8_t)(code) < 0xf0)  // 此范围内为3字节UTF-8字符
+#define IS_UTF8_4BYTE(code) (0xf0 < (uint8_t)(code) && (uint8_t)(code) < 0xf8)  // 此范围内为4字节UTF-8字符
+#define IS_UTF8_EXTRA(code) (0x80 < (uint8_t)(code) && (uint8_t)(code) < 0xc0)  // 其余的字符规则
+
 namespace eular {
 CodeConvert::CodeConvert() :
     m_codeConvHandle(INVALID_ICONV_HANDLE),
@@ -325,6 +340,110 @@ int32_t CodeConvert::UTF16LEToUTF8(const std::string &u16String, std::string &u8
     u8String.append(outU8String);
     iconv_close(iconvHandle);
     return result;
+}
+
+int getChar(const char *str, size_t size)
+{
+    const char *start = str;
+    const char *end = start + size;
+    if (IS_UTF8_ANSII(*start)) {
+        return 0;
+    }
+
+    if (IS_UTF8_2BYTE(*start)) {
+        if ((start + 1) >= end) { // 当是utf8时，检测到2字节编码头时后面会跟着一个字符
+            return -1;
+        }
+        if (IS_UTF8_EXTRA(*(start + 1))) {
+            return 2;
+        }
+    }
+    if (IS_UTF8_3BYTE(*start)) {
+        if (start + 2 >= end) { // 检测到3字节编码头时，后面会有两个字节的位置
+            return -1;
+        }
+        if (IS_UTF8_EXTRA(*(start + 1)) && IS_UTF8_EXTRA(*(start + 2))) {
+            return 3;
+        }
+    }
+    if (IS_UTF8_4BYTE(*start)) {
+        if (start + 3 >= end) {
+            return -1;
+        }
+        if (IS_UTF8_EXTRA(*(start + 1)) && IS_UTF8_EXTRA(*(start + 2)) && IS_UTF8_EXTRA(*(start + 3))) {
+            return 4;
+        }
+    }
+
+    return -1;
+}
+
+bool CodeConvert::IsUTF8Encode(const std::string & u8String, uint32_t *characterSize)
+{
+    if (u8String.empty()) {
+        if (nullptr != characterSize) {
+            *characterSize = 0;
+        }
+        return true;
+    }
+
+    uint32_t charSize = 0;
+    const char *start = u8String.c_str();
+    const char *end = start + u8String.length();
+    bool isUtf8 = false;
+
+    while (start < end) {
+        if (IS_UTF8_ANSII(*start)) {
+            ++start;
+            ++charSize;
+            continue;
+        }
+
+        if (IS_UTF8_2BYTE(*start)) {
+            if ((start + 1) >= end) { // 当是utf8时，检测到2字节编码头时后面会跟着一个字符
+                return false;
+            }
+            if (IS_UTF8_EXTRA(*(start + 1))) {
+                isUtf8 = true;
+            }
+            start += 2;
+            ++charSize;
+            continue;
+        }
+
+        if (IS_UTF8_3BYTE(*start)) {
+            if (start + 2 >= end) { // 检测到3字节编码头时，后面会有两个字节的位置
+                return false;
+            }
+            if (IS_UTF8_EXTRA(*(start + 1)) && IS_UTF8_EXTRA(*(start + 2))) {
+                isUtf8 = true;
+            }
+            start += 3;
+            ++charSize;
+            continue;
+        }
+
+        if (IS_UTF8_4BYTE(*start)) {
+            if (start + 3 >= end) {
+                return false;
+            }
+            if (IS_UTF8_EXTRA(*(start + 1)) && IS_UTF8_EXTRA(*(start + 2)) && IS_UTF8_EXTRA(*(start + 3))) {
+                isUtf8 = true;
+            }
+            start += 4;
+            ++charSize;
+            continue;
+        }
+
+        isUtf8 = false;
+        break;
+    }
+
+    if (isUtf8 && characterSize != nullptr) {
+        *characterSize = charSize;
+    }
+
+    return isUtf8;
 }
 
 const char *CodeConvert::_Flag2str(CodeFlag flag)

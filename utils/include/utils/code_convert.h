@@ -92,6 +92,16 @@ public:
      */
     static int32_t UTF16LEToUTF8(const std::string &u16String, std::string &u8String);
 
+    /**
+     * @brief 判断字符串是否UTF8编码
+     *
+     * @param u8String UTF8字符串
+     * @param characterSize u8字符个数
+     * @return true 是
+     * @return false 否
+     */
+    static bool IsUTF8Encode(const std::string &u8String, uint32_t *characterSize = nullptr);
+
 protected:
     static const char *_Flag2str(CodeFlag flag);
     static uint32_t _ComputeOutSize(CodeFlag from, CodeFlag to, uint32_t inputSize);
