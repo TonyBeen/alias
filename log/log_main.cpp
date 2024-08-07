@@ -42,16 +42,13 @@ void LogManager::WriteLog(LogEvent *event)
     // pthread_mutex_lock(&mListMutex);
     for (LogWriteIt it = mLogWriteList.begin(); it != mLogWriteList.end(); ++it) {
         if (*it != nullptr) {
-            if ((*it)->type() != LogWrite::STDOUT) {
+            if ((*it)->type() != static_cast<uint16_t>(OutputType::STDOUT)) {
                 event->enableColor = false;
             }
 
-            if ((*it)->type() == LogWrite::CONSOLEOUT)
-            {
+            if ((*it)->type() == static_cast<uint16_t>(OutputType::CONSOLEOUT)) {
                 (*it)->WriteToFile(*event);
-            }
-            else
-            {
+            } else {
                 std::string log = LogFormat::Format(event);
                 (*it)->WriteToFile(log);
             }
@@ -81,15 +78,15 @@ void LogManager::addLogWriteToList(int type)
         ++it;
     }
 
-    switch (type) {
-        case LogWrite::STDOUT:
+    switch (static_cast<OutputType>(type)) {
+        case OutputType::STDOUT:
             logWrite = new StdoutLogWrite();
             break;
-        case LogWrite::FILEOUT:
+        case OutputType::FILEOUT:
             logWrite = new FileLogWrite();
             logWrite->setBasePath(mBasePath);
             break;
-        case LogWrite::CONSOLEOUT:
+        case OutputType::CONSOLEOUT:
             logWrite = new ConsoleLogWrite();
             break;
         default:

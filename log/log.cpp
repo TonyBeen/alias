@@ -1,4 +1,5 @@
 #include "log.h"
+#include "log_main.h"
 #include "callstack.h"
 #include <sys/syscall.h>
 #include <sys/time.h>
