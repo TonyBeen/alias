@@ -11,6 +11,8 @@
 #include <chrono>
 #include <list>
 
+namespace eular {
+
 enum class ElapsedTimeType {
     SECOND,         // 秒
     MILLISECOND,    // 毫秒
@@ -18,7 +20,6 @@ enum class ElapsedTimeType {
     NANOSECOND,     // 纳秒
 };
 
-namespace eular {
 class ElapsedTime
 {
 public:
