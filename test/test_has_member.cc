@@ -18,7 +18,9 @@ class Foo
 public:
     void Hash() {}
     int32_t Hash(int32_t, double) { return 0; }
-    void Hash(int32_t) {}
+    void Hash(int32_t) const {}
+    // void Hash(std::string) const {}
+    void Hash(const std::string &) const {}
 };
 
 HAS_MEMBER(FooClass, Hash);
@@ -28,7 +30,10 @@ TEST_CASE("test", "[has_member]") {
     CHECK(FooClass::has_member_Hash<Foo, int32_t, int32_t, double>::value);
     CHECK(FooClass::has_member_Hash<Foo, void, int32_t>::value);
 
+    CHECK(FooClass::has_member_Hash<Foo, void, std::string>::value);
+    CHECK(FooClass::has_member_Hash<Foo, void, std::string&>::value);
+    CHECK(FooClass::has_member_Hash<Foo, void, const std::string&>::value);
+
     CHECK(FooClass::has_member_Hash<Foo, void, double>::value == true); // 隐式类型转换, double -> int32_t
     CHECK(FooClass::has_member_Hash<Foo, double, int32_t>::value == false);
-    CHECK(FooClass::has_member_Hash<Foo, void, std::string>::value == false);
 }
