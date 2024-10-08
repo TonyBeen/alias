@@ -8,7 +8,7 @@
 #ifndef __EULAR_BUFFER_STREAM_UTILS_H__
 #define __EULAR_BUFFER_STREAM_UTILS_H__
 
-#include "buffer_stream.h"
+#include <utils/buffer_stream.h>
 
 namespace eular {
 
