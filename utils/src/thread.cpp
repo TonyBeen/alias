@@ -14,6 +14,8 @@
 #include "utils/errors.h"
 #include "utils/exception.h"
 
+#define CAST2UINT(x) static_cast<uint32_t>(x)
+
 namespace eular {
 ThreadBase::ThreadBase(const String8 &threadName) :
     userData(nullptr),
@@ -21,14 +23,14 @@ ThreadBase::ThreadBase(const String8 &threadName) :
     mKernalTid(0),
     mTid(0),
     mSem(0),
-    mThreadStatus(THREAD_EXIT),
+    mThreadStatus(CAST2UINT(ThreadStatus::THREAD_EXIT)),
     mExitStatus(false)
 {
 }
 
 ThreadBase::~ThreadBase()
 {
-    if (threadStatus() != THREAD_EXIT) { // 等待线程退出，否则在析构完成之后会导致线程段错误问题
+    if (threadStatus() != CAST2UINT(ThreadStatus::THREAD_EXIT)) { // 等待线程退出，否则在析构完成之后会导致线程段错误问题
         stop();
     }
 }
@@ -40,24 +42,24 @@ uint32_t ThreadBase::threadStatus() const
 
 void ThreadBase::stop()
 {
-    if (mThreadStatus == THREAD_EXIT) {
+    if (mThreadStatus == CAST2UINT(ThreadStatus::THREAD_EXIT)) {
         return;
     }
 
     mExitStatus = true;
-    if (mThreadStatus == THREAD_WAITING) { // 如果线程处于等待用户状态，则需要通知线程
+    if (mThreadStatus == CAST2UINT(ThreadStatus::THREAD_WAITING)) { // 如果线程处于等待用户状态，则需要通知线程
         mSem.post();
     }
 }
 
 bool ThreadBase::forceExit()
 {
-    if (mThreadStatus == THREAD_EXIT) {
+    if (mThreadStatus == CAST2UINT(ThreadStatus::THREAD_EXIT)) {
         return true;
     }
 
     bool flag = pthread_cancel(mTid) == 0;
-    mExitStatus = THREAD_EXIT;
+    mExitStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
     return flag;
 }
 
@@ -68,7 +70,7 @@ bool ThreadBase::ShouldExit()
 
 int ThreadBase::run(size_t stackSize)
 {
-    if (mThreadStatus != THREAD_EXIT) {
+    if (mThreadStatus != CAST2UINT(ThreadStatus::THREAD_EXIT)) {
         return INVALID_OPERATION;
     }
 
@@ -77,34 +79,34 @@ int ThreadBase::run(size_t stackSize)
     if (stackSize) {
         pthread_attr_setstacksize(&attr, stackSize);
     }
-    // pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 
     int ret = pthread_create(&mTid, &attr, threadloop, this);
-    if (ret == 0) {
-        mThreadStatus = THREAD_RUNNING;
-    } else {
+    pthread_attr_destroy(&attr);
+    if (ret != 0) {
         throw Exception(String8::format("pthread_create error %s\n", strerror(ret)));
     }
 
-    pthread_detach(mTid);
-    pthread_attr_destroy(&attr);
+    mThreadStatus = CAST2UINT(ThreadStatus::THREAD_RUNNING);
     return ret;
 }
 
-void ThreadBase::start()
+int32_t ThreadBase::start(size_t stackSize)
 {
+    int32_t code = 0;
     switch (mThreadStatus) {
-    case THREAD_WAITING:
+    case CAST2UINT(ThreadStatus::THREAD_WAITING):
         mSem.post();
         break;
-    case THREAD_RUNNING:
+    case CAST2UINT(ThreadStatus::THREAD_RUNNING):
         break;
-    case THREAD_EXIT:
-        run();
+    case CAST2UINT(ThreadStatus::THREAD_EXIT):
+        code = run(stackSize);
         break;
     default:
         break;
     }
+
+    return code;
 }
 
 void *ThreadBase::threadloop(void *user)
@@ -115,17 +117,17 @@ void *ThreadBase::threadloop(void *user)
 
     while (threadBase->ShouldExit() == false) {
         int result = threadBase->threadWorkFunction(threadBase->userData);
-        if (result == THREAD_EXIT || threadBase->ShouldExit()) {
+        if (result == CAST2UINT(ThreadStatus::THREAD_EXIT) || threadBase->ShouldExit()) {
             break;
         }
 
-        threadBase->mThreadStatus = THREAD_WAITING;
+        threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_WAITING);
 
         threadBase->mSem.wait();     // 阻塞线程，由用户决定下一次执行任务的时间
-        threadBase->mThreadStatus = THREAD_RUNNING;
+        threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_RUNNING);
     }
 
-    threadBase->mExitStatus = THREAD_EXIT;
+    threadBase->mExitStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
     return 0;
 }
 

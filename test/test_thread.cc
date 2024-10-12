@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     // thread.join();
 
     ThreadExt ext;
-    ext.run();
+    ext.start();
     sleep(1);
     printf("ext tid %d\n", ext.getKernalTid());
     printf("thread name: %s\n", ext.threadName().c_str());

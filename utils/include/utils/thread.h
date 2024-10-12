@@ -17,31 +17,35 @@
 #include <functional>
 #include <memory>
 
-#define THREAD_EXIT     0
-#define THREAD_RUNNING  1
-#define THREAD_WAITING  2
-
 namespace eular {
 class ThreadBase
 {
     DISALLOW_COPY_AND_ASSIGN(ThreadBase);
 public:
+    enum ThreadStatus {
+        THREAD_EXIT,
+        THREAD_BLOCK,
+        THREAD_RUNNING,
+        THREAD_WAITING,
+    };
+
     ThreadBase(const String8 &threadName);
     virtual ~ThreadBase();
 
     uint32_t        threadStatus() const;
-    int             run(size_t stackSize = 0);
-    void            start();
+
+    int32_t         start(size_t stackSize = 0);
     void            stop();
     bool            forceExit();
     const String8&  threadName() const { return mThreadName; }
-    const uint32_t& getKernalTid() const { return mKernalTid; }
-    const pthread_t &getTid() const { return mTid; }
+    uint32_t        getKernalTid() const { return mKernalTid; }
+    pthread_t       getTid() const { return mTid; }
 
 protected:
-            void    *userData;       // 用户传参数据块
+    int             run(size_t stackSize);
+    void*           userData;       // 用户传参数据块
     virtual int     threadWorkFunction(void *arg) = 0;
-            String8 mThreadName;
+    String8         mThreadName;
 
 private:
     static  void*   threadloop(void *user);
@@ -59,7 +63,7 @@ protected:
 class Thread
 {
 public:
-    typedef std::shared_ptr<Thread> SP;
+    using SP = std::shared_ptr<Thread>;
 
     Thread(std::function<void()> callback, const String8 &threadName = "");
     ~Thread();

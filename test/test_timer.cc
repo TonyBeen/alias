@@ -1,3 +1,6 @@
+#include <unistd.h>
+#include <signal.h>
+
 #include <utils/timer.h>
 #include <log/log.h>
 #include <log/callstack.h>
@@ -34,7 +37,7 @@ void test_thread_loop()
     gTimerManager.addTimer(2000, std::bind(func2, nullptr), 1000);
     uint64_t uniqueId = gTimerManager.addTimer(6000, std::bind(func, nullptr), 2000);
 
-    sleep(5);
+    sleep(2);
     gTimerManager.stopTimer();
 }
 

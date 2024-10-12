@@ -130,13 +130,13 @@ int TimerManager::startTimer(bool useCallerThread)
     if (useCallerThread) {
         return threadWorkFunction(this);
     }
-    return run();
+    return start();
 }
 
 void TimerManager::stopTimer()
 {
-    mSignal.post();
     mShouldExit = true;
+    mSignal.post();
 }
 
 /**
@@ -256,7 +256,7 @@ int TimerManager::threadWorkFunction(void *arg)
         }
     }
 
-    return THREAD_EXIT;
+    return ThreadBase::ThreadStatus::THREAD_EXIT;
 }
 
 } // namespace eular
