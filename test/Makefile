@@ -4,7 +4,7 @@ BIN_TARGET_DIR := $(CURRENT_PATH)/bin
 XML_TARGET_DIR := $(CURRENT_PATH)/xml
 
 CXX_FLAGS := -std=c++11 -m64 -O0 -g
-INC_PATH := -I$(CURRENT_PATH)
+INC_PATH := -I$(CURRENT_PATH) -I$(CURRENT_PATH)/../utils/include/
 
 SRC_LIST := $(wildcard *.cc)
 EXE_LIST := $(patsubst %.cc, $(BIN_TARGET_DIR)/%.out, $(SRC_LIST))
