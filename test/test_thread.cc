@@ -65,9 +65,9 @@ int main(int argc, char **argv)
     printf("thread name: %s\n", ext.threadName().c_str());
     usleep(500 * 1000);
 
-    // printf("restart thread...\n");
-    // ext.start();
-    // usleep(500 * 1000);
+    printf("restart thread...\n");
+    ext.start();
+    usleep(500 * 1000);
 
     ext.stop();
     delete data;
