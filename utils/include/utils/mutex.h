@@ -55,24 +55,20 @@ class SpinLock final : public NonCopyAble
 {
 public:
     void lock() noexcept {
-        if (eular_likely(try_lock())) {
-            return;
-        }
-
-        LockSlow();
+        pthread_spin_lock(&mSpinLock); // No need to check the return value
     }
 
-    bool try_lock() noexcept {
-        return !m_locked.exchange(true, std::memory_order_acquire);
+    bool trylock() noexcept {
+        return 0 == pthread_spin_trylock(&mSpinLock);
     }
 
-    void unlock() noexcept { m_locked.store(false, std::memory_order_release); }
+    void unlock() noexcept { pthread_spin_unlock(&mSpinLock); }
 
 private:
     void LockSlow() noexcept;
 
 private:
-    std::atomic<bool> m_locked{false};
+    pthread_spinlock_t mSpinLock;
 };
 
 typedef enum class __MutexSharedAttr {

@@ -20,6 +20,14 @@ class ThreadExt : public ThreadBase {
 public:
     ThreadExt() : ThreadBase("test-drived-thread") {}
 
+    void join()
+    {
+        int ret = pthread_join(mTid, nullptr);
+        if (ret) {
+            perror("pthread_join error");
+        }
+    }
+
 protected:
     virtual int threadWorkFunction(void *arg) override
     {
@@ -51,18 +59,19 @@ int main(int argc, char **argv)
     data->num = 100;
     data->str = "Hello world!";
 
-    // eular::Thread thread(std::bind(function, data), "test-thread");
-    // thread.join();
-
     ThreadExt ext;
     ext.start();
-    sleep(1);
     printf("ext tid %d\n", ext.getKernalTid());
     printf("thread name: %s\n", ext.threadName().c_str());
+    usleep(500 * 1000);
+
+    // printf("restart thread...\n");
+    // ext.start();
+    // usleep(500 * 1000);
+
     ext.stop();
     delete data;
+    ext.join();
     printf("\033[32mWhen you see this sentence, the program runs successfully\033[0m\n");
-    sleep(1);
-    // 由于线程是detach状态，由系统回收线程资源，故此处需要sleep一段时间来保证系统回收到了，不然会被检测到内存泄漏
     return 0;
 }

@@ -223,8 +223,10 @@ int TimerManager::threadWorkFunction(void *arg)
                 mRWMutex.rlock();
             }
             it = mTimers.begin();
+            if (it == mTimers.end()) { // 当不存在定时器且调用stopTimer后需要校验
+                continue;
+            }
         }
-        assert(it != mTimers.end());
 
         int nextTime = (*it)->mTime - Timer::getCurrentTime();
         if (nextTime > 0) {

@@ -8,14 +8,15 @@
 #ifndef __THREAD_H__
 #define __THREAD_H__
 
-#include "utils.h"
-#include "mutex.h"
-#include "condition.h"
-#include "string8.h"
 #include <stdint.h>
 #include <atomic>
 #include <functional>
 #include <memory>
+
+#include <utils/string8.h>
+#include <utils/mutex.h>
+#include <utils/condition.h>
+#include <utils/utils.h>
 
 namespace eular {
 class ThreadBase
@@ -55,6 +56,7 @@ protected:
     uint32_t            mKernalTid;
     pthread_t           mTid;
     Sem                 mSem;
+    Sem                 mSemWait; // 用于等待线程创建完毕
 
     std::atomic<uint32_t>   mThreadStatus;
     std::atomic<bool>       mExitStatus;

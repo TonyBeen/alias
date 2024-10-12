@@ -23,6 +23,7 @@ ThreadBase::ThreadBase(const String8 &threadName) :
     mKernalTid(0),
     mTid(0),
     mSem(0),
+    mSemWait(0),
     mThreadStatus(CAST2UINT(ThreadStatus::THREAD_EXIT)),
     mExitStatus(false)
 {
@@ -58,9 +59,16 @@ bool ThreadBase::forceExit()
         return true;
     }
 
-    bool flag = pthread_cancel(mTid) == 0;
-    mExitStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
-    return flag;
+    mExitStatus = true;
+    pthread_cancel(mTid);
+    int ret = pthread_join(mTid, nullptr);
+    if (ret) {
+        String8 msg = String8::format("pthread_join error. [%d,%s]", errno, strerror(errno));
+        throw eular::Exception(msg);
+    }
+
+    mThreadStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
+    return ret == 0;
 }
 
 bool ThreadBase::ShouldExit()
@@ -85,8 +93,8 @@ int ThreadBase::run(size_t stackSize)
     if (ret != 0) {
         throw Exception(String8::format("pthread_create error %s\n", strerror(ret)));
     }
+    mSemWait.timedwait(1000); // 等待线程启动完毕
 
-    mThreadStatus = CAST2UINT(ThreadStatus::THREAD_RUNNING);
     return ret;
 }
 
@@ -113,9 +121,11 @@ void *ThreadBase::threadloop(void *user)
 {
     ThreadBase *threadBase = (ThreadBase *)user;
     threadBase->mKernalTid = gettid();
+    threadBase->mSemWait.post();
     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, nullptr);    // 设置任何时间点都可以取消线程
 
     while (threadBase->ShouldExit() == false) {
+        threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_RUNNING);
         int result = threadBase->threadWorkFunction(threadBase->userData);
         if (result == CAST2UINT(ThreadStatus::THREAD_EXIT) || threadBase->ShouldExit()) {
             break;
@@ -124,10 +134,9 @@ void *ThreadBase::threadloop(void *user)
         threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_WAITING);
 
         threadBase->mSem.wait();     // 阻塞线程，由用户决定下一次执行任务的时间
-        threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_RUNNING);
     }
 
-    threadBase->mExitStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
+    threadBase->mThreadStatus = CAST2UINT(ThreadStatus::THREAD_EXIT);
     return 0;
 }
 
