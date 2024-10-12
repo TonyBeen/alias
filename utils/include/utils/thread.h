@@ -48,7 +48,6 @@ private:
             bool    ShouldExit();
 
 protected:
-    uint32_t            mPid;
     uint32_t            mKernalTid;
     pthread_t           mTid;
     Sem                 mSem;
@@ -65,7 +64,7 @@ public:
     Thread(std::function<void()> callback, const String8 &threadName = "");
     ~Thread();
 
-    static void         SetName(eular::String8 name);
+    static void         SetName(const eular::String8 &name);
     static String8      GetName();
     static Thread *     GetThis();
     eular::String8      getName() const { return mThreadName; }

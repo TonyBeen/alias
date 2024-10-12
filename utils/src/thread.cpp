@@ -18,7 +18,6 @@ namespace eular {
 ThreadBase::ThreadBase(const String8 &threadName) :
     userData(nullptr),
     mThreadName(threadName),
-    mPid(0),
     mKernalTid(0),
     mTid(0),
     mSem(0),
@@ -149,7 +148,7 @@ Thread::Thread(std::function<void()> callback, const String8 &threadName) :
         String8 msg = String8::format("pthread_create error. [%d,%s]", errno, strerror(errno));
         throw eular::Exception(msg);
     }
-    mSemaphore.wait();
+    mSemaphore.timedwait(1000);
 }
 
 Thread::~Thread()
@@ -159,13 +158,14 @@ Thread::~Thread()
     }
 }
 
-void Thread::SetName(eular::String8 name)
+void Thread::SetName(const eular::String8 &name)
 {
     if (name.empty()) {
         return;
     }
     if (gLocalThread) {
         gLocalThread->mThreadName = name;
+        pthread_setname_np(gLocalThread->mTid, name.c_str());
     }
     gThreadName = name;
 }
