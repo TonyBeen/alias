@@ -1,11 +1,3 @@
-/**
- * @file ConsistentHash.h。
- *
- * 一致性Hash (無thread-safe)
- *
- * @author boris.chen@localhost
- */
-
 #ifndef __HTTPD_CONSISTENT_HASH_H__
 #define __HTTPD_CONSISTENT_HASH_H__
 
@@ -20,7 +12,7 @@
 #ifdef USE_FNV_HASH
 using HashFunction = uint32_t (*)(const std::string &);
 // https://en.wikipedia.org/wiki/Fowler–Noll–Vo_hash_function
-uint32_t FNVHash(const std::string &key)
+static inline uint32_t FNVHash(const std::string &key)
 {
     const uint32_t FNV_prime = 0x01000193; // FNV prime number
     uint32_t hash = 0x811c9dc5;            // FNV offset basis
