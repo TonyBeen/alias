@@ -56,11 +56,14 @@
 #define OS_UNIX
 #define DIR_SEPARATOR       '/'
 #define DIR_SEPARATOR_STR   "/"
-
 #endif
 
 #ifndef __FILE_NAME__
+#ifdef __BASE_FILE__
+#define __FILE_NAME__   __BASE_FILE__
+#else
 #define __FILE_NAME__  (strrchr(DIR_SEPARATOR_STR __FILE__, DIR_SEPARATOR) + 1)
+#endif
 #endif
 
 // #if defined(__x86_64__) || defined(_M_X64) || defined(__powerpc64__) || defined(__alpha__) ||
