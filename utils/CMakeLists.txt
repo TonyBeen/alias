@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 
 option(UTILS_STATIC_LIB "Build static library" ON)
 option(UTILS_DYNAMIC_LIB "Build dynamic library" ON)
-option(ENABLE_DEBUG "Enable debug symbol" OFF)
+option(ENABLE_DEBUG "Enable debug symbol" ON)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo") # Release MinSizeRel RelWithDebInfo Debug
@@ -28,11 +28,7 @@ file(GLOB HEADER_LIST       "include/utils/*.h")
 file(GLOB HPP_HEADER_LIST   "include/utils/*.hpp")
 list(APPEND HEADER_LIST ${HPP_HEADER_LIST})
 
-message(STATUS "HEADER_LIST: ${HEADER_LIST}")
-
 file(GLOB SRC_LIST          "src/*.cpp")
-
-message(STATUS "SRC_LIST: ${SRC_LIST}")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "Linux")
