@@ -61,8 +61,8 @@ TEST(AesTest, test_aes_wrong_key) {
     userKey[0] = '0';
     aes.setKey(userKey, sizeof(userKey));
 
+    // 使用错误的key不会报错, 但是得到的结果与加密的数据不一致
     int decodeSize = aes.decode(tmp, out, encodeSize);
-    printf("%d\n", decodeSize);
-    // EXPECT_TRUE(decodeSize == (int32_t)strlen(something));
-    // EXPECT_TRUE(memcmp(something, tmp, decodeSize) == 0);
+    EXPECT_FALSE(decodeSize == (int32_t)strlen(something));
+    EXPECT_FALSE(memcmp(something, tmp, decodeSize) == 0);
 }
