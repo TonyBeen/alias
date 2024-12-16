@@ -46,7 +46,7 @@ public:
     size_t      capacity() const { return mCapacity; }
     size_t      size() const { return mDataSize; }
     void        clear();
-    void        resize(size_t sz) { mDataSize = sz > mCapacity ? mCapacity : sz; }
+    void        resize(size_t sz);
 
     std::string dump()  const;
     static size_t hash(const ByteBuffer &buf);
