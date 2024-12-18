@@ -37,6 +37,11 @@ public:
         return m_value;
     }
 
+    T *pointer()
+    {
+        return &m_value;
+    }
+
 private:
     T m_value;
 };
