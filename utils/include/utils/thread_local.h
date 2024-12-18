@@ -65,15 +65,19 @@ public:
     }
 
     template <typename T>
-    void set(const std::string &key, const T &value)
+    std::shared_ptr<TLSSlot<T>> set(const std::string &key, const T &value)
     {
+        std::shared_ptr<TLSSlot<T>> result;
         auto it = m_tlsMap.find(key);
         if (it == m_tlsMap.end()) {
             it = m_tlsMap.insert(std::make_pair(key, std::make_shared<TLSSlot<T>>(value))).first;
+            result = std::dynamic_pointer_cast<TLSSlot<T>>(it->second);
         } else {
-            std::shared_ptr<TLSSlot<T>> pointer = std::dynamic_pointer_cast<TLSSlot<T>>(it->second);
-            pointer->value() = value;
+            result = std::dynamic_pointer_cast<TLSSlot<T>>(it->second);
+            result->value() = value;
         }
+
+        return result;
     }
 
     static ThreadLocalStorage *Current();
