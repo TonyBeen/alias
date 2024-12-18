@@ -1,0 +1,84 @@
+/*************************************************************************
+    > File Name: thread_local.h
+    > Author: hsz
+    > Brief:
+    > Created Time: 2024年12月18日 星期三 10时58分43秒
+ ************************************************************************/
+
+#ifndef __EULAR_UTILS_THREAD_H__
+#define __EULAR_UTILS_THREAD_H__
+
+#include <map>
+#include <memory>
+#include <string>
+
+#include <utils/utils.h>
+
+namespace eular {
+
+class TLSAbstractSlot
+{
+public:
+    TLSAbstractSlot() {}
+    virtual ~TLSAbstractSlot() {}
+};
+
+template <typename T>
+class TLSSlot: public TLSAbstractSlot
+{
+    DISALLOW_COPY_AND_ASSIGN(TLSSlot);
+public:
+    TLSSlot(): m_value() { }
+    TLSSlot(const T &value): m_value(value) { }
+    ~TLSSlot() { }
+
+    T &value()
+    {
+        return m_value;
+    }
+
+private:
+    T m_value;
+};
+
+class ThreadLocalStorage
+{
+public:
+    ThreadLocalStorage();
+    ~ThreadLocalStorage();
+
+    template <typename T>
+    std::shared_ptr<TLSSlot<T>> get(const std::string &key)
+    {
+        auto it = m_tlsMap.find(key);
+        if (it == m_tlsMap.end()) {
+            // it = m_tlsMap.insert(std::make_pair(key, std::make_shared<TLSSlot<T>>())).first;
+            return nullptr;
+        }
+
+        return std::dynamic_pointer_cast<TLSSlot<T>>(it->second);
+    }
+
+    template <typename T>
+    void set(const std::string &key, const T &value)
+    {
+        auto it = m_tlsMap.find(key);
+        if (it == m_tlsMap.end()) {
+            it = m_tlsMap.insert(std::make_pair(key, std::make_shared<TLSSlot<T>>(value))).first;
+        } else {
+            std::shared_ptr<TLSSlot<T>> pointer = std::dynamic_pointer_cast<TLSSlot<T>>(it->second);
+            pointer->value() = value;
+        }
+    }
+
+    static ThreadLocalStorage *Current();
+
+private:
+    using TLSMap = std::map<std::string, std::shared_ptr<TLSAbstractSlot>>;
+
+    TLSMap m_tlsMap;
+};
+
+} // namespace eular
+
+#endif // __EULAR_UTILS_THREAD_H__

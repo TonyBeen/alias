@@ -33,7 +33,7 @@ file(GLOB SRC_LIST          "src/*.cpp")
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     message(STATUS "Linux")
     add_definitions(-D_GNU_SOURCE -D__USE_FILE_OFFSET64 -D_LARGEFILE64_SOURCE)
-    add_compile_options(-W -Wall -Werror -Wextra -Wno-deprecated -Wno-unused-result -Wno-class-memaccess -Wno-unused-function -Wno-unused-parameter)
+    add_compile_options(-W -Wall -Werror -Wextra -Wno-deprecated -Wno-unused-result -Wno-unused-function -Wno-unused-parameter)
 endif()
 
 # link_directories(${CMAKE_CURRENT_SOURCE_DIR}/3rd)
