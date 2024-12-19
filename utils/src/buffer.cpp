@@ -239,6 +239,10 @@ void ByteBuffer::reserve(size_t newSize)
         return;
     }
 
+    if (mCapacity >= newSize) {
+        return;
+    }
+
     SharedBuffer *buf = SharedBuffer::bufferFromData(mBuffer)->editResize(newSize);
     if (buf) {
         mBuffer = static_cast<uint8_t *>(buf->data());
