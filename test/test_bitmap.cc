@@ -46,7 +46,7 @@ TEST_CASE("test_reserve", "[bitmap]") {
     eular::BitMap bitMapObj(16);
     REQUIRE(16 <= bitMapObj.capacity());
 
-    bitMapObj.reserve(32);
+    bitMapObj.resize(32);
     REQUIRE(32 <= bitMapObj.capacity());
 }
 
