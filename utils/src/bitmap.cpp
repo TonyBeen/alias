@@ -33,7 +33,7 @@ BitMap::BitMap(uint32_t bitSize) :
     mBitMap(nullptr),
     mCapacity(0)
 {
-    reserve(bitSize);
+    resize(bitSize);
 }
 
 BitMap::BitMap(const BitMap &other) :
@@ -161,7 +161,7 @@ uint32_t BitMap::capacity() const
     return mCapacity;
 }
 
-bool BitMap::reserve(uint32_t bitSize)
+bool BitMap::resize(uint32_t bitSize)
 {
     if (bitSize <= mCapacity) {
         return true;

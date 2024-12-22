@@ -71,7 +71,7 @@ public:
      * @param bitSize 要扩容的大小, 大于容量时才会进行扩容
      * @return 成功返回true, 失败返回false
      */
-    bool reserve(uint32_t bitSize);
+    bool resize(uint32_t bitSize);
 
 public:
     static bool init();
