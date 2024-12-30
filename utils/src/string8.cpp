@@ -30,6 +30,10 @@ static inline char* getEmptyString()
         return buf;
     }();
 
+    ::atexit([]() {
+        gEmptyStringBuf->release();
+    });
+
     gEmptyStringBuf->acquire();
     return static_cast<char*>(gEmptyStringBuf->data());
 }
