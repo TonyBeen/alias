@@ -37,7 +37,12 @@ public:
     void                trimLeft(char c = ' ');         // 去掉字符串左侧空格
     void                trimRight(char c = ' ');        // 去掉字符串右侧空格
     String8             reverse();                      // 翻转字符串
+    void                reserve(size_t size);
     void                resize(size_t size);
+    char&               front();
+    const char&         front() const;
+    char&               back();
+    const char&         back() const;
     std::string         toStdString() const;            // String8 -> std::string
 
     bool                empty() const;
@@ -84,6 +89,7 @@ public:
     bool                operator>=(const char* other) const;
     bool                operator>(const char* other) const;
     char&               operator[](size_t index);
+    const char&         operator[](size_t index) const;
 
     // return the index of the first byte of other in this at or after
     // start, or -1 if not found
@@ -118,6 +124,7 @@ public:
     // 未匹配到或参数错误返回负值，否则返回匹配到的字符串位置
     static int32_t      kmp_strstr(const char *val, const char *key);
     static size_t       hash(const String8 &obj);
+
 private:
     friend std::ostream&   operator<<(std::ostream &out, const String8& in);
     char*               getBuffer(size_t numChars = 0);

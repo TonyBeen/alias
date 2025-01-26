@@ -108,3 +108,24 @@ TEST_CASE("std_hash_", "[ByteBuffer]") {
 
     CHECK(2 == hashMap.size());
 }
+
+TEST_CASE("reserve_resize", "[ByteBuffer]") {
+    {
+        ByteBuffer buffer;
+        buffer.reserve(64);
+        CHECK(buffer.capacity() == 64);
+
+        memcpy(buffer.data(), "Hello", 6);
+
+        buffer.resize(5);
+        CHECK(std::string("Hello") == (char *)buffer.data());
+    }
+
+    {
+        ByteBuffer buffer;
+        buffer.resize(64);
+        CHECK(buffer.size() == 64);
+
+        memset(buffer.data(), 0, buffer.size());
+    }
+}

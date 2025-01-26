@@ -14,13 +14,15 @@ TEST_CASE("test_constructer", "[bitmap]") {
     eular::BitMap bitMapObj1;
     REQUIRE(0 == bitMapObj1.count());
 
-    eular::BitMap bitMapObj2(16);
-    REQUIRE(16 <= bitMapObj2.capacity());
+    uint32_t size = 17;
+    eular::BitMap bitMapObj2(size);
+    REQUIRE(size <= bitMapObj2.capacity());
+    REQUIRE(size == bitMapObj2.size());
     bitMapObj2.set(1, true);
     REQUIRE(true == bitMapObj2.at(1));
 
     eular::BitMap fromCopy(bitMapObj2);
-    REQUIRE(16 <= fromCopy.capacity());
+    REQUIRE(size <= fromCopy.capacity());
     REQUIRE(true == fromCopy.at(1));
 }
 
@@ -42,12 +44,20 @@ TEST_CASE("test_set_at", "[bitmap]") {
     }
 }
 
-TEST_CASE("test_reserve", "[bitmap]") {
-    eular::BitMap bitMapObj(16);
-    REQUIRE(16 <= bitMapObj.capacity());
+TEST_CASE("test_resize_size", "[bitmap]") {
+    uint32_t size = 17;
+    eular::BitMap bitMapObj(size);
+    REQUIRE(size == bitMapObj.size());
 
-    bitMapObj.reserve(32);
-    REQUIRE(32 <= bitMapObj.capacity());
+    for (uint32_t i = 0; i < bitMapObj.size(); ++i) {
+        bitMapObj.set(i, true);
+    }
+    REQUIRE(bitMapObj.count() == size);
+
+    size = 33;
+    bitMapObj.resize(size);
+    REQUIRE(size == bitMapObj.size());
+    REQUIRE(size <= bitMapObj.capacity());
 }
 
 TEST_CASE("test_clear", "[bitmap]") {

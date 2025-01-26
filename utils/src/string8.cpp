@@ -16,7 +16,7 @@
 #include "utils/errors.h"
 #include "utils/exception.h"
 
-#define DEFAULT_STRING_SIZE 128
+#define DEFAULT_STRING_SIZE 64
 #define MAXSIZE (1024 * 1024) // 1Mb
 
 namespace eular {
@@ -29,6 +29,10 @@ static inline char* getEmptyString()
         *str = 0;
         return buf;
     }();
+
+    ::atexit([]() {
+        gEmptyStringBuf->release();
+    });
 
     gEmptyStringBuf->acquire();
     return static_cast<char*>(gEmptyStringBuf->data());
@@ -77,7 +81,7 @@ void String8::detach()
 {
     SharedBuffer *psb = SharedBuffer::bufferFromData(mString);
     if (psb == nullptr) {
-        mString = getBuffer();
+        mString = getEmptyString();
         return;
     }
 
@@ -92,6 +96,7 @@ void String8::release()
     if (mString) {
         SharedBuffer::bufferFromData(mString)->release();
     }
+
     mString = nullptr;
     mCapacity = 0;
 }
@@ -293,10 +298,60 @@ String8 String8::reverse()
     return ret;
 }
 
+void String8::reserve(size_t size)
+{
+    detach();
+    if (mString == nullptr) {
+        mString = getBuffer(size);
+    }
+
+    if (mCapacity < size) {
+        release();
+        mString = getBuffer(size);
+    }
+}
+
 void String8::resize(size_t size)
 {
     String8 temp(mString, size);
     *this = std::move(temp);
+}
+
+char &String8::front()
+{
+    if (empty()) {
+        throw Exception("length == 0");
+    }
+    return mString[0];
+}
+
+const char &String8::front() const
+{
+    if (empty()) {
+        throw Exception("length == 0");
+    }
+
+    return mString[0];
+}
+
+char &String8::back()
+{
+    if (empty()) {
+        throw Exception("length == 0");
+    }
+
+    size_t size = length();
+    return mString[size - 1];
+}
+
+const char &String8::back() const
+{
+    if (empty()) {
+        throw Exception("length == 0");
+    }
+
+    size_t size = length();
+    return mString[size - 1];
 }
 
 std::string String8::toStdString() const
@@ -315,6 +370,7 @@ size_t String8::length() const
     if (mString) {
         len = strlen(mString);
     }
+
     return len;
 }
 
@@ -540,6 +596,17 @@ char& String8::operator[](size_t index)
         if (mString == nullptr) {
             throw Exception("no memory");
         }
+    }
+    if (index >= mCapacity) {
+        return mString[mCapacity];
+    }
+    return mString[index];
+}
+
+const char& String8::operator[](size_t index) const
+{
+    if (mString == nullptr) {
+        throw Exception("no memory");
     }
     if (index >= mCapacity) {
         return mString[mCapacity];

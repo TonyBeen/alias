@@ -9,6 +9,8 @@
 #include "utils/shared_buffer.h"
 #include "utils/exception.h"
 
+#include <assert.h>
+
 #define DEFAULT_BUFFER_SIZE (256)
 
 // 此函数会导致valgrind报错: in use at exit: 25 bytes in 1 blocks
@@ -237,6 +239,10 @@ void ByteBuffer::reserve(size_t newSize)
         return;
     }
 
+    if (mCapacity >= newSize) {
+        return;
+    }
+
     SharedBuffer *buf = SharedBuffer::bufferFromData(mBuffer)->editResize(newSize);
     if (buf) {
         mBuffer = static_cast<uint8_t *>(buf->data());
@@ -254,6 +260,14 @@ void ByteBuffer::clear()
     }
 #endif
     mDataSize = 0;
+}
+
+void ByteBuffer::resize(size_t sz)
+{
+    reserve(sz);
+    if (mBuffer) {
+        mDataSize = sz;
+    }
 }
 
 std::string ByteBuffer::dump() const
@@ -318,7 +332,9 @@ size_t ByteBuffer::allocBuffer(size_t size)
     if (mBuffer == nullptr) { 
         mBuffer = static_cast<uint8_t *>(SharedBuffer::alloc(size)->data());
         if (mBuffer) {
+#ifdef _DEBUG
             memset(mBuffer, 0, size);
+#endif
             return size;
         }
     }

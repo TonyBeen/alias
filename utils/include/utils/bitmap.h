@@ -59,6 +59,13 @@ public:
     uint32_t count() const;
 
     /**
+     * @brief 获取当前bit位数, 通过resize设置
+     * 
+     * @return uint32_t 
+     */
+    uint32_t size() const;
+
+    /**
      * @brief 获取BitMap容量
      * 
      * @return 返回实际容量
@@ -71,7 +78,7 @@ public:
      * @param bitSize 要扩容的大小, 大于容量时才会进行扩容
      * @return 成功返回true, 失败返回false
      */
-    bool reserve(uint32_t bitSize);
+    bool resize(uint32_t bitSize);
 
 public:
     static bool init();
@@ -83,6 +90,7 @@ private:
 
 private:
     uint8_t*    mBitMap;
+    uint32_t    mSize;
     uint32_t    mCapacity;
 
 private:

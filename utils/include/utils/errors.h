@@ -25,6 +25,8 @@ enum Status {
     NOT_ENOUGH_DATA     = -ENODATA,     /* No data available */
     WOULD_BLOCK         = -EWOULDBLOCK, /* Operation would block */
     TIMED_OUT           = -ETIMEDOUT,   /* Something timed out */
+    NOT_SUPPORT         = -EOPNOTSUPP,  /* Operation not supported on transport endpoint */
+    NO_MORE_ITEM        = -ENOBUFS,     /* No buffer space available */
 };
 
 #endif // __ERRORS_H__

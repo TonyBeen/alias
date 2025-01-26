@@ -8,8 +8,8 @@ CC := g++
 DEST_DIR := /usr/local
 
 SRC_LIST := $(wildcard ./src/*.cpp)
-HEADER_FILE_LIST := $(wildcard ./include/*.h)
-HEADER_FILE_LIST += $(wildcard ./include/*.hpp)
+HEADER_FILE_LIST := $(wildcard ./include/utils/*.h)
+HEADER_FILE_LIST += $(wildcard ./include/utils/*.hpp)
 OBJ_LIST := $(patsubst %.cpp, %.o, $(SRC_LIST))
 
 libutils.so : $(OBJ_LIST)
