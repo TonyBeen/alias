@@ -68,10 +68,6 @@
 #include <Window.h>
 typedef SOCKET socket_t;
 typedef SSIZE_T ssize_t;
-struct iovec {
-    void*   iov_base;
-    size_t  iov_len;
-};
 #else
 typedef int socket_t;
 #endif

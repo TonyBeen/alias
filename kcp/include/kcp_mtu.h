@@ -9,6 +9,8 @@ EXTERN_C_BEGIN
 
 int32_t kcp_get_mtu(bool ipv6);
 
+int32_t kcp_get_localhost_mtu(bool ipv6);
+
 int32_t kcp_mtu_probe(bool ipv6);
 
 EXTERN_C_END

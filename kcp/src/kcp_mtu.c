@@ -1,17 +1,18 @@
 #include "kcp_mtu.h"
 
-#define ETHERNET_MTU 1500
-#define IPV4_HEADER_SIZE 20
-#define IPV6_HEADER_SIZE 40
-#define UDP_HEADER_SIZE 8
-#define GRE_HEADER_SIZE 24
-#define PPPOE_HEADER_SIZE 8
-#define MPPE_HEADER_SIZE 2
+#define LOCALHOST_MTU       65536
+#define ETHERNET_MTU        1500
+#define IPV4_HEADER_SIZE    20
+#define IPV6_HEADER_SIZE    40
+#define UDP_HEADER_SIZE     8
+#define GRE_HEADER_SIZE     24
+#define PPPOE_HEADER_SIZE   8
+#define MPPE_HEADER_SIZE    2
 // packets have been observed in the wild that were fragmented
 // with a payload of 1416 for the first fragment
 // There are reports of routers that have MTU sizes as small as 1392
 #define FUDGE_HEADER_SIZE 36
-#define TEREDO_MTU 1280
+#define TEREDO_MTU 1280 // IPv6 minimum MTU
 
 #define UDP_IPV4_OVERHEAD (IPV4_HEADER_SIZE + UDP_HEADER_SIZE)
 #define UDP_IPV6_OVERHEAD (IPV6_HEADER_SIZE + UDP_HEADER_SIZE)
@@ -27,6 +28,15 @@ int32_t kcp_get_mtu(bool ipv6)
         return UDP_TEREDO_MTU;
     } else {
         return UDP_IPV4_MTU;
+    }
+}
+
+int32_t kcp_get_localhost_mtu(bool ipv6)
+{
+    if (ipv6) {
+        return LOCALHOST_MTU - IPV6_HEADER_SIZE - UDP_HEADER_SIZE;
+    } else {
+        return LOCALHOST_MTU - IPV4_HEADER_SIZE - UDP_HEADER_SIZE;
     }
 }
 

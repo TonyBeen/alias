@@ -29,10 +29,10 @@ static const uint32_t IKCP_RTO_MIN = 100;   // normal min rto
 static const uint32_t IKCP_RTO_DEF = 200;
 static const uint32_t IKCP_RTO_MAX = 60000;
 
-static const uint32_t IKCP_ASK_SEND = 1;        // need to send IKCP_CMD_WASK
-static const uint32_t IKCP_ASK_TELL = 2;        // need to send IKCP_CMD_WINS
+static const uint32_t IKCP_ASK_SEND = 1;            // need to send IKCP_CMD_WASK
+static const uint32_t IKCP_ASK_TELL = 2;            // need to send IKCP_CMD_WINS
 static const uint32_t IKCP_WND_SND = 32;
-static const uint32_t IKCP_WND_RCV = 128;       // must >= max fragment size
+static const uint32_t IKCP_WND_RCV = 128;           // must >= max fragment size
 static const uint32_t IKCP_MTU_DEF = 1400;
 static const uint32_t IKCP_ACK_FAST = 3;
 static const uint32_t IKCP_INTERVAL = 100;
@@ -40,8 +40,8 @@ static const uint32_t IKCP_OVERHEAD = 24;
 static const uint32_t IKCP_DEADLINK = 20;
 static const uint32_t IKCP_THRESH_INIT = 2;
 static const uint32_t IKCP_THRESH_MIN = 2;
-static const uint32_t IKCP_PROBE_INIT = 7000;        // 7 secs to probe window size
+static const uint32_t IKCP_PROBE_INIT = 7000;       // 7 secs to probe window size
 static const uint32_t IKCP_PROBE_LIMIT = 120000;    // up to 120 secs to probe window
-static const uint32_t IKCP_FASTACK_LIMIT = 5;        // max times to trigger fastack
+static const uint32_t IKCP_FASTACK_LIMIT = 5;       // max times to trigger fastack
 
 #endif // __KCP_CONFIG_H__

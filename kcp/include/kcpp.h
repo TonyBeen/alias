@@ -7,9 +7,10 @@
 #include <kcp_def.h>
 #include <kcp_config.h>
 
-struct KcpControlBlock;
-
 EXTERN_C_BEGIN
+
+struct KcpControlBlock;
+struct iovec;
 
 /**
  * @brief Create a new kcp control block.
@@ -45,7 +46,7 @@ void kcp_destroy(struct KcpControlBlock *kcp);
  *
  * @return int32_t 0 if success, otherwise -1.
  */
-int32_t kcp_configure(struct KcpControlBlock *kcp, kcp_config_t *config);
+int32_t kcp_configure(struct KcpControlBlock *kcp, config_key_t flags, kcp_config_t *config);
 
 /**
  * @brief send data to peer.
@@ -55,13 +56,15 @@ int32_t kcp_configure(struct KcpControlBlock *kcp, kcp_config_t *config);
  * 
  * @return int32_t Return the byte size written to the sending queue.
  */
-int32_t kcp_send(struct KcpControlBlock *kcp, const void *data, size_t size);
+int32_t kcp_write(struct KcpControlBlock *kcp, const void *data, size_t size);
 
-int32_t kcp_recv(struct KcpControlBlock *kcp, void *data, size_t size);
+int32_t kcp_writev(struct KcpControlBlock *kcp, const struct iovec *iov, int32_t iovcnt);
+
+int32_t kcp_recd(struct KcpControlBlock *kcp, void *data, size_t size);
+
+int32_t kcp_recdv(struct KcpControlBlock *kcp, struct iovec *iov, int32_t iovcnt);
 
 int32_t kcp_update(struct KcpControlBlock *kcp, uint32_t current);
-
-
 
 EXTERN_C_END
 

@@ -13,6 +13,11 @@
 
 #pragma comment(lib, "ws2_32.lib")
 
+struct iovec {
+    void*   iov_base;
+    size_t  iov_len;
+};
+
 #elif defined(OS_LINUX)
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
