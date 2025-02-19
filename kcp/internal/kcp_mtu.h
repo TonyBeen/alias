@@ -8,6 +8,7 @@
 
 #include "kcp_def.h"
 #include "kcp_net_def.h"
+#include "kcp_socket.h"
 
 #define LOCALHOST_MTU       65536
 #define ETHERNET_MTU        1500
@@ -18,13 +19,14 @@
 
 EXTERN_C_BEGIN
 
+int32_t kcp_get_min_mss(bool ipv6);
+
 int32_t kcp_get_mss(bool ipv6);
 
 int32_t kcp_get_localhost_mss(bool ipv6);
 
-
-typedef void (*on_mtu_probe_completed_t)(socket_t sock, const sockaddr_t *addr, uint32_t addr_len, uint32_t mtu, void *user);
-int32_t kcp_mtu_probe(, const sockaddr_t *addr, uint32_t addr_len);
+typedef void (*on_mtu_probe_completed_t)(kcp_connection_t *kcp_conn, const sockaddr_t *addr, uint32_t addr_len, uint32_t mtu, void *user);
+int32_t kcp_mtu_probe(kcp_connection_t *kcp_conn, const sockaddr_t *addr, uint32_t addr_len, uint32_t timeout);
 
 EXTERN_C_END
 
