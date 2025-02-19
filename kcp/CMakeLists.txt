@@ -20,11 +20,13 @@ if(ENABLE_DEBUG MATCHES "ON")
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+find_package(Libevent REQUIRED)
+
 # 设置库的源文件
 set(SOURCES
-    src/file1.c
-    src/file2.c
-    src/file3.c
+    src/kcp.c
+    src/ikcp.c
+    src/ikcp.h
 )
 
 # 生成静态库
@@ -39,7 +41,6 @@ target_include_directories(MySharedLibrary PUBLIC include)
 
 # 设置版本号
 set_target_properties(MySharedLibrary PROPERTIES VERSION 1.0 SOVERSION 1)
-
 
 # uninstall target
 if(NOT TARGET uninstall)

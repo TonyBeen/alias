@@ -8,6 +8,8 @@
 #ifndef __KCP_NET_DEF_H__
 #define __KCP_NET_DEF_H__
 
+#include <errno.h>
+
 #include <kcp_def.h>
 
 #if defined(OS_WINDOWS)
@@ -21,5 +23,13 @@ typedef union {
     struct sockaddr_in  sin;
     struct sockaddr_in6 sin6;
 } sockaddr_t;
+
+static inline int32_t socket_errno() {
+#ifdef OS_WINDOWS
+    return WSAGetLastError();
+#else
+    return errno;
+#endif
+}
 
 #endif // __KCP_NET_DEF_H__

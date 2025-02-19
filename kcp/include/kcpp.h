@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <kcp_def.h>
 #include <kcp_config.h>
@@ -16,6 +17,37 @@ struct event;
 struct event_base;
 struct iovec;
 
+/// kcp callback
+
+/**
+ * @brief kcp连接回调函数
+ *
+ * @param kcp_connection kcp连接, 连接失败为空
+ * @param user 用户数据
+ * @param code 连接结果
+ */
+typedef void (*on_kcp_connected_t)(struct KcpConnection *kcp_connection, void *user, int32_t code);
+
+/**
+ * @brief kcp断连回调函数
+ *
+ * @param kcp_connection kcp连接
+ * @param user 用户数据
+ * @param code 断连原因
+ */
+typedef void (*on_kcp_closed_t)(struct KcpConnection *kcp_connection, void *user, int32_t code);
+
+/**
+ * @brief kcp建连回调函数
+ *
+ * @param kcp kcp上下文
+ *
+ * @return bool 返回true表示接受连接, false表示拒绝连接
+ */
+typedef bool (*on_kcp_accept_t)(struct KcpContext *kcp_ctx);
+
+/// kcp function
+
 /**
  * @brief Create a new kcp control block.
  *
@@ -23,14 +55,14 @@ struct iovec;
  * @param user The user data.
  * @return struct KcpContext*
  */
-struct KcpContext *kcp_create(struct event_base *base, void *user);
+KCP_PORT struct KcpContext *kcp_create(struct event_base *base, void *user);
 
 /**
  * @brief destroy kcp control block.
  *
  * @param kcp The kcp control block.
  */
-void kcp_destroy(struct KcpContext *kcp);
+KCP_PORT void kcp_destroy(struct KcpContext *kcp_ctx);
 
 /**
  * @brief configure kcp control block.
@@ -40,7 +72,7 @@ void kcp_destroy(struct KcpContext *kcp);
  *
  * @return int32_t 0 if success, otherwise -1.
  */
-int32_t kcp_configure(struct KcpContext *kcp, config_key_t flags, kcp_config_t *config);
+KCP_PORT int32_t kcp_configure(struct KcpContext *kcp_ctx, config_key_t flags, kcp_config_t *config);
 
 /**
  * @brief 绑定本地地址和端口, 网卡
@@ -51,7 +83,7 @@ int32_t kcp_configure(struct KcpContext *kcp, config_key_t flags, kcp_config_t *
  * @param nic 网卡名字
  * @return int32_t 成功返回0, 否则返回负值
  */
-int32_t kcp_bind(struct KcpContext *kcp, const sockaddr_t *addr, const char *nic);
+KCP_PORT int32_t kcp_bind(struct KcpContext *kcp_ctx, const sockaddr_t *addr, const char *nic);
 
 /**
  * @brief 
@@ -61,28 +93,19 @@ int32_t kcp_bind(struct KcpContext *kcp, const sockaddr_t *addr, const char *nic
  * @param addrlen 
  * @return struct KcpConnection* 
  */
-struct KcpConnection *kcp_accept(struct KcpContext *kcp, sockaddr_t *addr);
+KCP_PORT struct KcpConnection *kcp_accept(struct KcpContext *kcp_ctx, sockaddr_t *addr);
 
-/**
- * @brief 
- * 
- * @param kcp 
- * @param host 
- * @param port 
- * @param timeout_ms 
- * @return struct KcpConnection* 
- */
-struct KcpConnection *kcp_connect(struct KcpContext *kcp, const char *host, uint16_t port, uint32_t timeout_ms);
+KCP_PORT int32_t kcp_connect(struct KcpContext *kcp_ctx, const char *host, uint16_t port, uint32_t timeout_ms, on_kcp_connected_t cb);
 
 /**
  * @brief Send FIN to peer.
  */
-void kcp_close(struct KcpConnection *kcp);
+KCP_PORT void kcp_close(struct KcpConnection *kcp_connection, uint32_t timeout_ms, on_kcp_closed_t cb);
 
 /**
  * @brief Send RST to peer.
  */
-void kcp_shutdown(struct KcpConnection *kcp);
+KCP_PORT void kcp_shutdown(struct KcpConnection *kcp_connection);
 
 /**
  * @brief send data to peer.
@@ -92,15 +115,24 @@ void kcp_shutdown(struct KcpConnection *kcp);
  * 
  * @return int32_t Return the byte size written to the sending queue.
  */
-int32_t kcp_write(struct KcpContext *kcp, const void *data, size_t size);
+KCP_PORT int32_t kcp_write(struct KcpContext *kcp_ctx, const void *data, size_t size);
 
-int32_t kcp_writev(struct KcpContext *kcp, const struct iovec *iov, int32_t iovcnt);
+KCP_PORT int32_t kcp_writev(struct KcpContext *kcp_ctx, const struct iovec *iov, int32_t iovcnt);
 
-int32_t kcp_recd(struct KcpContext *kcp, void *data, size_t size);
+KCP_PORT int32_t kcp_recd(struct KcpContext *kcp_ctx, void *data, size_t size);
 
-int32_t kcp_recdv(struct KcpContext *kcp, struct iovec *iov, int32_t iovcnt);
+KCP_PORT int32_t kcp_recdv(struct KcpContext *kcp_ctx, struct iovec *iov, int32_t iovcnt);
 
-int32_t kcp_update(struct KcpContext *kcp, uint32_t current);
+KCP_PORT int32_t kcp_update(struct KcpContext *kcp_ctx, uint32_t current);
+
+
+/**
+ * @brief 获取kcp上下文的用户数据
+ *
+ * @param kcp_ctx kcp上下文
+ * @return void* 用户数据
+ */
+KCP_PORT void *kcp_get_user_data(struct KcpContext *kcp_ctx);
 
 EXTERN_C_END
 

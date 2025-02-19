@@ -65,11 +65,31 @@
 #endif
 
 #if defined(OS_WINDOWS)
+
+#ifdef _MSC_VER
+#pragma comment(lib, "ws2_32.lib")
+#endif
+
 #include <Window.h>
 typedef SOCKET socket_t;
 typedef SSIZE_T ssize_t;
+
+#define LIB_EXPORT __declspec(dllexport)
+#define LIB_IMPORT __declspec(dllimport)
+
+#if defined(KCP_LIBRARY)
+#define KCP_PORT LIB_EXPORT
 #else
+#define KCP_PORT LIB_IMPORT
+#endif
+
+#else
+
+#define KCP_PORT
 typedef int socket_t;
+#define INVALID_SOCKET  (-1)
+#define SOCKET_ERROR    (-1)
+
 #endif
 
 #endif // __KCP_DEF_H__
