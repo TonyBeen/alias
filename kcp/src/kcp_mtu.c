@@ -1,10 +1,5 @@
 #include "kcp_mtu.h"
 
-#define LOCALHOST_MTU       65536
-#define ETHERNET_MTU        1500
-#define IPV4_HEADER_SIZE    20
-#define IPV6_HEADER_SIZE    40
-#define UDP_HEADER_SIZE     8
 #define GRE_HEADER_SIZE     24
 #define PPPOE_HEADER_SIZE   8
 #define MPPE_HEADER_SIZE    2
@@ -22,7 +17,7 @@
 #define UDP_IPV6_MTU (ETHERNET_MTU - IPV6_HEADER_SIZE - UDP_HEADER_SIZE - GRE_HEADER_SIZE - PPPOE_HEADER_SIZE - MPPE_HEADER_SIZE - FUDGE_HEADER_SIZE)
 #define UDP_TEREDO_MTU (TEREDO_MTU - IPV6_HEADER_SIZE - UDP_HEADER_SIZE)
 
-int32_t kcp_get_mtu(bool ipv6)
+int32_t kcp_get_mss(bool ipv6)
 {
     if (ipv6) {
         return UDP_TEREDO_MTU;
@@ -31,20 +26,11 @@ int32_t kcp_get_mtu(bool ipv6)
     }
 }
 
-int32_t kcp_get_localhost_mtu(bool ipv6)
+int32_t kcp_get_localhost_mss(bool ipv6)
 {
     if (ipv6) {
         return LOCALHOST_MTU - IPV6_HEADER_SIZE - UDP_HEADER_SIZE;
     } else {
         return LOCALHOST_MTU - IPV4_HEADER_SIZE - UDP_HEADER_SIZE;
-    }
-}
-
-int32_t kcp_mtu_probe(bool ipv6)
-{
-    if (ipv6) {
-        return (ETHERNET_MTU - IPV6_HEADER_SIZE - UDP_HEADER_SIZE);
-    } else {
-        return (ETHERNET_MTU - IPV4_HEADER_SIZE - UDP_HEADER_SIZE);
     }
 }
