@@ -3,7 +3,11 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kcp_def.h>
+
+#include <event2/event.h>
+
+#include "kcp_def.h"
+#include "kcp_net_def.h"
 
 #define LOCALHOST_MTU       65536
 #define ETHERNET_MTU        1500
@@ -17,6 +21,10 @@ EXTERN_C_BEGIN
 int32_t kcp_get_mss(bool ipv6);
 
 int32_t kcp_get_localhost_mss(bool ipv6);
+
+
+typedef void (*on_mtu_probe_completed_t)(socket_t sock, const sockaddr_t *addr, uint32_t addr_len, uint32_t mtu, void *user);
+int32_t kcp_mtu_probe(, const sockaddr_t *addr, uint32_t addr_len);
 
 EXTERN_C_END
 

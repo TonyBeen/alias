@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-# 项目信息
-project(kcpp C VERSION 1.0.0)
+include(cmake/config.cmake)
+
+project(kcpp C VERSION ${KCP_VERSION_STRING})
 
 set(CMAKE_C_STANDARD 11)
 
@@ -21,6 +22,12 @@ if(ENABLE_DEBUG MATCHES "ON")
 endif()
 
 find_package(Libevent REQUIRED)
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/kcp_version.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/kcp_version.h
+    NEWLINE_STYLE LF
+)
 
 # 设置库的源文件
 set(SOURCES

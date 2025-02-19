@@ -3,28 +3,7 @@
 #include <event2/event.h>
 
 #include "kcp_error.h"
-#include "socket_set.h"
-
-typedef struct KcpFunctionCallback {
-    on_kcp_accept_t     on_accepted;
-    on_kcp_connected_t  on_connected;
-    on_kcp_closed_t     on_closed;
-} kcp_function_callback_t;
-
-typedef struct KcpConnection {
-    socket_set_node_t   socket_node;
-    struct KcpContext*  kcp_ctx;
-} kcp_connection_t;
-
-struct KcpContext {
-    socket_t                    sock;
-    kcp_function_callback_t     callback;
-    kcp_config_t                config;
-
-    socket_set_t                socket_set;
-    struct event_base*          event_base;
-    void*                       user_data;
-};
+#include "kcp_socket.h"
 
 struct KcpContext *kcp_create(struct event_base *base, void *user)
 {
