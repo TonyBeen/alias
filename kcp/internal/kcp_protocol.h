@@ -4,8 +4,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include <kcp_def.h>
-#include <list.h>
+#include "list.h"
+
+#include "kcp_def.h"
+#include "socket_set.h"
+#include "kcp_config.h"
+#include "kcpp.h"
+
+#define KCP_HEADER_SIZE (24)
 
 /// @brief KCP协议命令类型
 enum KcpCommand {
@@ -16,10 +22,22 @@ enum KcpCommand {
     KCP_CMD_WINS,       // Window Size (tell)
     KCP_CMD_PING,       // PING
     KCP_CMD_PONG,       // PONG
+    KCP_CMD_MTU_PROBE,  // MTU probe
+    KCP_CMD_MTU_ACK,    // MTU probe
     KCP_CMD_FIN,        // FIN
     KCP_CMD_RST,        // RST
 };
 typedef int32_t kcp_command_t;
+
+enum KcpConnectionState {
+    KCP_STATE_DISCONNECTED = 1,
+    KCP_STATE_SYN_SENT,
+    KCP_STATE_SYN_RECEIVED,
+    KCP_STATE_CONNECTED,
+    KCP_STATE_FIN_SENT,
+    KCP_STATE_FIN_RECEIVED,
+};
+typedef int32_t kcp_connection_state_t;
 
 /// @brief KCP报文段
 typedef struct KcpSengment {
@@ -39,17 +57,17 @@ typedef struct KcpSengment {
     char     data[1];   // 数据
 } kcp_sengment_t;
 
-struct KcpAckList {
+typedef struct KcpAck {
     struct list_head node;
     uint32_t sn;    // 序号
     uint32_t ts;    // 时间戳
-};
+} kcp_ack_t;
 
 /// @brief KCP控制块
 typedef struct KcpSocket {
     // 基础配置
     uint32_t conv;          // 会话ID，用于标识一个会话
-    uint32_t mtu;           // 最大传输单元，默认1400字节
+    uint32_t mtu;           // 最大传输单元
     uint32_t mss;           // 最大报文段大小，默认mtu-24字节
     uint32_t state;         // 连接状态，0=正常，-1=断开
 
@@ -106,12 +124,8 @@ typedef struct KcpSocket {
     struct list_head    rcv_buf;    // 接收缓存
 
     // ACK相关
-    struct KcpAckList ack_item;   // ACK列表项
-    struct KcpAckList ack_unused; // 未使用的ACK列表项
-
-    // 用户相关
-    void *user;             // 用户数据指针
-    char *ack_buffer;       // 临时缓存
+    kcp_ack_t   ack_item;   // ACK列表项
+    kcp_ack_t   ack_unused; // 未使用的ACK列表项
 
     // 快速重传相关
     int fastresend;     // 触发快速重传的重复ACK个数
@@ -121,5 +135,31 @@ typedef struct KcpSocket {
     int nocwnd;          // 是否关闭拥塞控制，0=不关闭
     int stream;          // 是否为流模式，0=消息模式(默认)，1=流模式
 } kcp_socket_t;
+
+typedef struct KcpFunctionCallback {
+    on_kcp_accept_t     on_accepted;
+    on_kcp_connected_t  on_connected;
+    on_kcp_closed_t     on_closed;
+} kcp_function_callback_t;
+
+typedef struct KcpConnection {
+    socket_set_node_t   socket_node;
+    struct KcpContext*  kcp_ctx;
+} kcp_connection_t;
+
+struct KcpContext {
+    socket_t                    sock;
+    kcp_function_callback_t     callback;
+
+    socket_set_t                socket_set;
+    struct event_base*          event_base;
+    void*                       user_data;
+};
+
+EXTERN_C_BEGIN
+
+void kcp_socket_init(kcp_socket_t *kcp, uint32_t conv, void *user);
+
+EXTERN_C_END
 
 #endif // __KCP_PROTOCOL_H__

@@ -44,3 +44,8 @@ int32_t kcp_get_localhost_mss(bool ipv6)
         return LOCALHOST_MTU - IPV4_HEADER_SIZE - UDP_HEADER_SIZE;
     }
 }
+
+int32_t kcp_mtu_probe(kcp_connection_t *kcp_conn, const sockaddr_t *addr, uint32_t addr_len, uint32_t timeout, uint16_t retry)
+{
+    
+}

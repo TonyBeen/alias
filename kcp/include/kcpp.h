@@ -72,7 +72,7 @@ KCP_PORT void kcp_destroy(struct KcpContext *kcp_ctx);
  *
  * @return int32_t 0 if success, otherwise -1.
  */
-KCP_PORT int32_t kcp_configure(struct KcpContext *kcp_ctx, config_key_t flags, kcp_config_t *config);
+KCP_PORT int32_t kcp_configure(struct KcpConnection *kcp_connection, config_key_t flags, kcp_config_t *config);
 
 /**
  * @brief 绑定本地地址和端口, 网卡

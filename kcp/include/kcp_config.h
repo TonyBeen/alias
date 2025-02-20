@@ -47,9 +47,12 @@ static const uint32_t IKCP_PROBE_INIT = 7000;       // 7 secs to probe window si
 static const uint32_t IKCP_PROBE_LIMIT = 120000;    // up to 120 secs to probe window
 static const uint32_t IKCP_FASTACK_LIMIT = 5;       // max times to trigger fastack
 
-static const uint32_t   KCP_INTERVAL_MAX    = 100;
-static const uint32_t   KCP_INTERVAL_MIN    = 10;
-static const int32_t    KCP_RESEND_MAX      = 5;
-static const int32_t    KCP_RESEND_MIN      = 0;
+static const uint32_t   KCP_INTERVAL_MAX        = 500;  // 协议内部发送数据的最大间隔
+static const uint32_t   KCP_INTERVAL_MIN        = 10;   // 协议内部发送数据的最小间隔
+static const int32_t    KCP_FASTACK_LIMIT       = 17;   // 快速重传ACK最大跳过次数
+static const uint32_t   KCP_RETRANSMISSION_MAX  = 5;    // 最大重传次数
+static const uint32_t   KCP_KEEPALIVE_TIMEOUT   = 10;   // 心跳超时时间 10 * rtt
+static const uint32_t   KCP_KEEPALIVE_INTERVAL  = 10000;// 心跳间隔时间
+static const uint32_t   KCP_KEEPALIVE_TIMES     = 5;    // 心跳超时最大次数
 
 #endif // __KCP_CONFIG_H__

@@ -5,15 +5,15 @@ socket_set_node_t *socket_set_search(socket_set_t *root, int32_t conv)
 {
     struct rb_node *node = root->rb_node;
   	while (node) {
-  		socket_set_node_t *this = container_of(node, socket_set_node_t, node);
-        assert(this->sock != NULL);
+  		socket_set_node_t *pthis = container_of(node, socket_set_node_t, node);
+        assert(pthis->sock != NULL);
 
-		if (conv < this->sock->conv) {
+		if (conv < pthis->sock->conv) {
             node = node->rb_left;
-        } else if (conv > this->sock->conv) {
+        } else if (conv > pthis->sock->conv) {
   			node = node->rb_right;
         } else {
-  			return this;
+  			return pthis;
         }
 	}
 
@@ -28,13 +28,13 @@ bool socket_set_insert(socket_set_t *root, socket_set_node_t *data)
 
     struct rb_node **new = &(root->rb_node), *parent = NULL;
     while (*new) {
-        socket_set_node_t *this = container_of(*new, socket_set_node_t, node);
-        assert(this->sock != NULL);
+        socket_set_node_t *pthis = container_of(*new, socket_set_node_t, node);
+        assert(pthis->sock != NULL);
 
         parent = *new;
-        if (data->sock->conv < this->sock->conv) {
+        if (data->sock->conv < pthis->sock->conv) {
             new = &((*new)->rb_left);
-        } else if (data->sock->conv > this->sock->conv) {
+        } else if (data->sock->conv > pthis->sock->conv) {
             new = &((*new)->rb_right);
         } else {
             return false;
@@ -52,12 +52,12 @@ socket_set_node_t *socket_set_erase(socket_set_t *root, int32_t conv)
         return NULL;
     }
 
-    socket_set_node_t *this = socket_set_search(root, conv);
-    if (this) {
-        rb_erase(&this->node, root);
+    socket_set_node_t *pthis = socket_set_search(root, conv);
+    if (pthis) {
+        rb_erase(&pthis->node, root);
     }
 
-    return this;
+    return pthis;
 }
 
 void socket_set_erase_node(socket_set_t *root, socket_set_node_t *node)

@@ -3,7 +3,7 @@
 #include <event2/event.h>
 
 #include "kcp_error.h"
-#include "kcp_socket.h"
+#include "kcp_protocol.h"
 
 struct KcpContext *kcp_create(struct event_base *base, void *user)
 {
@@ -27,7 +27,6 @@ struct KcpContext *kcp_create(struct event_base *base, void *user)
         .on_closed = NULL
     };
 
-    ctx->config = KCP_CONFIG_NORMAL;
     ctx->socket_set.rb_node = NULL;
     ctx->event_base = base;
     ctx->user_data = user;
@@ -51,14 +50,19 @@ void kcp_destroy(struct KcpContext *kcp_ctx)
     free(kcp_ctx);
 }
 
-int32_t kcp_configure(struct KcpContext *kcp_ctx, config_key_t flags, kcp_config_t *config)
+int32_t kcp_configure(struct KcpConnection *kcp_connection, config_key_t flags, kcp_config_t *config)
 {
-    if (kcp_ctx == NULL || config == NULL) {
+    if (kcp_connection == NULL || config == NULL) {
         return INVALID_PARAM;
     }
 
     if (flags & CONFIG_KEY_NODELAY) {
-        kcp_ctx->config.nodelay = config->nodelay ? 1 : 0;
+        kcp_connection->socket_node.sock->nodelay = config->nodelay ? 1 : 0;
+        if (kcp_connection->socket_node.sock->nodelay) {
+            kcp_connection->socket_node.sock->rx_minrto = IKCP_RTO_NDL;
+        } else {
+            kcp_connection->socket_node.sock->rx_minrto = IKCP_RTO_MIN;
+        }
     }
 
     if (flags & CONFIG_KEY_INTERVAL) {
@@ -66,19 +70,19 @@ int32_t kcp_configure(struct KcpContext *kcp_ctx, config_key_t flags, kcp_config
             return INVALID_PARAM;
         }
 
-        kcp_ctx->config.interval = config->interval;
+        kcp_connection->socket_node.sock->interval = config->interval;
     }
 
     if (flags & CONFIG_KEY_RESEND) {
-        if (config->resend < KCP_RESEND_MIN || config->resend > KCP_RESEND_MAX) {
+        if (config->resend > KCP_FASTACK_LIMIT) {
             return INVALID_PARAM;
         }
 
-        kcp_ctx->config.resend = config->resend;
+        kcp_connection->socket_node.sock->fastresend = config->resend;
     }
 
     if (flags & CONFIG_KEY_NC) {
-        kcp_ctx->config.nc = config->nc ? 1 : 0;
+        kcp_connection->socket_node.sock->nocwnd = config->nc ? 1 : 0;
     }
 
     return NO_ERROR;
