@@ -1,7 +1,7 @@
-#include "socket_set.h"
+#include "conv_set.h"
 #include <assert.h>
 
-socket_set_node_t *socket_set_search(socket_set_t *root, int32_t conv)
+socket_set_node_t *socket_set_search(conversation_set_t *root, int32_t conv)
 {
     struct rb_node *node = root->rb_node;
   	while (node) {
@@ -20,7 +20,7 @@ socket_set_node_t *socket_set_search(socket_set_t *root, int32_t conv)
 	return NULL;
 }
 
-bool socket_set_insert(socket_set_t *root, socket_set_node_t *data)
+bool socket_set_insert(conversation_set_t *root, socket_set_node_t *data)
 {
     if (root == NULL || data == NULL || data->sock == NULL) {
         return false;
@@ -46,7 +46,7 @@ bool socket_set_insert(socket_set_t *root, socket_set_node_t *data)
     return true;
 }
 
-socket_set_node_t *socket_set_erase(socket_set_t *root, int32_t conv)
+socket_set_node_t *socket_set_erase(conversation_set_t *root, int32_t conv)
 {
     if (root == NULL) {
         return NULL;
@@ -60,7 +60,7 @@ socket_set_node_t *socket_set_erase(socket_set_t *root, int32_t conv)
     return pthis;
 }
 
-void socket_set_erase_node(socket_set_t *root, socket_set_node_t *node)
+void socket_set_erase_node(conversation_set_t *root, socket_set_node_t *node)
 {
     if (root != NULL && node != NULL) {
         rb_erase(&node->node, root);

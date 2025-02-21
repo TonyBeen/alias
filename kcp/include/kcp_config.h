@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-// kcp 交流号标志, 即支持65536个会话
+// kcp 交流号标志, 即最多支持65535个会话
 #define KCP_CONV_FLAG  0xFFFF0000
 
 enum ConfigKey {

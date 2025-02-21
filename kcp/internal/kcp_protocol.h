@@ -7,7 +7,7 @@
 #include "list.h"
 
 #include "kcp_def.h"
-#include "socket_set.h"
+#include "conv_set.h"
 #include "kcp_config.h"
 #include "kcpp.h"
 
@@ -142,9 +142,10 @@ typedef struct KcpSocket {
 } kcp_socket_t;
 
 typedef struct KcpFunctionCallback {
-    on_kcp_accepted_t   on_accepted;
-    on_kcp_connected_t  on_connected;
-    on_kcp_closed_t     on_closed;
+    on_kcp_connected_t      on_connected;
+    on_kcp_syn_received_t   on_syn_received;
+    on_kcp_accepted_t       on_accepted;
+    on_kcp_closed_t         on_closed;
 } kcp_function_callback_t;
 
 // MTU探测回调
@@ -164,7 +165,7 @@ struct KcpContext {
     sockaddr_t                  local_addr;
     kcp_function_callback_t     callback;
 
-    socket_set_t                socket_set;
+    conversation_set_t          socket_set;
     struct event_base*          event_loop;
     void*                       user_data;
 };
