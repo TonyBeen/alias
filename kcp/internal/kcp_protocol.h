@@ -118,22 +118,27 @@ typedef struct KcpSocket {
     uint32_t incr;         // 可发送的最大数据量
 
     // 数据队列
-    struct list_head    snd_queue;  // 发送队列
-    struct list_head    rcv_queue;  // 接收队列
-    struct list_head    snd_buf;    // 发送缓存
-    struct list_head    rcv_buf;    // 接收缓存
+    struct list_head    snd_queue;      // 发送队列
+    struct list_head    snd_buf;        // 发送缓存
+    struct list_head    snd_buf_unused; // 未使用的发送缓存
+
+    struct list_head    rcv_queue;      // 接收队列
+    struct list_head    rcv_buf;        // 接收缓存
+    struct list_head    rcv_buf_unused; // 未使用的接收缓存
 
     // ACK相关
-    kcp_ack_t   ack_item;   // ACK列表项
-    kcp_ack_t   ack_unused; // 未使用的ACK列表项
+    struct list_head    ack_item;   // ACK列表项
+    struct list_head    ack_unused; // 未使用的ACK列表项
+
+    // 临时缓存
+    char *buffer; // 存放ACK或PING等数据
 
     // 快速重传相关
     int fastresend;     // 触发快速重传的重复ACK个数
-    int fastlimit;      // 快速重传次数限制，默认IKCP_FASTACK_LIMIT(5)
+    int fastlimit;      // 快速重传次数限制，默认 KCP_FASTACK_LIMIT(5)
 
     // 其他配置
     int nocwnd;          // 是否关闭拥塞控制，0=不关闭
-    int stream;          // 是否为流模式，0=消息模式(默认)，1=流模式
 } kcp_socket_t;
 
 typedef struct KcpFunctionCallback {
@@ -142,17 +147,25 @@ typedef struct KcpFunctionCallback {
     on_kcp_closed_t     on_closed;
 } kcp_function_callback_t;
 
+// MTU探测回调
+typedef void (*on_probe_completed_t)(kcp_connection_t *kcp_conn, uint32_t mtu, int32_t code);
+
 typedef struct KcpConnection {
-    socket_set_node_t   socket_node;
-    struct KcpContext*  kcp_ctx;
+    socket_set_node_t       socket_node;
+    struct KcpContext*      kcp_ctx;
+
+    // mtu
+    on_probe_completed_t    on_probe_completed;
+    void*                   probe_user_data;
 } kcp_connection_t;
 
 struct KcpContext {
     socket_t                    sock;
+    sockaddr_t                  local_addr;
     kcp_function_callback_t     callback;
 
     socket_set_t                socket_set;
-    struct event_base*          event_base;
+    struct event_base*          event_loop;
     void*                       user_data;
 };
 

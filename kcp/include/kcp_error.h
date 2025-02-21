@@ -27,16 +27,21 @@ enum KcpError {
     NO_MORE_ITEM        = -ENOBUFS,     /* No buffer space available */
 
     // I/O errors
-    READ_ERROR          = -10000,
-    WRITE_ERROR         = -10001,
-    CLOSE_ERROR         = -10002,
-    ADD_EVENT_ERROR     = -10003,
+    READ_ERROR          = -11000,
+    WRITE_ERROR,
+    CLOSE_ERROR,
+    ADD_EVENT_ERROR,
 
     // Network errors
-    BIND_ERROR          = -100000,
-    LISTEN_ERROR        = -100001,
-    ACCEPT_ERROR        = -100002,
-    CONNECT_ERROR       = -100003,
+    CREATE_SOCKET_ERROR = -110000,
+    BIND_ERROR,
+    SOCKET_INUSE,
+    LISTEN_ERROR,
+    ACCEPT_ERROR,
+    CONNECT_ERROR,
+    UNKNOWN_PROTO,
+    PROTO_ERROR,
+    IOCTL_ERROR,
 };
 typedef int32_t kcp_error_t;
 

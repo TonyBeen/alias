@@ -95,7 +95,7 @@ KCP_PORT int32_t kcp_bind(struct KcpContext *kcp_ctx, const sockaddr_t *addr, co
  */
 KCP_PORT struct KcpConnection *kcp_accept(struct KcpContext *kcp_ctx, sockaddr_t *addr);
 
-KCP_PORT int32_t kcp_connect(struct KcpContext *kcp_ctx, const char *host, uint16_t port, uint32_t timeout_ms, on_kcp_connected_t cb);
+KCP_PORT int32_t kcp_connect(struct KcpContext *kcp_ctx, const sockaddr_t *addr, uint32_t timeout_ms, on_kcp_connected_t cb);
 
 /**
  * @brief Send FIN to peer.
