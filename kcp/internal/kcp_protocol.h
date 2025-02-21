@@ -142,7 +142,7 @@ typedef struct KcpSocket {
 } kcp_socket_t;
 
 typedef struct KcpFunctionCallback {
-    on_kcp_accept_t     on_accepted;
+    on_kcp_accepted_t   on_accepted;
     on_kcp_connected_t  on_connected;
     on_kcp_closed_t     on_closed;
 } kcp_function_callback_t;

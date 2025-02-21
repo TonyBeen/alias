@@ -38,13 +38,23 @@ typedef void (*on_kcp_connected_t)(struct KcpConnection *kcp_connection, void *u
 typedef void (*on_kcp_closed_t)(struct KcpConnection *kcp_connection, void *user, int32_t code);
 
 /**
- * @brief kcp建连回调函数
+ * @brief SYN连接请求回调函数
  *
- * @param kcp kcp上下文
+ * @param kcp_ctx kcp上下文
+ * @param addr 连接请求地址
  *
  * @return bool 返回true表示接受连接, false表示拒绝连接
  */
-typedef bool (*on_kcp_accept_t)(struct KcpContext *kcp_ctx);
+typedef bool (*on_kcp_syn_received_t)(struct KcpContext *kcp_ctx, const sockaddr_t *addr);
+
+/**
+ * @brief kcp建连回调函数
+ *
+ * @param kcp kcp上下文
+ * @param kcp_connection kcp连接
+ * @param code 建连结果, 0表示成功, 其他表示失败
+ */
+typedef void (*on_kcp_accepted_t)(struct KcpContext *kcp_ctx, struct KcpConnection *kcp_connection, int32_t code);
 
 /// kcp function
 
@@ -86,6 +96,16 @@ KCP_PORT int32_t kcp_configure(struct KcpConnection *kcp_connection, config_key_
 KCP_PORT int32_t kcp_bind(struct KcpContext *kcp_ctx, const sockaddr_t *addr, const char *nic);
 
 /**
+ * @brief 监听连接请求
+ *
+ * @param kcp_ctx kcp上下文
+ * @param backlog 最大连接数
+ * @param cb syn连接回调
+ * @return int32_t 成功返回0, 否则返回负值
+ */
+KCP_PORT int32_t kcp_listen(struct KcpContext *kcp_ctx, int32_t backlog, on_kcp_syn_received_t cb);
+
+/**
  * @brief 
  *
  * @param kcp 
@@ -93,7 +113,7 @@ KCP_PORT int32_t kcp_bind(struct KcpContext *kcp_ctx, const sockaddr_t *addr, co
  * @param addrlen 
  * @return struct KcpConnection* 
  */
-KCP_PORT struct KcpConnection *kcp_accept(struct KcpContext *kcp_ctx, sockaddr_t *addr);
+KCP_PORT int32_t kcp_accept(struct KcpContext *kcp_ctx, sockaddr_t *addr);
 
 KCP_PORT int32_t kcp_connect(struct KcpContext *kcp_ctx, const sockaddr_t *addr, uint32_t timeout_ms, on_kcp_connected_t cb);
 

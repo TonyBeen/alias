@@ -143,3 +143,18 @@ _error:
     kcp_ctx->sock = INVALID_SOCKET;
     return status;
 }
+
+struct KcpConnection *kcp_accept(struct KcpContext *kcp_ctx, sockaddr_t *addr)
+{
+    if (kcp_ctx == NULL) {
+        return NULL;
+    }
+
+    struct KcpConnection *kcp_connection = (struct KcpConnection *)malloc(sizeof(struct KcpConnection));
+    if (kcp_connection == NULL) {
+        return NULL;
+    }
+
+    // TODO 从半连接队列处理连接
+    return NULL;
+}
